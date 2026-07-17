@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CareerOS — Resume Analyzer</title>
+<script src="/static/theme.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-widget.css') }}">
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#0b1020;
+  --card:rgba(255,255,255,.06);
+  --card-border:rgba(255,255,255,.08);
+  --text:#ffffff;
+  --muted:#94a3b8;
+  --sidebar-bg:rgba(15,23,42,.8);
+  --blob-opacity:.35;
+  --track-bg:#334155;
+  --chip-bg:rgba(255,255,255,.05);
+  --good:#22c55e;
+  --mid:#f59e0b;
+  --bad:#ef4444;
+  --primary:#6366F1;
+  --primary-rgb:99,102,241;
+  --primary-2:#818CF8;
+  --secondary:#06B6D4;
+}
+[data-theme="light"]{
+  --bg:#f3f4f9;
+  --card:rgba(255,255,255,.85);
+  --card-border:rgba(15,23,42,.08);
+  --text:#0f172a;
+  --muted:#5b6472;
+  --sidebar-bg:rgba(255,255,255,.85);
+  --blob-opacity:.18;
+  --track-bg:#dfe3ee;
+  --chip-bg:rgba(15,23,42,.03);
+  --primary:#4F46E5;
+  --primary-rgb:79,70,229;
+  --primary-2:#6366F1;
+}
+
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s}
+.bg,.bg2{position:fixed;border-radius:50%;filter:blur(90px);opacity:var(--blob-opacity);animation:float 12s ease-in-out infinite;transition:opacity .3s}
+.bg{width:320px;height:320px;background:var(--primary);top:-80px;left:-60px}
+.bg2{width:260px;height:260px;background:var(--secondary);right:-60px;bottom:-40px;animation-delay:3s}
+@keyframes float{50%{transform:translate(40px,30px) scale(1.1)}}
+.main{margin-left:250px;padding:30px;position:relative;max-width:1100px}
+.top{display:flex;justify-content:flex-end;margin-bottom:20px}
+.top i{font-size:20px;color:var(--muted)}
+
+@keyframes fade{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+}
+
+h1.page-title{font-size:26px;margin-bottom:6px;animation:fade .5s ease both}
+.page-sub{color:var(--muted);font-size:14px;margin-bottom:28px;animation:fade .5s ease .05s both}
+
+.card{
+  background:var(--card);border:1px solid var(--card-border);border-radius:18px;padding:24px;
+  backdrop-filter:blur(15px);margin-bottom:22px;
+  animation:fade .55s cubic-bezier(.16,1,.3,1) both;
+  transition:background .3s,border-color .3s;
+}
+.card h3{font-size:16px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card .card-sub{font-size:12.5px;color:var(--muted);margin-bottom:18px}
+
+/* ---------- Upload card ---------- */
+.upload-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.upload-box{
+  flex:1;min-width:260px;border:1.5px dashed var(--card-border);border-radius:14px;padding:20px;
+  display:flex;align-items:center;gap:14px;cursor:pointer;transition:border-color .2s ease,background .2s ease;
+}
+.upload-box:hover,.upload-box.drag{border-color:var(--primary);background:var(--chip-bg)}
+.upload-box .u-icon{
+  width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;flex-shrink:0;
+}
+.upload-box .u-text{font-size:.88rem}
+.upload-box .u-sub{color:var(--muted);font-size:.76rem;margin-top:2px}
+#fileInput{display:none}
+
+.existing-resume{
+  display:flex;align-items:center;gap:12px;background:var(--chip-bg);border:1px solid var(--card-border);
+  border-radius:14px;padding:14px 16px;min-width:260px;
+}
+.existing-resume .e-icon{
+  width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;flex-shrink:0;
+}
+.existing-resume .e-name{font-size:.86rem;font-weight:600;word-break:break-all}
+.existing-resume .e-sub{color:var(--muted);font-size:.74rem;margin-top:2px}
+.e-delete-btn{
+  margin-left:auto;flex-shrink:0;width:34px;height:34px;border-radius:9px;border:1px solid var(--card-border);
+  background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:16px;transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease;
+}
+.e-delete-btn:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.4);color:#f87171}
+.e-delete-btn:active{transform:scale(.94)}
+.e-delete-btn:disabled{opacity:.5;cursor:not-allowed}
+
+.role-line{display:flex;align-items:center;gap:8px;margin-top:16px;color:var(--muted);font-size:.85rem}
+.role-line b{color:var(--text);font-weight:600}
+.role-line a{color:var(--primary-2);text-decoration:none}
+
+.btn{
+  padding:10px 20px;border-radius:10px;font-size:13.5px;font-weight:600;text-decoration:none;
+  cursor:pointer;border:none;display:inline-flex;align-items:center;gap:8px;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,background .25s ease,opacity .2s ease;
+}
+.btn:active{transform:translateY(0) scale(.96)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(var(--primary-rgb),.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--card-border)}
+.btn-outline:hover{border-color:var(--primary);transform:translateY(-2px)}
+.analyze-row{margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+
+.spinner{
+  width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.error-box{
+  margin-top:14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;
+  padding:12px 16px;border-radius:12px;font-size:.85rem;display:none;
+}
+.error-box.show{display:block}
+
+/* ---------- Results ---------- */
+#results{display:none}
+#results.show{display:block}
+
+.score-hero{display:flex;gap:28px;align-items:center;flex-wrap:wrap}
+.gauge{position:relative;width:150px;height:150px;flex-shrink:0}
+.gauge svg{transform:rotate(-90deg);width:150px;height:150px}
+.gauge circle{fill:none;stroke-width:12}
+.gauge .g-track{stroke:var(--track-bg)}
+.gauge .g-fill{stroke:var(--primary);stroke-linecap:round;transition:stroke-dashoffset 1.1s cubic-bezier(.16,1,.3,1),stroke .4s ease}
+.gauge .g-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge .g-num{font-size:1.9rem;font-weight:800}
+.gauge .g-cap{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+.score-meta{flex:1;min-width:220px}
+.score-meta .verdict-title{font-size:1.05rem;font-weight:700;margin-bottom:6px}
+.score-meta .verdict-text{color:var(--muted);font-size:.9rem;line-height:1.6}
+.score-meta .analyzed-on{color:var(--muted);font-size:.74rem;margin-top:10px}
+
+.sub-score-row{display:flex;align-items:center;gap:14px;margin-top:18px}
+.sub-score-row .ss-label{font-size:.82rem;color:var(--muted);width:90px;flex-shrink:0}
+.sub-score-track{flex:1;height:8px;background:var(--track-bg);border-radius:20px;overflow:hidden}
+.sub-score-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--primary),var(--secondary));width:0;transition:width 1s cubic-bezier(.16,1,.3,1)}
+.sub-score-val{font-size:.82rem;font-weight:600;width:36px;text-align:right;flex-shrink:0}
+
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:22px}
+@media(max-width:900px){.results-grid{grid-template-columns:1fr}}
+
+.item-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.item-list li{display:flex;align-items:flex-start;gap:10px;font-size:.87rem;line-height:1.5}
+.item-list li i{margin-top:2px;flex-shrink:0;font-size:16px}
+.item-list.missing li i{color:#f59e0b}
+.item-list.strength li i{color:#22c55e}
+.item-list.suggest li{background:var(--chip-bg);border:1px solid var(--card-border);border-radius:10px;padding:10px 12px}
+.item-list.suggest li i{color:var(--primary-2)}
+.item-list .empty{color:var(--muted);font-style:italic}
+
+.kw-tags{display:flex;flex-wrap:wrap;gap:8px}
+.kw-tag{
+  background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.3);
+  padding:6px 12px;border-radius:99px;font-size:.78rem;font-weight:600;
+}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="bg2"></div>
+{% include "_sidebar.html" %}
+
+<div class="main">
+  <div class="top"><i class="ti ti-bell"></i></div>
+
+  <h1 class="page-title">Resume Analyzer</h1>
+  <p class="page-sub">See your resume the way a recruiter would — what's missing, what's strong, and your realistic shot at an interview.</p>
+
+  <!-- UPLOAD / ANALYZE -->
+  <div class="card">
+    <h3><i class="ti ti-file-search"></i> Analyze your resume</h3>
+    <div class="card-sub">Use your resume on file, or upload a new PDF, DOCX, or TXT.</div>
+
+    <div class="upload-row">
+      {% if user.resume_filename %}
+      <div class="existing-resume" id="existingResume">
+        <div class="e-icon"><i class="ti ti-file-text"></i></div>
+        <div>
+          <div class="e-name" id="existingName">{{ user.resume_filename }}</div>
+          <div class="e-sub">Currently on file — will be used unless you upload a new one below</div>
+        </div>
+        <button type="button" class="e-delete-btn" id="deleteResumeBtn" aria-label="Delete uploaded resume" title="Delete this resume">
+          <i class="ti ti-trash"></i>
+        </button>
+      </div>
+      {% endif %}
+
+      <label class="upload-box" id="uploadBox" for="fileInput">
+        <div class="u-icon"><i class="ti ti-upload"></i></div>
+        <div>
+          <div class="u-text" id="uploadText">Choose or drop a resume file</div>
+          <div class="u-sub">PDF, DOCX, or TXT · max ~10MB</div>
+        </div>
+      </label>
+      <input type="file" id="fileInput" accept=".pdf,.docx,.txt">
+    </div>
+
+    <div class="role-line">
+      <i class="ti ti-target-arrow"></i>
+      Analyzing for: <b>{{ user.target_role or "no target role set" }}</b>
+      {% if not user.target_role %}
+      — <a href="{{ url_for('profile_setup') }}">set one in Edit Profile</a> for a sharper score
+      {% endif %}
+    </div>
+
+    <div class="analyze-row">
+      <button class="btn btn-primary" id="analyzeBtn" {% if not user.resume_filename %}disabled{% endif %}>
+        <i class="ti ti-sparkles" id="analyzeIcon"></i> <span id="analyzeBtnText">Analyze Resume</span>
+      </button>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" class="{{ 'show' if analysis else '' }}">
+    <div class="card score-hero">
+      <div class="gauge">
+        <svg viewBox="0 0 150 150">
+          <circle class="g-track" cx="75" cy="75" r="62"></circle>
+          <circle class="g-fill" id="gaugeFill" cx="75" cy="75" r="62" stroke-dasharray="389.6" stroke-dashoffset="389.6"></circle>
+        </svg>
+        <div class="g-label">
+          <div class="g-num" id="gaugeNum">0%</div>
+          <div class="g-cap">Interview<br>Chance</div>
+        </div>
+      </div>
+      <div class="score-meta">
+        <div class="verdict-title" id="verdictTitle">Upload a resume to get started</div>
+        <div class="verdict-text" id="verdictText">Your analysis will appear here — an honest, recruiter-style read on how this resume would actually perform.</div>
+        <div class="analyzed-on" id="analyzedOn"></div>
+
+        <div class="sub-score-row">
+          <div class="ss-label">ATS Score</div>
+          <div class="sub-score-track"><div class="sub-score-fill" id="atsFill"></div></div>
+          <div class="sub-score-val" id="atsVal">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="results-grid">
+      <div class="card">
+        <h3><i class="ti ti-alert-triangle" style="color:#f59e0b"></i> What's Missing</h3>
+        <div class="card-sub">Sections that are absent or too thin</div>
+        <ul class="item-list missing" id="missingList"></ul>
+      </div>
+
+      <div class="card">
+        <h3><i class="ti ti-circle-check" style="color:#22c55e"></i> Strengths</h3>
+        <div class="card-sub">What's already working in your favor</div>
+        <ul class="item-list strength" id="strengthList"></ul>
+      </div>
+
+      <div class="card">
+        <h3><i class="ti ti-tags" style="color:#f59e0b"></i> Keyword Gaps</h3>
+        <div class="card-sub">Skills/tools relevant to your target role that are missing or under-represented</div>
+        <div class="kw-tags" id="keywordTags"></div>
+      </div>
+
+      <div class="card">
+        <h3><i class="ti ti-bulb" style="color:var(--primary-2)"></i> Suggestions to Improve</h3>
+        <div class="card-sub">Ranked by impact</div>
+        <ul class="item-list suggest" id="suggestList"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% include "_chatbot_widget.html" %}
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const uploadBox = document.getElementById('uploadBox');
+const uploadText = document.getElementById('uploadText');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const analyzeBtnText = document.getElementById('analyzeBtnText');
+const errorBox = document.getElementById('errorBox');
+const resultsEl = document.getElementById('results');
+
+const GAUGE_CIRCUMFERENCE = 389.6; // 2 * PI * 62
+
+function scoreColor(pct){
+  if(pct >= 70) return getComputedStyle(document.documentElement).getPropertyValue('--good').trim();
+  if(pct >= 40) return getComputedStyle(document.documentElement).getPropertyValue('--mid').trim();
+  return getComputedStyle(document.documentElement).getPropertyValue('--bad').trim();
+}
+
+function verdictTitleFor(pct){
+  if(pct >= 70) return "Strong shot at an interview";
+  if(pct >= 40) return "Middle of the pack — worth tightening up";
+  return "Needs real work before applying";
+}
+
+function renderList(el, items, emptyText){
+  el.innerHTML = '';
+  if(!items || items.length === 0){
+    el.innerHTML = `<li class="empty">${emptyText}</li>`;
+    return;
+  }
+  items.forEach(text => {
+    const li = document.createElement('li');
+    const isSuggest = el.classList.contains('suggest');
+    const icon = el.classList.contains('missing') ? 'ti-point'
+               : el.classList.contains('strength') ? 'ti-check'
+               : 'ti-arrow-right';
+    li.innerHTML = `<i class="ti ${icon}"></i><span></span>`;
+    li.querySelector('span').textContent = text;
+    el.appendChild(li);
+  });
+}
+
+function renderResults(data){
+  resultsEl.classList.add('show');
+
+  const pct = Math.max(0, Math.min(100, Number(data.selection_chance) || 0));
+  const ats = Math.max(0, Math.min(100, Number(data.ats_score) || 0));
+  const color = scoreColor(pct);
+
+  document.getElementById('gaugeNum').textContent = pct + '%';
+  document.getElementById('verdictTitle').textContent = verdictTitleFor(pct);
+  document.getElementById('verdictText').textContent = data.summary || '';
+  if(data.created_at){
+    document.getElementById('analyzedOn').textContent = 'Last analyzed on ' + data.created_at;
+  } else {
+    document.getElementById('analyzedOn').textContent = 'Just analyzed';
+  }
+
+  const fill = document.getElementById('gaugeFill');
+  fill.style.stroke = color;
+  requestAnimationFrame(() => {
+    fill.style.strokeDashoffset = GAUGE_CIRCUMFERENCE - (GAUGE_CIRCUMFERENCE * pct / 100);
+  });
+
+  document.getElementById('atsVal').textContent = ats + '%';
+  requestAnimationFrame(() => {
+    document.getElementById('atsFill').style.width = ats + '%';
+  });
+
+  renderList(document.getElementById('missingList'), data.missing_sections, "Nothing obviously missing — nice.");
+  renderList(document.getElementById('strengthList'), data.strengths, "No standout strengths detected yet.");
+  renderList(document.getElementById('suggestList'), data.suggestions, "No suggestions — looking solid.");
+
+  const kwWrap = document.getElementById('keywordTags');
+  kwWrap.innerHTML = '';
+  if(!data.keyword_gaps || data.keyword_gaps.length === 0){
+    kwWrap.innerHTML = '<span style="color:var(--muted);font-size:.85rem;font-style:italic">No obvious keyword gaps for your target role.</span>';
+  } else {
+    data.keyword_gaps.forEach(kw => {
+      const tag = document.createElement('span');
+      tag.className = 'kw-tag';
+      tag.textContent = kw;
+      kwWrap.appendChild(tag);
+    });
+  }
+
+  resultsEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+{% if analysis %}
+renderResults({
+  selection_chance: {{ analysis.selection_chance }},
+  ats_score: {{ analysis.ats_score }},
+  summary: {{ analysis.summary|tojson }},
+  missing_sections: {{ analysis.missing_sections|tojson }},
+  keyword_gaps: {{ analysis.keyword_gaps|tojson }},
+  strengths: {{ analysis.strengths|tojson }},
+  suggestions: {{ analysis.suggestions|tojson }},
+  created_at: {{ analysis.created_at|tojson }}
+});
+{% endif %}
+
+fileInput.addEventListener('change', () => {
+  if(fileInput.files.length){
+    uploadText.textContent = fileInput.files[0].name;
+    analyzeBtn.disabled = false;
+  }
+});
+
+const deleteResumeBtn = document.getElementById('deleteResumeBtn');
+if(deleteResumeBtn){
+  deleteResumeBtn.addEventListener('click', async () => {
+    if(!confirm('Delete this resume from your account? You\'ll need to upload a new one to analyze.')) return;
+
+    deleteResumeBtn.disabled = true;
+    errorBox.classList.remove('show');
+
+    try {
+      const res = await fetch("{{ url_for('resume_analyzer_delete') }}", { method: 'POST' });
+      const data = await res.json();
+
+      if(!res.ok || data.error){
+        errorBox.textContent = data.error || 'Could not delete that resume. Please try again.';
+        errorBox.classList.add('show');
+        deleteResumeBtn.disabled = false;
+        return;
+      }
+
+      document.getElementById('existingResume').remove();
+      if(!fileInput.files.length){
+        analyzeBtn.disabled = true;
+      }
+      resultsEl.classList.remove('show');
+    } catch(err){
+      errorBox.textContent = 'Could not reach the server. Please try again.';
+      errorBox.classList.add('show');
+      deleteResumeBtn.disabled = false;
+    }
+  });
+}
+
+['dragover','dragenter'].forEach(evt => {
+  uploadBox.addEventListener(evt, e => { e.preventDefault(); uploadBox.classList.add('drag'); });
+});
+['dragleave','drop'].forEach(evt => {
+  uploadBox.addEventListener(evt, e => { e.preventDefault(); uploadBox.classList.remove('drag'); });
+});
+uploadBox.addEventListener('drop', e => {
+  const file = e.dataTransfer.files[0];
+  if(file){
+    fileInput.files = e.dataTransfer.files;
+    uploadText.textContent = file.name;
+    analyzeBtn.disabled = false;
+  }
+});
+
+analyzeBtn.addEventListener('click', async () => {
+  errorBox.classList.remove('show');
+  analyzeBtn.disabled = true;
+  analyzeBtnText.textContent = 'Analyzing…';
+  document.getElementById('analyzeIcon').outerHTML = '<span class="spinner" id="btnSpinner"></span>';
+
+  const formData = new FormData();
+  if(fileInput.files.length){
+    formData.append('resume', fileInput.files[0]);
+  }
+
+  try {
+    const res = await fetch("{{ url_for('resume_analyzer_analyze') }}", {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+
+    if(!res.ok || data.error){
+      errorBox.textContent = data.error || 'Something went wrong. Please try again.';
+      errorBox.classList.add('show');
+    } else {
+      renderResults(data);
+      if(data.resume_filename){
+        const existingName = document.getElementById('existingName');
+        if(existingName) existingName.textContent = data.resume_filename;
+      }
+    }
+  } catch(err){
+    errorBox.textContent = 'Could not reach the server. Please try again.';
+    errorBox.classList.add('show');
+  } finally {
+    analyzeBtn.disabled = false;
+    analyzeBtnText.textContent = 'Re-analyze Resume';
+    const spinner = document.getElementById('btnSpinner');
+    if(spinner) spinner.outerHTML = '<i class="ti ti-sparkles" id="analyzeIcon"></i>';
+  }
+});
+</script>
+</body>
+</html>

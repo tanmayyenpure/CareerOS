@@ -1,0 +1,483 @@
+"""
+CODING ARENA — patch for app.py
+================================
+Mirrors the exact pattern Learning Hub already uses (AI-generated list ->
+AI-generated detail, both cached in the DB, both calling the shared
+_call_gemini_json() helper). The one new piece is code execution, which
+goes through a separate helper file (piston_helper.py — drop it next to
+app.py, same folder as youtube_helper.py) instead of running user code
+in the Flask process directly. Running arbitrary submitted code with
+Python's exec()/subprocess in your own server is a real security hole
+(the code can read your DB, your .env, anything the Flask process can
+touch) — Piston runs it in a disposable sandboxed container instead.
+
+Six things to paste into app.py, in this order:
+
+
+── 0. NEW IMPORT ───────────────────────────────────────────────────────
+Near your other local imports (next to the youtube_helper import):
+
+    from piston_helper import run_code, list_supported_languages, PistonError
+
+Also make sure `requests` is installed (piston_helper.py imports it) —
+it's a very common transitive dependency so it's likely already in your
+venv, but if not: pip install requests
+
+
+── 1. CATEGORY LABELS CONSTANT ─────────────────────────────────────────
+Add near DOMAIN_LABELS (same section, same convention):
+
+    CODING_CATEGORIES = {
+        "arrays_strings":          "Arrays & Strings",
+        "linked_lists":            "Linked Lists",
+        "recursion_backtracking":  "Recursion & Backtracking",
+        "trees_graphs":            "Trees & Graphs",
+        "dynamic_programming":     "Dynamic Programming",
+        "sorting_searching":       "Sorting & Searching",
+        "sql_databases":           "Databases (SQL)",
+    }
+
+
+── 2. THREE NEW MODELS ─────────────────────────────────────────────────
+Add these right after LearningHubMaterial (same file, same conventions).
+
+class CodingProblemSet(db.Model):
+    """
+    Cached AI-generated problem list for one category. Same caching
+    rationale as LearningHubSubjectSet — one row per category, only
+    regenerated if you pass ?regenerate=1.
+    """
+    __tablename__ = "coding_problem_sets"
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(120), unique=True, nullable=False)
+    problems_json = db.Column(db.Text)  # JSON: [{"title","difficulty","tags":[...],"one_liner"}, ...]
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class CodingProblem(db.Model):
+    """
+    Cached AI-generated full problem detail for one (category, title)
+    pair — statement, constraints, examples, hidden test cases, and
+    starter code per language. test_cases_json is never sent to the
+    frontend (see _get_coding_test_cases) so it stays server-side only,
+    same spirit as a real judge hiding its grading cases.
+    """
+    __tablename__ = "coding_problems"
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(120), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    difficulty = db.Column(db.String(20))
+    statement = db.Column(db.Text)
+    constraints_json = db.Column(db.Text)   # JSON: ["1 <= n <= 1e5", ...]
+    examples_json = db.Column(db.Text)      # JSON: [{"input","output","explanation"}, ...]
+    test_cases_json = db.Column(db.Text)    # JSON: [{"input","output"}, ...] — server-side only
+    starter_code_json = db.Column(db.Text)  # JSON: {"python": "...", "javascript": "...", ...}
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('category', 'title', name='uq_coding_category_title'),
+    )
+
+
+class CodingSubmission(db.Model):
+    """
+    One Submit attempt (not every Run — Run against samples is cheap/free
+    and doesn't get saved). Powers the "Problems Solved" / "Submissions
+    Made" stats and the solved-checkmark on the problem grid.
+    """
+    __tablename__ = "coding_submissions"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    category = db.Column(db.String(120), nullable=False)
+    problem_title = db.Column(db.String(200), nullable=False)
+    language = db.Column(db.String(30), nullable=False)
+    code = db.Column(db.Text)
+    verdict = db.Column(db.String(30))  # Accepted / Wrong Answer / Runtime Error / Compile Error
+    passed_count = db.Column(db.Integer, default=0)
+    total_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+These are brand-new tables, so `db.create_all()` at the bottom of app.py
+creates them automatically on next restart — no migration script needed
+(same as the Learning Hub tables).
+
+
+── 3. TWO GEMINI CACHING HELPERS ────────────────────────────────────────
+Add these near _get_or_create_hub_subjects / _get_or_create_hub_material
+(same section, same pattern — reuses your existing _call_gemini_json).
+
+def _get_or_create_coding_problems(category, regenerate=False):
+    existing = CodingProblemSet.query.filter_by(category=category).first()
+    if existing and not regenerate:
+        return json.loads(existing.problems_json)
+
+    prompt = f'''You are building a curated coding-practice problem list for
+Indian students and job-seekers preparing for technical interviews.
+
+Category: "{category}"
+
+Return 6 to 8 problems in this category, similar in spirit to a
+LeetCode/HackerRank problem list, ranging across difficulty levels. For
+each problem give:
+- "title": a short, specific problem title (e.g. "Two Sum")
+- "difficulty": one of "Easy", "Medium", "Hard"
+- "tags": 2-3 short tag words (e.g. "Hash Map", "Two Pointers")
+- "one_liner": one sentence describing what the problem asks for
+
+Respond with ONLY raw JSON, no markdown fences, no commentary, in exactly
+this shape:
+
+{{
+  "problems": [
+    {{
+      "title": "Two Sum",
+      "difficulty": "Easy",
+      "tags": ["Arrays", "Hash Map"],
+      "one_liner": "Find two numbers in an array that add up to a target."
+    }}
+  ]
+}}
+'''
+    data = _call_gemini_json(prompt)
+    problems = data.get("problems", [])
+    if not isinstance(problems, list) or not problems:
+        raise ValueError("Gemini returned no problems")
+
+    if existing:
+        existing.problems_json = json.dumps(problems)
+        existing.created_at = datetime.utcnow()
+    else:
+        existing = CodingProblemSet(category=category, problems_json=json.dumps(problems))
+        db.session.add(existing)
+    db.session.commit()
+    return problems
+
+
+def _get_or_create_coding_problem_detail(category, title, regenerate=False):
+    existing = CodingProblem.query.filter_by(category=category, title=title).first()
+    if existing and not regenerate:
+        return {
+            "title": existing.title,
+            "difficulty": existing.difficulty,
+            "statement": existing.statement,
+            "constraints": json.loads(existing.constraints_json or "[]"),
+            "examples": json.loads(existing.examples_json or "[]"),
+            "starter_code": json.loads(existing.starter_code_json or "{}"),
+        }
+
+    prompt = f'''You are creating one coding-practice problem for an online
+judge aimed at Indian students preparing for technical interviews.
+
+Category: "{category}"
+Problem title: "{title}"
+
+Design this as a stdin/stdout problem (like Codeforces/HackerRank) — the
+solution reads input from standard input and prints output to standard
+output. Keep the input/output format simple and completely unambiguous,
+since it will be auto-graded by exact string match on stdout.
+
+Return:
+1. "statement": 2-4 plain-text paragraphs (no markdown headers) explaining
+   the problem clearly, including the exact input/output format.
+2. "constraints": 3-5 short strings describing input limits (e.g.
+   "1 <= n <= 10^5").
+3. "examples": 2-3 sample input/output pairs to SHOW the user, each with
+   "input" (exact stdin text), "output" (exact expected stdout, no extra
+   text), and "explanation" (1 sentence).
+4. "test_cases": 6-10 input/output pairs used to auto-grade submissions
+   (can reuse the examples plus more, covering edge cases). Same
+   "input"/"output" shape as examples, no explanation needed. Output must
+   be the exact stdout text a correct solution would print (trailing
+   whitespace is trimmed before comparison, but formatting inside the
+   output must be exact).
+5. "starter_code": boilerplate for EXACTLY these 5 languages — python,
+   javascript, cpp, java, c — that reads input in the exact format you
+   defined above and has a clear TODO comment where the user writes their
+   solution, but does NOT solve the problem. For java, the public class
+   MUST be named "Main" (the file is Main.java). Keep each boilerplate
+   short and idiomatic for that language's standard stdin reading.
+
+Respond with ONLY raw JSON, no markdown fences, no commentary, in exactly
+this shape:
+
+{{
+  "statement": "...",
+  "constraints": ["..."],
+  "examples": [{{"input": "...", "output": "...", "explanation": "..."}}],
+  "test_cases": [{{"input": "...", "output": "..."}}],
+  "starter_code": {{
+    "python": "...", "javascript": "...", "cpp": "...", "java": "...", "c": "..."
+  }}
+}}
+'''
+    data = _call_gemini_json(prompt)
+    statement = data.get("statement", "")
+    constraints = data.get("constraints", [])
+    examples = data.get("examples", [])
+    test_cases = data.get("test_cases", [])
+    starter_code = data.get("starter_code", {})
+
+    if not test_cases:
+        raise ValueError("Gemini returned no test cases")
+
+    # Difficulty lives on the cached problem *list*, not this call — pull
+    # it from there so the detail row matches what the grid already showed.
+    difficulty = "Medium"
+    problem_set = CodingProblemSet.query.filter_by(category=category).first()
+    if problem_set:
+        for p in json.loads(problem_set.problems_json):
+            if p.get("title") == title:
+                difficulty = p.get("difficulty", "Medium")
+                break
+
+    if existing:
+        existing.difficulty = difficulty
+        existing.statement = statement
+        existing.constraints_json = json.dumps(constraints)
+        existing.examples_json = json.dumps(examples)
+        existing.test_cases_json = json.dumps(test_cases)
+        existing.starter_code_json = json.dumps(starter_code)
+        existing.created_at = datetime.utcnow()
+    else:
+        existing = CodingProblem(
+            category=category, title=title, difficulty=difficulty,
+            statement=statement,
+            constraints_json=json.dumps(constraints),
+            examples_json=json.dumps(examples),
+            test_cases_json=json.dumps(test_cases),
+            starter_code_json=json.dumps(starter_code),
+        )
+        db.session.add(existing)
+    db.session.commit()
+
+    return {
+        "title": title, "difficulty": difficulty, "statement": statement,
+        "constraints": constraints, "examples": examples, "starter_code": starter_code,
+    }
+
+
+def _get_coding_test_cases(category, title):
+    """Server-side only — never returned directly to the frontend."""
+    row = CodingProblem.query.filter_by(category=category, title=title).first()
+    if not row or not row.test_cases_json:
+        return []
+    return json.loads(row.test_cases_json)
+
+
+── 4. FIVE ROUTES ───────────────────────────────────────────────────────
+Add these near your other page/api routes (next to the Learning Hub ones
+is a natural spot).
+
+@app.route('/coding-arena')
+def coding_arena():
+    user = User.query.get(session.get('user_id'))
+    if not user:
+        return redirect(url_for('login'))
+
+    solved = (db.session.query(CodingSubmission.problem_title)
+              .filter_by(user_id=user.id, verdict="Accepted")
+              .distinct().count())
+    submissions = CodingSubmission.query.filter_by(user_id=user.id).count()
+
+    return render_template(
+        'coding-arena.html', user=user,
+        category_labels=CODING_CATEGORIES,
+        languages=list_supported_languages(),
+        stats={"solved": solved, "submissions": submissions},
+    )
+
+
+@app.route('/api/coding-arena/problems', methods=['POST'])
+def api_coding_arena_problems():
+    if 'user_id' not in session:
+        return jsonify({"error": "Please log in first."}), 401
+
+    data = request.get_json(silent=True) or {}
+    category = (data.get("category") or "").strip()
+    if not category:
+        return jsonify({"error": "Missing category."}), 400
+
+    regenerate = request.args.get("regenerate") == "1"
+
+    try:
+        problems = _get_or_create_coding_problems(category, regenerate=regenerate)
+    except RateLimitError:
+        return jsonify({"error": "AI is busy right now. Please try again in a moment.", "retry": True}), 429
+    except (json.JSONDecodeError, ValueError) as e:
+        print("Coding Arena problems generation error:", e)
+        return jsonify({"error": "Couldn't generate problems right now. Please try again."}), 502
+
+    solved_titles = {
+        r.problem_title for r in
+        CodingSubmission.query.filter_by(user_id=session['user_id'], category=category, verdict="Accepted").all()
+    }
+    for p in problems:
+        p['solved'] = p.get('title') in solved_titles
+
+    return jsonify({"problems": problems}), 200
+
+
+@app.route('/api/coding-arena/problem', methods=['POST'])
+def api_coding_arena_problem():
+    if 'user_id' not in session:
+        return jsonify({"error": "Please log in first."}), 401
+
+    data = request.get_json(silent=True) or {}
+    category = (data.get("category") or "").strip()
+    title = (data.get("title") or "").strip()
+    if not category or not title:
+        return jsonify({"error": "Missing category or title."}), 400
+
+    regenerate = request.args.get("regenerate") == "1"
+
+    try:
+        problem = _get_or_create_coding_problem_detail(category, title, regenerate=regenerate)
+    except RateLimitError:
+        return jsonify({"error": "AI is busy right now. Please try again in a moment.", "retry": True}), 429
+    except (json.JSONDecodeError, ValueError) as e:
+        print("Coding Arena problem detail generation error:", e)
+        return jsonify({"error": "Couldn't generate this problem right now. Please try again."}), 502
+
+    return jsonify(problem), 200
+
+
+@app.route('/api/coding-arena/run', methods=['POST'])
+def api_coding_arena_run():
+    """Quick feedback only — runs against the sample cases (or a custom
+    stdin override), never saved as a submission."""
+    if 'user_id' not in session:
+        return jsonify({"error": "Please log in first."}), 401
+
+    data = request.get_json(silent=True) or {}
+    category = (data.get("category") or "").strip()
+    title = (data.get("title") or "").strip()
+    language = (data.get("language") or "").strip()
+    code = data.get("code") or ""
+    stdin_override = data.get("stdin")
+
+    if not language or not code:
+        return jsonify({"error": "Missing language or code."}), 400
+
+    try:
+        if stdin_override is not None:
+            result = run_code(language, code, stdin_override)
+            return jsonify({"mode": "custom", "result": result}), 200
+
+        if not category or not title:
+            return jsonify({"error": "Missing category or title."}), 400
+        problem = CodingProblem.query.filter_by(category=category, title=title).first()
+        if not problem:
+            return jsonify({"error": "Problem not found. Open it first."}), 404
+
+        examples = json.loads(problem.examples_json or "[]")
+        if not examples:
+            return jsonify({"error": "No sample cases for this problem."}), 400
+
+        results = []
+        for ex in examples:
+            r = run_code(language, code, ex.get("input", ""))
+            passed = r["stdout"].strip() == (ex.get("output") or "").strip()
+            results.append({
+                "input": ex.get("input", ""), "expected": ex.get("output", ""),
+                "stdout": r["stdout"], "stderr": r["stderr"], "passed": passed,
+            })
+        return jsonify({"mode": "samples", "results": results}), 200
+
+    except PistonError as e:
+        print("Piston run error:", e)
+        return jsonify({"error": "Code execution service is unavailable right now. Please try again."}), 502
+
+
+@app.route('/api/coding-arena/submit', methods=['POST'])
+def api_coding_arena_submit():
+    """Runs against ALL test cases (hidden ones included), saves a
+    submission row, and returns a verdict — stops at the first failing
+    case (like most real judges) rather than running everything."""
+    if 'user_id' not in session:
+        return jsonify({"error": "Please log in first."}), 401
+
+    data = request.get_json(silent=True) or {}
+    category = (data.get("category") or "").strip()
+    title = (data.get("title") or "").strip()
+    language = (data.get("language") or "").strip()
+    code = data.get("code") or ""
+
+    if not category or not title or not language or not code:
+        return jsonify({"error": "Missing category, title, language or code."}), 400
+
+    test_cases = _get_coding_test_cases(category, title)
+    if not test_cases:
+        return jsonify({"error": "This problem has no test cases yet. Open it first."}), 404
+
+    passed = 0
+    verdict = "Accepted"
+    failure = None
+
+    try:
+        for tc in test_cases:
+            r = run_code(language, code, tc.get("input", ""))
+            if r["compile_error"]:
+                verdict = "Compile Error"
+                failure = {"stderr": r["stderr"]}
+                break
+            if r["exit_code"] not in (0, None):
+                verdict = "Runtime Error"
+                failure = {"stderr": r["stderr"], "input": tc.get("input", "")}
+                break
+            if r["stdout"].strip() != (tc.get("output") or "").strip():
+                verdict = "Wrong Answer"
+                failure = {
+                    "input": tc.get("input", ""), "expected": tc.get("output", ""),
+                    "stdout": r["stdout"],
+                }
+                break
+            passed += 1
+    except PistonError as e:
+        print("Piston submit error:", e)
+        return jsonify({"error": "Code execution service is unavailable right now. Please try again."}), 502
+
+    submission = CodingSubmission(
+        user_id=session['user_id'], category=category, problem_title=title,
+        language=language, code=code, verdict=verdict,
+        passed_count=passed, total_count=len(test_cases),
+    )
+    db.session.add(submission)
+    db.session.commit()
+
+    return jsonify({
+        "verdict": verdict, "passed": passed, "total": len(test_cases), "failure": failure,
+    }), 200
+
+
+── 5. SIDEBAR ──────────────────────────────────────────────────────────
+In _sidebar.html, replace the disabled Coding Arena entry:
+
+    <a href="javascript:void(0)" class="disabled" aria-disabled="true">
+      <i class="ti ti-code"></i>Coding Arena<span class="soon-tag">Soon</span>
+    </a>
+
+with:
+
+    <a href="{{ url_for('coding_arena') }}" class="{{ 'active' if request.endpoint == 'coding_arena' else '' }}">
+      <i class="ti ti-code"></i>Coding Arena
+    </a>
+
+
+── NOTES / LIMITATIONS ─────────────────────────────────────────────────
+- Starter code is only AI-authored for python/javascript/cpp/java/c. Any
+  other language Piston supports (go, ruby, rust, sql, ...) still runs
+  fine, it just starts from a blank template — see STARTER_LANGS in
+  coding-arena.html if you want to grow that list later (you'd need to
+  ask Gemini for more languages in the prompt above too).
+- Piston's public instance is shared and rate-limited (~5 req/sec). A
+  Submit that runs 8 test cases sequentially is 8 requests — fine for one
+  user clicking Submit, but if this ever gets real traffic, self-host
+  Piston (their repo has a docker-compose file) and just change
+  PISTON_BASE in piston_helper.py.
+- Test cases are compared with exact string match after trimming
+  surrounding whitespace. Gemini is instructed to keep formats simple,
+  but for anything involving floats/multiple valid outputs you may
+  occasionally need to regenerate a problem (?regenerate=1) if it comes
+  out ambiguous.
+"""

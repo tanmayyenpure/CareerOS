@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerOS — Set Up Your Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+<style>
+  .ps-label{display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem}
+  .ps-input{width:100%;padding:0.75rem 1rem;margin-bottom:1.2rem;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:inherit;font-family:inherit}
+  .ps-input:focus{outline:none;border-color:var(--purple);background:rgba(255,255,255,0.05)}
+  select.ps-input{appearance:none}
+  .ps-section-title{font-size:1rem;font-weight:700;margin:2rem 0 1rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.08)}
+  .ps-section-title:first-of-type{margin-top:0;padding-top:0;border-top:none}
+  .ps-section-hint{font-size:0.78rem;color:var(--muted);margin:-0.8rem 0 1.2rem}
+  .ps-row{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem}
+  .ps-repeat-block{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:1rem;margin-bottom:0.8rem;position:relative}
+  .ps-remove-btn{position:absolute;top:0.6rem;right:0.6rem;background:transparent;border:none;color:var(--muted);font-size:1.1rem;line-height:1;cursor:pointer;padding:0.2rem 0.4rem;border-radius:6px}
+  .ps-remove-btn:hover{color:var(--coral);background:rgba(248,113,113,0.1)}
+  .ps-add-btn{width:100%;padding:0.65rem 1rem;margin-bottom:1.2rem;border-radius:8px;border:1px dashed rgba(255,255,255,0.2);background:transparent;color:var(--muted);font-family:inherit;font-size:0.85rem;cursor:pointer;transition:border-color .2s,color .2s}
+  .ps-add-btn:hover{border-color:var(--purple);color:var(--purple-light)}
+  .ps-skill-row{display:grid;grid-template-columns:1fr 110px auto;gap:0.6rem;align-items:center;margin-bottom:0.6rem}
+  .ps-skill-row select.ps-input{margin-bottom:0}
+  .ps-skill-row input.ps-input{margin-bottom:0}
+  .ps-file-wrap{margin-bottom:0.6rem}
+  .ps-file-name{font-size:0.78rem;color:var(--muted);margin-top:0.4rem}
+</style>
+</head>
+
+<body>
+<canvas id="hero-canvas"></canvas>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+<a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+</nav>
+
+<!-- PROFILE SETUP -->
+<section style="max-width:560px;margin:8rem auto 4rem;padding:0 1rem">
+  <div class="fade-in" style="text-align:center;margin-bottom:2rem">
+    <p class="section-label">Welcome, {{ user.name }} 👋</p>
+    <h2 class="section-title">Set up your profile</h2>
+    <p class="section-sub">Tell us a bit about yourself so we can personalize your roadmap and AI guidance.</p>
+  </div>
+
+  <form method="POST" action="{{ url_for('profile_setup') }}" enctype="multipart/form-data" class="fade-in"
+        style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:2rem">
+
+    <!-- Career basics -->
+    <label class="ps-label">What's your target role?</label>
+    <input type="text" name="target_role" required placeholder="e.g. Software Engineer, Data Analyst, Product Manager"
+           class="ps-input" value="{{ user.target_role or '' }}">
+
+    <label class="ps-label">Which field are you in?</label>
+    <select name="domain" required class="ps-input">
+      <option value="" disabled {{ 'selected' if not user.domain else '' }}>Select your domain</option>
+      <option value="engineering_tech" {{ 'selected' if user.domain == 'engineering_tech' else '' }}>Engineering &amp; Technology</option>
+      <option value="medical_healthcare" {{ 'selected' if user.domain == 'medical_healthcare' else '' }}>Medical &amp; Healthcare</option>
+      <option value="commerce_finance" {{ 'selected' if user.domain == 'commerce_finance' else '' }}>Commerce &amp; Finance</option>
+      <option value="law" {{ 'selected' if user.domain == 'law' else '' }}>Law</option>
+      <option value="design_creative" {{ 'selected' if user.domain == 'design_creative' else '' }}>Design &amp; Creative Arts</option>
+      <option value="government_public" {{ 'selected' if user.domain == 'government_public' else '' }}>Government &amp; Public Services</option>
+      <option value="agriculture" {{ 'selected' if user.domain == 'agriculture' else '' }}>Agriculture</option>
+    </select>
+
+    <label class="ps-label">Tell us about yourself</label>
+    <textarea name="bio" rows="5" placeholder="Your background, current skills, goals — anything that helps us guide you better."
+              class="ps-input" style="resize:vertical">{{ user.bio or '' }}</textarea>
+
+    <!-- Contact details -->
+    <div class="ps-section-title">Contact details</div>
+    <p class="ps-section-hint">Shown on your profile page so recruiters and connections can reach you.</p>
+
+    <div class="ps-row">
+      <div>
+        <label class="ps-label">Phone number</label>
+        <input type="tel" name="phone" placeholder="+91 98765 43210" class="ps-input" value="{{ user.phone or '' }}">
+      </div>
+      <div>
+        <label class="ps-label">Location</label>
+        <input type="text" name="location" placeholder="City, Country" class="ps-input" value="{{ user.location or '' }}">
+      </div>
+    </div>
+    <div class="ps-row">
+      <div>
+        <label class="ps-label">LinkedIn URL</label>
+        <input type="url" name="linkedin" placeholder="linkedin.com/in/yourname" class="ps-input" value="{{ user.linkedin or '' }}">
+      </div>
+      <div>
+        <label class="ps-label">GitHub URL</label>
+        <input type="url" name="github" placeholder="github.com/yourname" class="ps-input" value="{{ user.github or '' }}">
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="ps-section-title">Skills</div>
+    <p class="ps-section-hint">Add the skills you want reflected on your profile, and how confident you feel in each.</p>
+
+    <div id="skills-list">
+      {% for s in (user.skills or [{'name':'','level':'Intermediate'}]) %}
+      <div class="ps-skill-row">
+        <input type="text" name="skill_name[]" placeholder="e.g. Python" class="ps-input" value="{{ s.name or '' }}">
+        <select name="skill_level[]" class="ps-input">
+          <option value="Beginner" {{ 'selected' if s.level == 'Beginner' else '' }}>Beginner</option>
+          <option value="Intermediate" {{ 'selected' if s.level == 'Intermediate' or not s.level else '' }}>Intermediate</option>
+          <option value="Advanced" {{ 'selected' if s.level == 'Advanced' else '' }}>Advanced</option>
+        </select>
+        <button type="button" class="ps-remove-btn" onclick="this.closest('.ps-skill-row').remove()">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="ps-add-btn" id="add-skill">+ Add another skill</button>
+
+    <!-- Education -->
+    <div class="ps-section-title">Education</div>
+    <p class="ps-section-hint">Your degrees, diplomas, or certifications.</p>
+
+    <div id="education-list">
+      {% for edu in (user.education or [{}]) %}
+      <div class="ps-repeat-block">
+        {% if not loop.first %}<button type="button" class="ps-remove-btn" onclick="this.closest('.ps-repeat-block').remove()">✕</button>{% endif %}
+        <label class="ps-label">School / Institution</label>
+        <input type="text" name="edu_school[]" placeholder="e.g. IIT Bombay" class="ps-input" value="{{ edu.school or '' }}">
+        <label class="ps-label">Degree / Certification</label>
+        <input type="text" name="edu_degree[]" placeholder="e.g. B.Tech in Computer Science" class="ps-input" value="{{ edu.degree or '' }}">
+        <label class="ps-label" style="margin-bottom:0.4rem">Years</label>
+        <input type="text" name="edu_years[]" placeholder="e.g. 2021 – 2025" class="ps-input" style="margin-bottom:0" value="{{ edu.years or '' }}">
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="ps-add-btn" id="add-education">+ Add another education entry</button>
+
+    <!-- Work experience -->
+    <div class="ps-section-title">Work experience</div>
+    <p class="ps-section-hint">Internships count too — add roles in the order you'd like them shown, most recent first.</p>
+
+    <div id="experience-list">
+      {% for job in (user.experience or [{}]) %}
+      <div class="ps-repeat-block">
+        {% if not loop.first %}<button type="button" class="ps-remove-btn" onclick="this.closest('.ps-repeat-block').remove()">✕</button>{% endif %}
+        <label class="ps-label">Job title</label>
+        <input type="text" name="exp_title[]" placeholder="e.g. Backend Engineering Intern" class="ps-input" value="{{ job.title or '' }}">
+        <label class="ps-label">Company</label>
+        <input type="text" name="exp_company[]" placeholder="e.g. Acme Corp" class="ps-input" value="{{ job.company or '' }}">
+        <label class="ps-label" style="margin-bottom:0.4rem">Dates</label>
+        <input type="text" name="exp_dates[]" placeholder="e.g. Jun 2025 – Aug 2025" class="ps-input" style="margin-bottom:0" value="{{ job.dates or '' }}">
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="ps-add-btn" id="add-experience">+ Add another role</button>
+
+    <!-- Resume -->
+    <div class="ps-section-title">Resume</div>
+    <p class="ps-section-hint">Upload a PDF or Word file. We'll score it and suggest improvements on your profile page.</p>
+
+    <div class="ps-file-wrap">
+      <input type="file" name="resume" id="resume-input" accept=".pdf,.doc,.docx" class="ps-input" style="margin-bottom:0">
+      {% if user.resume_filename %}
+      <div class="ps-file-name">Current file: {{ user.resume_filename }}</div>
+      {% endif %}
+    </div>
+
+    <p style="font-size:0.78rem;color:var(--muted);margin:1.5rem 0 1.5rem">
+      Next step: a quick 20-question skill assessment for your domain, so your roadmap starts from where you actually are.
+    </p>
+
+    <button type="submit" class="btn-primary" style="width:100%;justify-content:center">Continue to Assessment →</button>
+  </form>
+</section>
+
+<script>
+  function cloneRepeatBlock(listId, template){
+    const list = document.getElementById(listId);
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = template;
+    list.appendChild(wrapper.firstElementChild);
+  }
+
+  document.getElementById('add-skill').addEventListener('click', ()=>{
+    cloneRepeatBlock('skills-list', `
+      <div class="ps-skill-row">
+        <input type="text" name="skill_name[]" placeholder="e.g. Python" class="ps-input">
+        <select name="skill_level[]" class="ps-input">
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate" selected>Intermediate</option>
+          <option value="Advanced">Advanced</option>
+        </select>
+        <button type="button" class="ps-remove-btn" onclick="this.closest('.ps-skill-row').remove()">✕</button>
+      </div>`);
+  });
+
+  document.getElementById('add-education').addEventListener('click', ()=>{
+    cloneRepeatBlock('education-list', `
+      <div class="ps-repeat-block">
+        <button type="button" class="ps-remove-btn" onclick="this.closest('.ps-repeat-block').remove()">✕</button>
+        <label class="ps-label">School / Institution</label>
+        <input type="text" name="edu_school[]" placeholder="e.g. IIT Bombay" class="ps-input">
+        <label class="ps-label">Degree / Certification</label>
+        <input type="text" name="edu_degree[]" placeholder="e.g. B.Tech in Computer Science" class="ps-input">
+        <label class="ps-label" style="margin-bottom:0.4rem">Years</label>
+        <input type="text" name="edu_years[]" placeholder="e.g. 2021 – 2025" class="ps-input" style="margin-bottom:0">
+      </div>`);
+  });
+
+  document.getElementById('add-experience').addEventListener('click', ()=>{
+    cloneRepeatBlock('experience-list', `
+      <div class="ps-repeat-block">
+        <button type="button" class="ps-remove-btn" onclick="this.closest('.ps-repeat-block').remove()">✕</button>
+        <label class="ps-label">Job title</label>
+        <input type="text" name="exp_title[]" placeholder="e.g. Backend Engineering Intern" class="ps-input">
+        <label class="ps-label">Company</label>
+        <input type="text" name="exp_company[]" placeholder="e.g. Acme Corp" class="ps-input">
+        <label class="ps-label" style="margin-bottom:0.4rem">Dates</label>
+        <input type="text" name="exp_dates[]" placeholder="e.g. Jun 2025 – Aug 2025" class="ps-input" style="margin-bottom:0">
+      </div>`);
+  });
+
+  document.getElementById('resume-input').addEventListener('change', function(){
+    const existing = this.parentElement.querySelector('.ps-file-name');
+    const text = this.files.length ? `Selected: ${this.files[0].name}` : '';
+    if(existing){ existing.textContent = text || existing.textContent; }
+  });
+</script>
+
+</body>
+</html>

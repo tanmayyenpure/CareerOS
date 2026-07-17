@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap — CareerOS (Demo)</title>
+<style>
+  :root{
+    --bg: #0b0a14;
+    --bg-soft: #100e1c;
+    --card: #15121f;
+    --card-border: #2a2440;
+    --text: #f2f1f7;
+    --text-dim: #9994b3;
+    --accent-1: #7c5cfc;
+    --accent-2: #5b7fff;
+    --accent-grad: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+    --success: #4ade80;
+    --radius: 16px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(circle at 30% 0%, #1b1530 0%, var(--bg) 55%);
+    color: var(--text);
+    min-height:100vh;
+  }
+
+  /* ---------- Top bar / sidebar shell (just to mimic the app context) ---------- */
+  .shell{ display:flex; min-height:100vh; }
+
+  .sidebar{
+    width:220px;
+    padding:28px 18px;
+    border-right:1px solid var(--card-border);
+    flex-shrink:0;
+  }
+  .logo{ font-weight:800; font-size:20px; margin-bottom:34px; }
+  .logo span{ background:var(--accent-grad); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .nav-item{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px; border-radius:10px; margin-bottom:6px;
+    color:var(--text-dim); font-size:14px; cursor:default;
+  }
+  .nav-item.active{ background:var(--card); color:var(--text); font-weight:600; }
+
+  .main{ flex:1; padding:32px 40px; }
+  .page-title{ font-size:20px; font-weight:700; margin-bottom:28px; }
+
+  .hero-card{
+    max-width:560px; margin:60px auto 0; text-align:center;
+    background:var(--card); border:1px solid var(--card-border);
+    border-radius:var(--radius); padding:48px 36px;
+  }
+  .hero-icon{
+    width:64px; height:64px; margin:0 auto 20px; border-radius:50%;
+    background:rgba(124,92,252,0.15); display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+  }
+  .hero-card h1{ font-size:22px; margin:0 0 10px; }
+  .hero-card p{ color:var(--text-dim); font-size:14px; line-height:1.5; margin:0 0 26px; }
+
+  .btn-primary{
+    background:var(--accent-grad); color:#fff; border:none;
+    padding:13px 26px; border-radius:10px; font-size:15px; font-weight:600;
+    cursor:pointer; transition:opacity .15s ease, transform .15s ease;
+  }
+  .btn-primary:hover{ opacity:.92; transform:translateY(-1px); }
+  .btn-primary:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
+
+  /* ---------- Roadmap result area (populated after generation) ---------- */
+  #roadmap-result{ max-width:760px; margin:36px auto 0; display:none; }
+  .roadmap-step{
+    background:var(--card); border:1px solid var(--card-border);
+    border-radius:14px; padding:20px 22px; margin-bottom:14px;
+    text-align:left;
+  }
+  .roadmap-step .step-head{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+  .step-num{
+    width:28px; height:28px; border-radius:50%; background:var(--accent-grad);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;
+  }
+  .roadmap-step h3{ margin:0; font-size:16px; }
+  .roadmap-step p{ color:var(--text-dim); font-size:13.5px; line-height:1.5; margin:0 0 12px; }
+  .resource-tags{ display:flex; flex-wrap:wrap; gap:8px; }
+  .tag{
+    font-size:12px; padding:5px 10px; border-radius:20px;
+    background:rgba(124,92,252,0.12); color:#c9beff; border:1px solid rgba(124,92,252,0.3);
+  }
+
+  /* ---------- Chat popup ---------- */
+  .chat-overlay{
+    position:fixed; inset:0; background:rgba(5,4,10,0.6);
+    display:none; align-items:center; justify-content:center; z-index:100;
+    backdrop-filter: blur(3px);
+  }
+  .chat-overlay.open{ display:flex; }
+
+  .chat-window{
+    width:420px; max-width:92vw; height:560px; max-height:85vh;
+    background:var(--bg-soft); border:1px solid var(--card-border);
+    border-radius:18px; display:flex; flex-direction:column; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .chat-header{
+    padding:16px 18px; border-bottom:1px solid var(--card-border);
+    display:flex; align-items:center; gap:10px;
+  }
+  .chat-avatar{
+    width:34px; height:34px; border-radius:50%; background:var(--accent-grad);
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+  }
+  .chat-header-text strong{ display:block; font-size:14px; }
+  .chat-header-text span{ font-size:12px; color:var(--text-dim); }
+  .chat-close{
+    margin-left:auto; background:none; border:none; color:var(--text-dim);
+    font-size:18px; cursor:pointer; line-height:1; padding:4px;
+  }
+  .chat-close:hover{ color:var(--text); }
+
+  .chat-body{
+    flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:12px;
+  }
+  .msg{ max-width:82%; padding:11px 14px; border-radius:14px; font-size:14px; line-height:1.45; }
+  .msg.bot{
+    background:var(--card); border:1px solid var(--card-border);
+    align-self:flex-start; border-bottom-left-radius:4px;
+  }
+  .msg.user{
+    background:var(--accent-grad); color:#fff;
+    align-self:flex-end; border-bottom-right-radius:4px;
+  }
+  .typing{ display:flex; gap:4px; align-self:flex-start; padding:12px 14px; }
+  .typing span{
+    width:6px; height:6px; border-radius:50%; background:var(--text-dim);
+    animation:blink 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2){ animation-delay:.2s; }
+  .typing span:nth-child(3){ animation-delay:.4s; }
+  @keyframes blink{ 0%,80%,100%{ opacity:.25; } 40%{ opacity:1; } }
+
+  .chat-input-row{
+    display:flex; gap:8px; padding:14px; border-top:1px solid var(--card-border);
+  }
+  .chat-input-row input{
+    flex:1; background:var(--card); border:1px solid var(--card-border);
+    border-radius:10px; padding:11px 14px; color:var(--text); font-size:14px; outline:none;
+  }
+  .chat-input-row input:focus{ border-color:var(--accent-1); }
+  .chat-send{
+    background:var(--accent-grad); border:none; color:#fff; width:42px; border-radius:10px;
+    cursor:pointer; font-size:16px; flex-shrink:0;
+  }
+  .chat-send:disabled{ opacity:.5; cursor:not-allowed; }
+
+  @media (prefers-reduced-motion: reduce){
+    .typing span{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="sidebar">
+    <div class="logo">Career<span>OS</span></div>
+    <div class="nav-item">Dashboard</div>
+    <div class="nav-item">Profile</div>
+    <div class="nav-item active">Roadmap</div>
+    <div class="nav-item">Resume</div>
+    <div class="nav-item">Settings</div>
+  </div>
+
+  <div class="main">
+    <div class="page-title">Roadmap</div>
+
+    <div class="hero-card" id="hero-card">
+      <div class="hero-icon">🗺️</div>
+      <h1>Your roadmap is on the way</h1>
+      <p>This is where your personalized career roadmap will live — step-by-step guidance toward your goal.</p>
+      <button class="btn-primary" id="generate-btn">Generate My Roadmap</button>
+    </div>
+
+    <div id="roadmap-result"></div>
+  </div>
+</div>
+
+<!-- ---------------- Chat popup ---------------- -->
+<div class="chat-overlay" id="chat-overlay">
+  <div class="chat-window">
+    <div class="chat-header">
+      <div class="chat-avatar">🤖</div>
+      <div class="chat-header-text">
+        <strong>Roadmap Assistant</strong>
+        <span>Let's build your learning path</span>
+      </div>
+      <button class="chat-close" id="chat-close">✕</button>
+    </div>
+
+    <div class="chat-body" id="chat-body"></div>
+
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="e.g. React, Data Structures, UI/UX design..." autocomplete="off">
+      <button class="chat-send" id="chat-send">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   ROADMAP CHATBOT DEMO
+   -----------------------------------------------------------------
+   This is a self-contained mock. It uses a fake "generateRoadmap()"
+   function with a setTimeout to simulate a real AI call.
+
+   >>> TO CONNECT YOUR BACKEND / AI API <<<
+   Replace the body of generateRoadmap(topic) near the bottom of this
+   script with a real fetch() call to your backend (which in turn
+   calls the Claude API or whichever model you use). Keep the same
+   function signature: it must return a Promise that resolves to an
+   array of step objects shaped like:
+
+   {
+     title: "Step title",
+     description: "Short explanation of this step",
+     resources: ["Resource label 1", "Resource label 2", ...]
+   }
+
+   Example real implementation:
+
+   async function generateRoadmap(topic) {
+     const res = await fetch("/api/generate-roadmap", {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({ topic })
+     });
+     const data = await res.json();
+     return data.steps; // shape must match the array described above
+   }
+   ===================================================================== */
+
+const generateBtn = document.getElementById('generate-btn');
+const heroCard = document.getElementById('hero-card');
+const roadmapResult = document.getElementById('roadmap-result');
+
+const chatOverlay = document.getElementById('chat-overlay');
+const chatBody = document.getElementById('chat-body');
+const chatInput = document.getElementById('chat-input');
+const chatSend = document.getElementById('chat-send');
+const chatClose = document.getElementById('chat-close');
+
+let awaitingTopic = true;
+
+// ---- open chat when "Generate My Roadmap" is clicked ----
+generateBtn.addEventListener('click', () => {
+  chatOverlay.classList.add('open');
+  chatBody.innerHTML = '';
+  awaitingTopic = true;
+  addBotMessage("Hi! I'll help build your personalized roadmap. What do you have to learn?");
+  chatInput.value = '';
+  chatInput.focus();
+});
+
+chatClose.addEventListener('click', () => {
+  chatOverlay.classList.remove('open');
+});
+
+// close on backdrop click
+chatOverlay.addEventListener('click', (e) => {
+  if (e.target === chatOverlay) chatOverlay.classList.remove('open');
+});
+
+chatSend.addEventListener('click', handleSend);
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleSend();
+});
+
+function handleSend(){
+  const value = chatInput.value.trim();
+  if (!value) return;
+  addUserMessage(value);
+  chatInput.value = '';
+  chatInput.disabled = true;
+  chatSend.disabled = true;
+
+  if (awaitingTopic){
+    awaitingTopic = false;
+    showTyping();
+    setTimeout(() => {
+      removeTyping();
+      addBotMessage(`Great choice! Building your roadmap for "${value}" — this'll take just a moment...`);
+      buildRoadmap(value);
+    }, 900);
+  }
+}
+
+function addBotMessage(text){
+  const el = document.createElement('div');
+  el.className = 'msg bot';
+  el.textContent = text;
+  chatBody.appendChild(el);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function addUserMessage(text){
+  const el = document.createElement('div');
+  el.className = 'msg user';
+  el.textContent = text;
+  chatBody.appendChild(el);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function showTyping(){
+  const el = document.createElement('div');
+  el.className = 'typing';
+  el.id = 'typing-indicator';
+  el.innerHTML = '<span></span><span></span><span></span>';
+  chatBody.appendChild(el);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function removeTyping(){
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function buildRoadmap(topic){
+  showTyping();
+  const steps = await generateRoadmap(topic);
+  removeTyping();
+  addBotMessage(`Done! Your roadmap for "${topic}" is ready below the chat — take a look. Want to learn something else too? Just tell me.`);
+  chatInput.disabled = false;
+  chatSend.disabled = false;
+  chatInput.focus();
+  awaitingTopic = true; // allow chaining another topic
+  renderRoadmap(topic, steps);
+}
+
+function renderRoadmap(topic, steps){
+  heroCard.style.display = 'none';
+  roadmapResult.style.display = 'block';
+  roadmapResult.innerHTML = `<h2 style="margin:0 0 18px;font-size:19px;">Your roadmap: ${escapeHtml(topic)}</h2>`;
+
+  steps.forEach((step, i) => {
+    const card = document.createElement('div');
+    card.className = 'roadmap-step';
+    card.innerHTML = `
+      <div class="step-head">
+        <div class="step-num">${i + 1}</div>
+        <h3>${escapeHtml(step.title)}</h3>
+      </div>
+      <p>${escapeHtml(step.description)}</p>
+      <div class="resource-tags">
+        ${step.resources.map(r => `<span class="tag">${escapeHtml(r)}</span>`).join('')}
+      </div>
+    `;
+    roadmapResult.appendChild(card);
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------------------------------------------------------------------
+   MOCK GENERATOR — replace this with a real API call (see comment block
+   at the top of this script for the exact shape to return).
+--------------------------------------------------------------------- */
+function generateRoadmap(topic){
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        {
+          title: `${topic} Fundamentals`,
+          description: `Start with the core concepts and vocabulary of ${topic} so later steps make sense.`,
+          resources: ["Beginner video course", "Official docs", "Cheat sheet"]
+        },
+        {
+          title: "Hands-on Practice",
+          description: `Apply what you learned about ${topic} through small guided exercises.`,
+          resources: ["Practice platform", "Coding exercises", "Community forum"]
+        },
+        {
+          title: "Build a Project",
+          description: `Consolidate your ${topic} knowledge by building a small real-world project.`,
+          resources: ["Project walkthrough video", "Sample repo", "Checklist"]
+        },
+        {
+          title: "Advanced Concepts",
+          description: `Go deeper into ${topic} — patterns, edge cases, and best practices used in real jobs.`,
+          resources: ["Advanced course", "Blog articles", "Case studies"]
+        },
+        {
+          title: "Interview & Portfolio Prep",
+          description: `Prepare to showcase your ${topic} skills — polish your portfolio and practice explaining your work.`,
+          resources: ["Mock interview guide", "Portfolio template", "Common questions list"]
+        }
+      ]);
+    }, 1400); // simulated network delay
+  });
+}
+</script>
+
+</body>
+</html>

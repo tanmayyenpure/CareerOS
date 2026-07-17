@@ -1,0 +1,234 @@
+"""
+LEARNING HUB — patch for app.py
+================================
+Delete learning_hub_routes.py — this replaces it. That first draft used
+`google.generativeai` and its own Gemini caller; your app actually uses
+the newer `google.genai` SDK with a shared `_call_gemini_json()` helper
+(the one roadmap + pathfinder generation already use), so this version
+plugs into that instead of duplicating it.
+
+Four things to paste into app.py, in this order:
+
+
+── 1. TWO NEW MODELS ──────────────────────────────────────────────────
+Add these near your other cache-style models (right after MilestoneQuiz /
+MilestoneNotes is a natural spot — same file, same conventions).
+
+class LearningHubSubjectSet(db.Model):
+    """
+    Cached AI-generated subject list for one domain. Domain here is the
+    human-readable label (DOMAIN_LABELS value, e.g. "Engineering &
+    Technology"), not the short key, since that's what the frontend
+    already sends. One row per domain — regenerated only if you pass
+    ?regenerate=1.
+    """
+    __tablename__ = "learning_hub_subject_sets"
+    id = db.Column(db.Integer, primary_key=True)
+    domain = db.Column(db.String(120), unique=True, nullable=False)
+    subjects_json = db.Column(db.Text)  # JSON: [{"name","description","tags":[...]}, ...]
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class LearningHubMaterial(db.Model):
+    """
+    Cached AI-generated study material for one (domain, subject) pair.
+    Same caching rationale as MilestoneQuiz/MilestoneNotes: avoid
+    re-spending Gemini quota every time the same subject gets clicked.
+    """
+    __tablename__ = "learning_hub_material"
+    id = db.Column(db.Integer, primary_key=True)
+    domain = db.Column(db.String(120), nullable=False)
+    subject = db.Column(db.String(200), nullable=False)
+    overview = db.Column(db.Text)
+    topics_json = db.Column(db.Text)     # JSON: [{"title","explanation"}, ...]
+    resources_json = db.Column(db.Text)  # JSON: [{"label","url"}, ...]
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('domain', 'subject', name='uq_hub_domain_subject'),
+    )
+
+
+After adding these two classes, run a one-off column-creation script the
+same way you did for add_video_metadata_columns.py — or since these are
+brand new TABLES (not new columns on an existing table), `db.create_all()`
+at the bottom of app.py will create them automatically on next restart.
+No migration script needed for new tables, only for new columns on
+existing ones.
+
+
+── 2. TWO CACHING HELPERS ─────────────────────────────────────────────
+Add these near _get_or_create_quiz (same file, same section).
+
+def _get_or_create_hub_subjects(domain, regenerate=False):
+    existing = LearningHubSubjectSet.query.filter_by(domain=domain).first()
+    if existing and not regenerate:
+        return json.loads(existing.subjects_json)
+
+    prompt = f'''You are helping build a study syllabus browser for Indian
+students and job-seekers.
+
+Domain: "{domain}"
+
+Return 6 to 8 core subjects/specializations that fall under this domain in
+the Indian education/career context. For each subject give a short
+1-sentence description and 2-3 short tag words (e.g. difficulty level,
+category).
+
+Respond with ONLY raw JSON, no markdown fences, no commentary, in exactly
+this shape:
+
+{{
+  "subjects": [
+    {{
+      "name": "Data Structures & Algorithms",
+      "description": "Core problem-solving skills tested in every tech interview.",
+      "tags": ["Core", "Interview-critical"]
+    }}
+  ]
+}}
+'''
+    data = _call_gemini_json(prompt)
+    subjects = data.get("subjects", [])
+    if not isinstance(subjects, list) or not subjects:
+        raise ValueError("Gemini returned no subjects")
+
+    if existing:
+        existing.subjects_json = json.dumps(subjects)
+        existing.created_at = datetime.utcnow()
+    else:
+        existing = LearningHubSubjectSet(domain=domain, subjects_json=json.dumps(subjects))
+        db.session.add(existing)
+    db.session.commit()
+    return subjects
+
+
+def _get_or_create_hub_material(domain, subject, regenerate=False):
+    existing = LearningHubMaterial.query.filter_by(domain=domain, subject=subject).first()
+    if existing and not regenerate:
+        return {
+            "overview": existing.overview,
+            "topics": json.loads(existing.topics_json or "[]"),
+            "resources": json.loads(existing.resources_json or "[]"),
+        }
+
+    prompt = f'''You are building a study guide for an Indian student
+learning "{subject}" within the "{domain}" domain.
+
+Return:
+1. A 2-3 sentence overview of what this subject covers and why it matters.
+2. 5 to 7 key topics within this subject, each with a 1-2 sentence
+   plain-English explanation a beginner could follow.
+3. 3 to 5 real, generally well-known learning resources (official docs,
+   well-known free course platforms, NPTEL/SWAYAM for Indian academic
+   subjects, etc.) as a label and URL. Only include resource types that
+   are safe to link — prefer a platform's homepage/search page over a
+   guessed deep link if you are not confident a specific URL exists.
+
+Respond with ONLY raw JSON, no markdown fences, no commentary, in exactly
+this shape:
+
+{{
+  "overview": "...",
+  "topics": [
+    {{ "title": "...", "explanation": "..." }}
+  ],
+  "resources": [
+    {{ "label": "...", "url": "..." }}
+  ]
+}}
+'''
+    data = _call_gemini_json(prompt)
+    overview = data.get("overview", "")
+    topics = data.get("topics", [])
+    resources = data.get("resources", [])
+
+    if existing:
+        existing.overview = overview
+        existing.topics_json = json.dumps(topics)
+        existing.resources_json = json.dumps(resources)
+        existing.created_at = datetime.utcnow()
+    else:
+        existing = LearningHubMaterial(
+            domain=domain, subject=subject,
+            overview=overview,
+            topics_json=json.dumps(topics),
+            resources_json=json.dumps(resources),
+        )
+        db.session.add(existing)
+    db.session.commit()
+    return {"overview": overview, "topics": topics, "resources": resources}
+
+
+── 3. THREE ROUTES ─────────────────────────────────────────────────────
+Add these near your other page/api routes (e.g. next to skill_pathfinder
+and its /api/... counterparts, if you have one, or near resume_analyzer).
+
+@app.route('/learning-hub')
+def learning_hub():
+    user = User.query.get(session.get('user_id'))
+    if not user:
+        return redirect(url_for('login'))
+    return render_template('learning-hub.html', user=user, domain_labels=DOMAIN_LABELS)
+
+
+@app.route('/api/learning-hub/subjects', methods=['POST'])
+def api_learning_hub_subjects():
+    if 'user_id' not in session:
+        return jsonify({"error": "Please log in first."}), 401
+
+    data = request.get_json(silent=True) or {}
+    domain = (data.get("domain") or "").strip()
+    if not domain:
+        return jsonify({"error": "Missing domain."}), 400
+
+    regenerate = request.args.get("regenerate") == "1"
+
+    try:
+        subjects = _get_or_create_hub_subjects(domain, regenerate=regenerate)
+    except RateLimitError:
+        return jsonify({"error": "AI is busy right now. Please try again in a moment.", "retry": True}), 429
+    except (json.JSONDecodeError, ValueError) as e:
+        print("Learning Hub subjects generation error:", e)
+        return jsonify({"error": "Couldn't generate subjects right now. Please try again."}), 502
+
+    return jsonify({"subjects": subjects}), 200
+
+
+@app.route('/api/learning-hub/material', methods=['POST'])
+def api_learning_hub_material():
+    if 'user_id' not in session:
+        return jsonify({"error": "Please log in first."}), 401
+
+    data = request.get_json(silent=True) or {}
+    domain = (data.get("domain") or "").strip()
+    subject = (data.get("subject") or "").strip()
+    if not domain or not subject:
+        return jsonify({"error": "Missing domain or subject."}), 400
+
+    regenerate = request.args.get("regenerate") == "1"
+
+    try:
+        material = _get_or_create_hub_material(domain, subject, regenerate=regenerate)
+    except RateLimitError:
+        return jsonify({"error": "AI is busy right now. Please try again in a moment.", "retry": True}), 429
+    except (json.JSONDecodeError, ValueError) as e:
+        print("Learning Hub material generation error:", e)
+        return jsonify({"error": "Couldn't generate study material right now. Please try again."}), 502
+
+    return jsonify(material), 200
+
+
+── 4. SIDEBAR ──────────────────────────────────────────────────────────
+In _sidebar.html, replace the disabled Learning Hub entry:
+
+    <a href="javascript:void(0)" class="disabled" aria-disabled="true">
+      <i class="ti ti-book"></i>Learning Hub<span class="soon-tag">Soon</span>
+    </a>
+
+with:
+
+    <a href="{{ url_for('learning_hub') }}" class="{{ 'active' if request.endpoint == 'learning_hub' else '' }}">
+      <i class="ti ti-book"></i>Learning Hub
+    </a>
+"""

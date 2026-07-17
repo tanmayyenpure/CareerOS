@@ -1,0 +1,48 @@
+<!-- FLOATING ROBOT ASSISTANT — include this partial on every page -->
+<div id="bot-launcher">
+  <div id="bot-intro-bubble" class="hidden">👋 Hi! I'm <strong>Cara</strong>, your CareerOS guide.<br>Ask me anything about the site!</div>
+  <button id="bot-btn" aria-label="Open CareerOS assistant">
+    <div id="bot-notif">1</div>
+    <svg class="bot-face" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="9" width="26" height="20" rx="5" fill="white" fill-opacity="0.95"/>
+      <rect x="17" y="3" width="2" height="6" rx="1" fill="white" fill-opacity="0.9"/>
+      <circle cx="18" cy="3" r="2.5" fill="white"/>
+      <rect x="9" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+      <rect x="21" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+      <rect x="10" y="15" width="2" height="2" rx="0.5" fill="white" fill-opacity="0.7"/>
+      <rect x="22" y="15" width="2" height="2" rx="0.5" fill="white" fill-opacity="0.7"/>
+      <path d="M11 23 Q18 28 25 23" stroke="#00D4AA" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <rect x="2" y="15" width="3" height="6" rx="1.5" fill="white" fill-opacity="0.7"/>
+      <rect x="31" y="15" width="3" height="6" rx="1.5" fill="white" fill-opacity="0.7"/>
+    </svg>
+  </button>
+</div>
+
+<div id="bot-panel">
+  <div class="bot-panel-header">
+    <div class="bot-header-avatar">
+      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="5" y="9" width="26" height="20" rx="5" fill="white" fill-opacity="0.95"/>
+        <rect x="9" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+        <rect x="21" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+        <path d="M11 23 Q18 28 25 23" stroke="#00D4AA" stroke-width="2" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="bot-header-info">
+      <h4>Cara — CareerOS Guide</h4>
+      <span>Online &amp; ready to help</span>
+    </div>
+    <button class="bot-close-btn" id="bot-close" aria-label="Close">✕</button>
+  </div>
+  <div id="bot-messages"></div>
+  <div id="bot-quick-replies">
+    <button class="bot-qr" onclick="botQuickReply('What can CareerOS do?')">What can CareerOS do?</button>
+    <button class="bot-qr" onclick="botQuickReply('How does pricing work?')">Pricing?</button>
+    <button class="bot-qr" onclick="botQuickReply('How do I get started?')">Get started</button>
+    <button class="bot-qr" onclick="botQuickReply('Tell me about the AI coach')">AI Coach</button>
+  </div>
+  <div class="bot-input-row">
+    <input type="text" id="bot-input" placeholder="Ask me anything…" autocomplete="off"/>
+    <button id="bot-send">➤</button>
+  </div>
+</div>

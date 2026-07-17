@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CareerOS — Settings</title>
+<script src="/static/theme.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* ── THEME TOKENS ── */
+:root{
+  --bg:#0b1020;
+  --card:rgba(255,255,255,.06);
+  --card-border:rgba(255,255,255,.08);
+  --text:#ffffff;
+  --muted:#94a3b8;
+  --sidebar-bg:rgba(15,23,42,.8);
+  --blob-opacity:.35;
+  --input-bg:rgba(255,255,255,.05);
+  --primary:#6366F1;
+  --primary-rgb:99,102,241;
+  --secondary:#06B6D4;
+  --secondary-rgb:6,182,212;
+}
+[data-theme="light"]{
+  --bg:#f3f4f9;
+  --card:rgba(255,255,255,.85);
+  --card-border:rgba(15,23,42,.08);
+  --text:#0f172a;
+  --muted:#5b6472;
+  --sidebar-bg:rgba(255,255,255,.85);
+  --blob-opacity:.18;
+  --input-bg:rgba(15,23,42,.04);
+  --primary:#4F46E5;
+  --primary-rgb:79,70,229;
+}
+
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s}
+.bg,.bg2{position:fixed;border-radius:50%;filter:blur(90px);opacity:var(--blob-opacity);animation:float 12s ease-in-out infinite;transition:opacity .3s}
+.bg{width:320px;height:320px;background:var(--primary);top:-80px;left:-60px}
+.bg2{width:260px;height:260px;background:var(--secondary);right:-60px;bottom:-40px;animation-delay:3s}
+@keyframes float{50%{transform:translate(40px,30px) scale(1.1)}}
+
+.main{margin-left:250px;padding:30px;max-width:900px}
+.top{display:flex;justify-content:flex-end;margin-bottom:20px}
+
+@keyframes fade{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+h1.page-title{font-size:26px;margin-bottom:6px;animation:fade .5s ease both}
+.page-sub{color:var(--muted);font-size:14px;margin-bottom:28px;animation:fade .5s ease .05s both}
+
+.section-label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:0 0 12px}
+.card{
+  background:var(--card);border:1px solid var(--card-border);border-radius:18px;padding:24px;
+  backdrop-filter:blur(15px);margin-bottom:26px;
+  animation:fade .55s cubic-bezier(.16,1,.3,1) both;
+  transition:background .3s,border-color .3s,transform .25s ease,box-shadow .25s ease;
+}
+.card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.section-label:nth-of-type(1) ~ .card,
+.card:nth-of-type(1){animation-delay:.05s}
+.card:nth-of-type(2){animation-delay:.12s}
+.card:nth-of-type(3){animation-delay:.19s}
+.card:nth-of-type(4){animation-delay:.26s}
+.card h3{font-size:16px;margin-bottom:4px}
+.card .card-sub{font-size:12.5px;color:var(--muted);margin-bottom:18px}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+}
+
+/* appearance toggle */
+.appearance-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.appearance-row .label-text{font-size:14px}
+.appearance-row .label-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.switch{position:relative;width:56px;height:30px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch-track{
+  position:absolute;inset:0;background:#334155;border-radius:30px;cursor:pointer;transition:background .3s;
+  display:flex;align-items:center;padding:0 6px;justify-content:space-between;
+}
+.switch-track i{font-size:14px;color:#facc15;transition:transform .3s ease,opacity .3s ease}
+.switch-track i.moon{color:#cbd5e1}
+.switch input:checked + .switch-track i.sun{transform:scale(.8) rotate(-40deg);opacity:.5}
+.switch input:not(:checked) + .switch-track i.moon{transform:scale(.8) rotate(40deg);opacity:.5}
+.switch-thumb{
+  position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));transition:transform .35s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 8px rgba(var(--primary-rgb),.67);
+}
+.switch input:checked + .switch-track .switch-thumb{transform:translateX(26px)}
+
+/* account info */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:6px}
+.info-item .info-label{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.info-item .info-value{font-size:15px;font-weight:500}
+.card-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.btn{
+  padding:9px 18px;border-radius:10px;font-size:13.5px;font-weight:600;text-decoration:none;
+  cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,background .25s ease,border-color .25s ease;
+}
+.btn:active{transform:translateY(0) scale(.96)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(var(--primary-rgb),.4)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--card-border)}
+.btn-outline:hover{border-color:var(--primary);transform:translateY(-2px)}
+.btn-danger{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.35)}
+.btn-danger:hover{background:rgba(239,68,68,.2);transform:translateY(-2px);box-shadow:0 8px 20px rgba(239,68,68,.18)}
+
+/* vision / mission */
+.vm-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.vm-card{
+  background:var(--input-bg);border-radius:14px;padding:18px;border:1px solid var(--card-border);
+  transition:transform .25s ease,border-color .25s ease;
+}
+.vm-card:hover{transform:translateY(-3px);border-color:rgba(var(--primary-rgb),.33)}
+.vm-card .vm-icon{
+  width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));margin-bottom:12px;font-size:17px;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.vm-card:hover .vm-icon{transform:scale(1.1) rotate(-6deg)}
+.vm-card h4{font-size:14px;margin-bottom:8px}
+.vm-card p{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* danger zone */
+.danger-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.danger-row .label-text{font-size:14px}
+.danger-row .label-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+@media(max-width:900px){
+  .main{margin:0;padding:20px}
+  .vm-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="bg2"></div>
+
+{% include "_sidebar.html" %}
+
+<div class="main">
+  <div class="top"><i class="ti ti-bell"></i></div>
+
+  <h1 class="page-title">Settings</h1>
+  <p class="page-sub">Manage your appearance, account, and learn more about CareerOS.</p>
+
+  <!-- APPEARANCE -->
+  <div class="section-label">Appearance</div>
+  <div class="card">
+    <div class="appearance-row">
+      <div>
+        <div class="label-text">Theme</div>
+        <div class="label-sub" id="themeDesc">Dark mode is on</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="themeSwitch">
+        <div class="switch-track">
+          <i class="ti ti-sun sun"></i>
+          <i class="ti ti-moon moon"></i>
+          <div class="switch-thumb"></div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- ACCOUNT INFO -->
+  <div class="section-label">Account Information</div>
+  <div class="card">
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Name</div>
+        <div class="info-value">{{ user.name or '—' }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Email</div>
+        <div class="info-value">{{ user.email or '—' }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Target Role</div>
+        <div class="info-value">{{ user.target_role or 'Not set' }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Plan</div>
+        <div class="info-value">{{ 'Pro' if user.is_pro else 'Free' }}</div>
+      </div>
+    </div>
+    <div class="card-actions">
+      <a class="btn btn-primary" href="{{ url_for('profile_setup') }}"><i class="ti ti-edit"></i>Edit Profile</a>
+      <a class="btn btn-outline" href="{{ url_for('pricing') }}"><i class="ti ti-crown"></i>Manage Plan</a>
+    </div>
+  </div>
+
+  <!-- VISION & MISSION -->
+  <div class="section-label">About CareerOS</div>
+  <div class="card">
+    <div class="vm-grid">
+      <div class="vm-card">
+        <div class="vm-icon"><i class="ti ti-telescope"></i></div>
+        <h4>Our Vision</h4>
+        <p>A future where every student and professional in India has a personal career mentor on call — no gatekeeping, no guesswork, no waiting for the right connections to figure out what's next.</p>
+      </div>
+      <div class="vm-card">
+        <div class="vm-icon"><i class="ti ti-target-arrow"></i></div>
+        <h4>Our Mission</h4>
+        <p>To give every job-seeker in India structured, AI-powered guidance — built around real hiring patterns, real salary data, and a roadmap they can actually follow, week by week.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DANGER ZONE / LOGOUT -->
+  <div class="section-label">Session</div>
+  <div class="card">
+    <div class="danger-row">
+      <div>
+        <div class="label-text">Log out of CareerOS</div>
+        <div class="label-sub">You'll need to log in again to access your dashboard.</div>
+      </div>
+      <a class="btn btn-danger" href="{{ url_for('logout') }}"><i class="ti ti-logout"></i>Log Out</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const html = document.documentElement;
+const themeSwitch = document.getElementById('themeSwitch');
+const themeDesc = document.getElementById('themeDesc');
+
+function syncSwitch(){
+  const current = html.getAttribute('data-theme') || 'dark';
+  themeSwitch.checked = current === 'light';
+  themeDesc.textContent = current === 'light' ? 'Light mode is on' : 'Dark mode is on';
+}
+syncSwitch();
+
+themeSwitch.addEventListener('change', () => {
+  setTheme(themeSwitch.checked ? 'light' : 'dark');
+  syncSwitch();
+});
+</script>
+</body>
+</html>

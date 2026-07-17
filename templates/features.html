@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerOS — AI-Powered Career Guidance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+</head>
+
+<body>
+<canvas id="hero-canvas"></canvas>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+<a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+  <ul class="nav-links">
+     <li><a href="{{ url_for('home') }}" class="active">Home</a></li>
+    <li><a href="{{ url_for('about') }}">About</a></li>
+<li><a href="{{ url_for('features') }}">Features</a></li>
+<li><a href="{{ url_for('stories') }}">Stories</a></li>
+<li><a href="{{ url_for('pricing') }}">Pricing</a></li>
+<li><a href="{{ url_for('faq') }}">FAQ</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <span class="icon-light">☀️</span>
+      <span class="icon-dark">🌙</span>
+    </button>
+    <a href="{{ url_for('login') }}" class="btn-nav">Login</a>
+<a href="{{ url_for('signup') }}" class="btn-nav">Sign Up</a>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <ul>
+    <li><a href="{{ url_for('home') }}" onclick="closeMobile()">Home</a></li>
+    <li><a href="{{ url_for('features') }}" onclick="closeMobile()">Features</a></li>
+    <li><a href="{{ url_for('stories') }}" onclick="closeMobile()">Stories</a></li>
+    <li><a href="{{ url_for('pricing') }}" onclick="closeMobile()">Pricing</a></li>
+    <li><a href="{{ url_for('faq') }}" onclick="closeMobile()">FAQ</a></li>
+    <li><a href="{{ url_for('home') }}#chat" class="btn-nav" onclick="closeMobile()">Get Started Free</a></li>
+  </ul>
+</div>
+
+<div class="page-hero fade-in">
+  <div>
+    <p class="section-label" style="text-align:center">Platform</p>
+    <h1>What CareerOS Offers</h1>
+    <p>Every tool a learner needs, working together instead of scattered across ten different tabs.</p>
+  </div>
+</div>
+
+<!-- FEATURES GRID -->
+<section id="features">
+  <div class="section-inner">
+    <div class="coverflow">
+      <button class="nav-btn left" id="prev">❮</button>
+      <div class="coverflow-container">
+        <div class="coverflow-track" id="coverflowTrack">
+          <div class="cover-card">
+            <div class="feat-icon">🧠</div>
+            <h3>AI Life Coach</h3>
+            <p>Ask anything career-related and receive personalized AI guidance 24/7.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">📊</div>
+            <h3>Skill Gap Analyzer</h3>
+            <p>Know exactly what skills you need to get your dream role.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">🎮</div>
+            <h3>Gamified Learning</h3>
+            <p>Earn XP, unlock badges and level up while learning.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">🎤</div>
+            <h3>Voice AI</h3>
+            <p>Talk naturally with your AI mentor anytime.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">📖</div>
+            <h3>Career Stories</h3>
+            <p>Explore journeys of successful professionals.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">🛣️</div>
+            <h3>AI Customised Career Roadmaps</h3>
+            <p>Your personalized week-by-week learning roadmap.Step-by-step plans generated for your target role.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">📚</div>
+            <h3>Personalized Learning Hub</h3>
+            <p>Curated resources matched to your goals and skill level.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">🛣️</div>
+            <h3></h3>
+            <p>Explore journeys of successful professionals.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">📄</div>
+            <h3>Resume Builder</h3>
+            <p>Professional templates built and refined in minutes.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">📊</div>
+            <h3>Resume Analyzer</h3>
+            <p>Instant feedback to strengthen every section of your resume.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">💼</div>
+            <h3>Job Recommendations</h3>
+            <p>Opportunities matched to your profile and progress.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">🎤</div>
+            <h3>Interview Preparation</h3>
+            <p>Practice and feedback to walk in ready and confident.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">🏆</div>
+            <h3>Certificate Tracking</h3>
+            <p>Keep every achievement organized in one place.</p>
+          </div>
+          <div class="cover-card">
+            <div class="feat-icon">🌐</div>
+            <h3>Networking Opportunities</h3>
+            <p>Connect with peers, mentors, and professionals in your field.</p>
+          </div>
+        </div>
+      </div>
+      <button class="nav-btn right" id="next">❯</button>
+    </div>
+  </div>
+</section>
+
+
+<section style="text-align:center;padding-top:0">
+  <a href="javascript:void(0)" class="btn-primary" onclick="document.getElementById('bot-btn').click()">Try the AI Coach Free →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+        <p>AI-powered career guidance for India's next generation of professionals.</p>
+        <div class="social-links">
+          <a href="#" aria-label="LinkedIn">in</a>
+          <a href="#" aria-label="Twitter">𝕏</a>
+          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="{{ url_for('features') }}">Features</a></li>
+          <li><a href="{{ url_for('pricing') }}">Pricing</a></li>
+          <li><a href="{{ url_for('home') }}#roadmap">Roadmaps</a></li>
+          <li><a href="{{ url_for('home') }}#chat">AI Chat</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Weekly career tips</h4>
+        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:0.5rem">Get actionable advice every Monday, free.</p>
+        <div class="newsletter-form">
+          <input type="email" class="newsletter-input" placeholder="your@email.com">
+          <button class="btn-subscribe">→</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 CareerOS. Made with ❤️ in India 🇮🇳</p>
+      <p style="color:var(--muted);font-size:0.75rem">Privacy Policy · Terms of Service</p>
+    </div>
+  </div>
+</footer>
+
+<!-- FLOATING ROBOT ASSISTANT -->
+<div id="bot-launcher">
+  <div id="bot-intro-bubble" class="hidden">👋 Hi! I'm <strong>Cara</strong>, your CareerOS guide.<br>Ask me anything about the site!</div>
+  <button id="bot-btn" aria-label="Open CareerOS assistant">
+    <div id="bot-notif">1</div>
+    <svg class="bot-face" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="9" width="26" height="20" rx="5" fill="white" fill-opacity="0.95"/>
+      <rect x="17" y="3" width="2" height="6" rx="1" fill="white" fill-opacity="0.9"/>
+      <circle cx="18" cy="3" r="2.5" fill="white"/>
+      <rect x="9" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+      <rect x="21" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+      <rect x="10" y="15" width="2" height="2" rx="0.5" fill="white" fill-opacity="0.7"/>
+      <rect x="22" y="15" width="2" height="2" rx="0.5" fill="white" fill-opacity="0.7"/>
+      <path d="M11 23 Q18 28 25 23" stroke="#00D4AA" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <rect x="2" y="15" width="3" height="6" rx="1.5" fill="white" fill-opacity="0.7"/>
+      <rect x="31" y="15" width="3" height="6" rx="1.5" fill="white" fill-opacity="0.7"/>
+    </svg>
+  </button>
+</div>
+
+<div id="bot-panel">
+  <div class="bot-panel-header">
+    <div class="bot-header-avatar">
+      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="5" y="9" width="26" height="20" rx="5" fill="white" fill-opacity="0.95"/>
+        <rect x="9" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+        <rect x="21" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+        <path d="M11 23 Q18 28 25 23" stroke="#00D4AA" stroke-width="2" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="bot-header-info">
+      <h4>Cara — CareerOS Guide</h4>
+      <span>Online &amp; ready to help</span>
+    </div>
+    <button class="bot-close-btn" id="bot-close" aria-label="Close">✕</button>
+  </div>
+  <div id="bot-messages"></div>
+  <div id="bot-quick-replies">
+    <button class="bot-qr" onclick="botQuickReply('What can CareerOS do?')">What can CareerOS do?</button>
+    <button class="bot-qr" onclick="botQuickReply('How does pricing work?')">Pricing?</button>
+    <button class="bot-qr" onclick="botQuickReply('How do I get started?')">Get started</button>
+    <button class="bot-qr" onclick="botQuickReply('Tell me about the AI coach')">AI Coach</button>
+  </div>
+  <div class="bot-input-row">
+    <input type="text" id="bot-input" placeholder="Ask me anything…" autocomplete="off"/>
+    <button id="bot-send">➤</button>
+  </div>
+</div>
+
+<script>
+// ── FEATURES COVERFLOW ──
+(function(){
+  const cards=document.querySelectorAll(".cover-card");
+  let current=0;
+  function updateCarousel(){
+    cards.forEach(card=>{card.className="cover-card hide"});
+    let left=(current-1+cards.length)%cards.length;
+    let right=(current+1)%cards.length;
+    cards[current].className="cover-card active";
+    cards[left].className="cover-card left";
+    cards[right].className="cover-card right";
+  }
+  document.getElementById("next").onclick=()=>{current=(current+1)%cards.length;updateCarousel()};
+  document.getElementById("prev").onclick=()=>{current=(current-1+cards.length)%cards.length;updateCarousel()};
+  updateCarousel();
+  setInterval(()=>{current=(current+1)%cards.length;updateCarousel()},3500);
+})();
+</script>
+</body>
+</html>

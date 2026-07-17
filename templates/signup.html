@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerOS — Sign Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+</head>
+
+<body>
+<canvas id="hero-canvas"></canvas>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+<a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('features') }}">Features</a></li>
+    <li><a href="{{ url_for('stories') }}">Stories</a></li>
+    <li><a href="{{ url_for('pricing') }}">Pricing</a></li>
+    <li><a href="{{ url_for('faq') }}">FAQ</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <span class="icon-light">☀️</span>
+      <span class="icon-dark">🌙</span>
+    </button>
+    <a href="{{ url_for('login') }}" class="btn-nav">Login</a>
+    <a href="{{ url_for('signup') }}" class="btn-nav active">Sign Up</a>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <ul>
+    <li><a href="{{ url_for('home') }}" onclick="closeMobile()">Home</a></li>
+    <li><a href="{{ url_for('features') }}" onclick="closeMobile()">Features</a></li>
+    <li><a href="{{ url_for('stories') }}" onclick="closeMobile()">Stories</a></li>
+    <li><a href="{{ url_for('pricing') }}" onclick="closeMobile()">Pricing</a></li>
+    <li><a href="{{ url_for('faq') }}" onclick="closeMobile()">FAQ</a></li>
+  </ul>
+</div>
+
+<!-- SIGNUP -->
+<section style="max-width:440px;margin:9rem auto 4rem;padding:0 1rem">
+  <div class="fade-in" style="text-align:center;margin-bottom:2rem">
+    <p class="section-label">Get Started</p>
+    <h2 class="section-title">Create your account</h2>
+  </div>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div style="background:rgba(248,113,113,0.1);border:1px solid var(--coral);color:var(--coral);padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem">
+        {{ messages[0] }}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="{{ url_for('signup') }}" class="fade-in"
+        style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:2rem">
+
+    <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem">Full Name</label>
+    <input type="text" name="name" required placeholder="Your name"
+           style="width:100%;padding:0.75rem 1rem;margin-bottom:1.2rem;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:inherit;font-family:inherit">
+
+    <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem">Email</label>
+    <input type="email" name="email" required placeholder="you@example.com"
+           style="width:100%;padding:0.75rem 1rem;margin-bottom:1.2rem;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:inherit;font-family:inherit">
+
+    <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem">Password</label>
+    <input type="password" name="password" required minlength="6" placeholder="At least 6 characters"
+           style="width:100%;padding:0.75rem 1rem;margin-bottom:1.5rem;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:inherit;font-family:inherit">
+
+    <button type="submit" class="btn-primary" style="width:100%;justify-content:center">Create Account →</button>
+
+    <p style="text-align:center;margin-top:1.2rem;font-size:0.85rem;color:var(--muted)">
+      Already have an account? <a href="{{ url_for('login') }}" style="color:var(--purple)">Log in</a>
+    </p>
+  </form>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+        <p>AI-powered career guidance for India's next generation of professionals.</p>
+        <div class="social-links">
+          <a href="#" aria-label="LinkedIn">in</a>
+          <a href="#" aria-label="Twitter">𝕏</a>
+          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+<li><a href="{{ url_for('features') }}">Features</a></li>
+<li><a href="{{ url_for('pricing') }}">Pricing</a></li>
+<li><a href="{{ url_for('home') }}#roadmap">Roadmaps</a></li>
+<li><a href="{{ url_for('home') }}#chat">AI Chat</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Weekly career tips</h4>
+        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:0.5rem">Get actionable advice every Monday, free.</p>
+        <div class="newsletter-form">
+          <input type="email" class="newsletter-input" placeholder="your@email.com">
+          <button class="btn-subscribe">→</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 CareerOS. Made with ❤️ in India 🇮🇳</p>
+      <p style="color:var(--muted);font-size:0.75rem">Privacy Policy · Terms of Service</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

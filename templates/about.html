@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About CareerOS | AI-Powered Career Operating System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+<style>
+  /* ── ABOUT PAGE — scoped styles, all colors pull from styles.css variables so dark/light mode Just Works ── */
+  .about-hero{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:9rem 2rem 3rem;position:relative}
+  .about-hero h1{font-size:clamp(2.6rem,6vw,4.6rem);font-weight:800;letter-spacing:-1px;max-width:900px;
+    background:linear-gradient(120deg,var(--text) 25%,var(--purple) 65%,var(--teal) 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .about-hero p{margin-top:1.4rem;font-size:clamp(1.05rem,2vw,1.3rem);color:var(--muted);max-width:620px;font-weight:300;line-height:1.7}
+
+  .glass-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius,16px);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease}
+  .glass-card:hover{transform:translateY(-5px);border-color:rgba(139,92,246,0.4);box-shadow:0 0 40px rgba(139,92,246,0.15)}
+
+  /* Story */
+  .story-wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}
+  .story-card{padding:2.7rem}
+  .story-card p{font-size:1.02rem;line-height:1.85;color:var(--muted);font-weight:300}
+  .story-visual{position:relative;height:300px;border-radius:20px;background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(45,212,191,0.1));border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .story-visual::before{content:'';position:absolute;width:180px;height:180px;border-radius:50%;border:1px dashed rgba(139,92,246,0.4);animation:spin 24s linear infinite}
+  .story-visual::after{content:'';position:absolute;width:250px;height:250px;border-radius:50%;border:1px dashed rgba(45,212,191,0.35);animation:spin 34s linear infinite reverse}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .story-icon{font-size:3rem;z-index:2}
+  @media(max-width:840px){.story-wrap{grid-template-columns:1fr}}
+
+  /* Mission / Vision */
+  .mv-grid{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:1.6rem}
+  .mv-card{padding:2.6rem 2.2rem}
+  .mv-card .icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1.3rem}
+  .mv-card.mission .icon{background:linear-gradient(135deg,var(--purple),#6d28d9)}
+  .mv-card.vision .icon{background:linear-gradient(135deg,var(--teal),#0d9488)}
+  .mv-card h3{font-size:1.3rem;margin-bottom:0.7rem;font-weight:700}
+  .mv-card p{font-size:0.96rem;line-height:1.75;color:var(--muted);font-weight:300}
+  @media(max-width:760px){.mv-grid{grid-template-columns:1fr}}
+
+  
+
+  /* Why choose */
+  .why-wrap{max-width:1100px;margin:0 auto;display:grid;gap:0.9rem}
+  .why-row{display:flex;align-items:center;gap:1.3rem;padding:1.5rem 1.8rem}
+  .why-num{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;min-width:48px;
+    background:linear-gradient(120deg,var(--purple),var(--teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .why-row p{font-size:0.98rem;color:var(--text)}
+
+ 
+
+  /* Meet Cara */
+  .cara-wrap{max-width:1000px;margin:0 auto;padding:3rem;display:flex;align-items:center;gap:3rem}
+  .cara-avatar{min-width:130px;width:130px;height:130px;border-radius:50%;background:conic-gradient(from 180deg,var(--purple),var(--teal),var(--purple));display:flex;align-items:center;justify-content:center;position:relative;animation:pulse-glow 4s ease-in-out infinite}
+  .cara-avatar::before{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--surface)}
+  .cara-avatar span{z-index:2;font-size:2.3rem}
+  @keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(139,92,246,0.3)}50%{box-shadow:0 0 0 16px rgba(139,92,246,0)}}
+  .cara-text h3{font-size:1.5rem;font-weight:700;margin-bottom:0.8rem}
+  .cara-text p{font-size:1rem;line-height:1.75;color:var(--muted);font-weight:300}
+  .cara-tags{display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:1.1rem}
+  .cara-tag{font-size:0.75rem;padding:0.35rem 0.85rem;border-radius:999px;border:1px solid var(--border);color:var(--teal);background:rgba(45,212,191,0.06)}
+  @media(max-width:760px){.cara-wrap{flex-direction:column;text-align:center;padding:2.4rem 1.6rem}}
+
+  .about-eyebrow{display:inline-block;font-size:0.75rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--teal);margin-bottom:1rem;
+    padding:0.35rem 0.85rem;border:1px solid rgba(45,212,191,0.3);border-radius:999px;background:rgba(45,212,191,0.06)}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('about') }}" class="active">About</a></li>
+    <li><a href="{{ url_for('features') }}">Features</a></li>
+    <li><a href="{{ url_for('stories') }}">Stories</a></li>
+    <li><a href="{{ url_for('pricing') }}">Pricing</a></li>
+    <li><a href="{{ url_for('faq') }}">FAQ</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <span class="icon-light">☀️</span>
+      <span class="icon-dark">🌙</span>
+    </button>
+    <a href="{{ url_for('login') }}" class="btn-nav">Login</a>
+    <a href="{{ url_for('signup') }}" class="btn-nav">Sign Up</a>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <ul>
+    <li><a href="{{ url_for('home') }}" onclick="closeMobile()">Home</a></li>
+    <li><a href="{{ url_for('features') }}" onclick="closeMobile()">Features</a></li>
+    <li><a href="{{ url_for('stories') }}" onclick="closeMobile()">Stories</a></li>
+    <li><a href="{{ url_for('pricing') }}" onclick="closeMobile()">Pricing</a></li>
+    <li><a href="{{ url_for('faq') }}" onclick="closeMobile()">FAQ</a></li>
+    <li><a href="{{ url_for('home') }}#chat" class="btn-nav" onclick="closeMobile()">Get Started Free</a></li>
+  </ul>
+</div>
+
+<!-- HERO -->
+<section class="about-hero">
+  <span class="about-eyebrow fade-in">About Us</span>
+  <h1 class="fade-in">About CareerOS</h1>
+  <p class="fade-in">Empowering every learner with AI-driven career guidance, personalized learning, and lifelong growth.</p>
+</section>
+
+<!-- OUR STORY -->
+<section id="story">
+  <div class="story-wrap">
+    <div class="glass-card story-card fade-in">
+      <span class="about-eyebrow">Our Story</span>
+      <p>
+        CareerOS was created to solve one of the biggest challenges faced by students and professionals: managing learning, career planning, resume building, job searching, and skill development across multiple disconnected platforms.
+        <br><br>
+        Our goal is to bring everything together into one intelligent ecosystem powered by Artificial Intelligence — a single home for every stage of a career journey.
+      </p>
+    </div>
+    <div class="story-visual fade-in">
+      <div class="story-icon">🚀</div>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION & VISION -->
+<section id="mission">
+  <div class="section-inner" style="max-width:1000px">
+    <div class="fade-in" style="text-align:center;margin-bottom:2.5rem">
+      <p class="section-label">Purpose</p>
+      <h2 class="section-title">Mission &amp; Vision</h2>
+    </div>
+    <div class="mv-grid">
+      <div class="glass-card mv-card mission fade-in">
+        <div class="icon">🎯</div>
+        <h3>Our Mission</h3>
+        <p>To empower learners and professionals with personalized AI guidance that simplifies career development, bridges skill gaps, and provides equal opportunities for success across every field.</p>
+      </div>
+      <div class="glass-card mv-card vision fade-in">
+        <div class="icon">🔭</div>
+        <h3>Our Vision</h3>
+        <p>To become the world's most trusted AI-powered Career Operating System, connecting education, skills, opportunities, and lifelong learning on a single platform.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- WHY CHOOSE -->
+<section id="why">
+  <div class="section-inner" style="max-width:1100px">
+    <div class="fade-in" style="text-align:center;margin-bottom:2.5rem">
+      <p class="section-label">Difference</p>
+      <h2 class="section-title">Why Choose CareerOS?</h2>
+    </div>
+    <div class="why-wrap">
+      <div class="glass-card why-row fade-in"><span class="why-num">01</span><p>One platform instead of many — no more switching between disconnected tools.</p></div>
+      <div class="glass-card why-row fade-in"><span class="why-num">02</span><p>AI-powered personalized guidance tailored to your goals, not generic advice.</p></div>
+      <div class="glass-card why-row fade-in"><span class="why-num">03</span><p>Supports 50+ career domains across tech, business, design, and more.</p></div>
+      <div class="glass-card why-row fade-in"><span class="why-num">04</span><p>Tracks your career progress from first login to job offer.</p></div>
+      <div class="glass-card why-row fade-in"><span class="why-num">05</span><p>Learning to job placement in one connected ecosystem.</p></div>
+      <div class="glass-card why-row fade-in"><span class="why-num">06</span><p>Designed for students, freshers, and working professionals alike.</p></div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- MEET CARA -->
+<section id="meet-cara">
+  <div class="glass-card cara-wrap fade-in">
+    <div class="cara-avatar"><span>🤖</span></div>
+    <div class="cara-text">
+      <span class="about-eyebrow">Your AI Companion</span>
+      <h3>Meet Cara</h3>
+      <p>Cara is CareerOS's intelligent AI companion, available 24/7 to answer questions, recommend learning resources, analyze resumes, generate roadmaps, and guide users throughout their career journey.</p>
+      <div class="cara-tags">
+        <span class="cara-tag">24/7 Support</span>
+        <span class="cara-tag">Resume Analysis</span>
+        <span class="cara-tag">Roadmap Generation</span>
+        <span class="cara-tag">Career Guidance</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="text-align:center">
+  <div class="fade-in">
+    <p class="section-label">Ready to Shape Your Future?</p>
+    <h2 class="section-title">Join CareerOS today</h2>
+    <p class="section-sub" style="margin:0 auto 2rem">Experience AI-powered career guidance like never before.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <a href="{{ url_for('signup') }}" class="btn-primary">Get Started</a>
+      <a href="#offer" class="btn-ghost">Explore Features</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+        <p>AI-powered career guidance for India's next generation of professionals.</p>
+        <div class="social-links">
+          <a href="#" aria-label="LinkedIn">in</a>
+          <a href="#" aria-label="Twitter">𝕏</a>
+          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="{{ url_for('features') }}">Features</a></li>
+          <li><a href="{{ url_for('pricing') }}">Pricing</a></li>
+          <li><a href="{{ url_for('home') }}#roadmap">Roadmaps</a></li>
+          <li><a href="{{ url_for('home') }}#chat">AI Chat</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="{{ url_for('about') }}">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Weekly career tips</h4>
+        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:0.5rem">Get actionable advice every Monday, free.</p>
+        <div class="newsletter-form">
+          <input type="email" class="newsletter-input" placeholder="your@email.com">
+          <button class="btn-subscribe">→</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 CareerOS. Made with ❤️ in India 🇮🇳</p>
+      <p style="color:var(--muted);font-size:0.75rem">Privacy Policy · Terms of Service</p>
+    </div>
+  </div>
+</footer>
+
+<!-- FLOATING ROBOT ASSISTANT -->
+<div id="bot-launcher">
+  <div id="bot-intro-bubble" class="hidden">👋 Hi! I'm <strong>Cara</strong>, your CareerOS guide.<br>Ask me anything about the site!</div>
+  <button id="bot-btn" aria-label="Open CareerOS assistant">
+    <div id="bot-notif">1</div>
+    <svg class="bot-face" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="9" width="26" height="20" rx="5" fill="white" fill-opacity="0.95"/>
+      <rect x="17" y="3" width="2" height="6" rx="1" fill="white" fill-opacity="0.9"/>
+      <circle cx="18" cy="3" r="2.5" fill="white"/>
+      <rect x="9" y="14" width="6" height="5" rx="2" fill="#8b5cf6"/>
+      <rect x="21" y="14" width="6" height="5" rx="2" fill="#8b5cf6"/>
+      <rect x="10" y="15" width="2" height="2" rx="0.5" fill="white" fill-opacity="0.7"/>
+      <rect x="22" y="15" width="2" height="2" rx="0.5" fill="white" fill-opacity="0.7"/>
+      <path d="M11 23 Q18 28 25 23" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <rect x="2" y="15" width="3" height="6" rx="1.5" fill="white" fill-opacity="0.7"/>
+      <rect x="31" y="15" width="3" height="6" rx="1.5" fill="white" fill-opacity="0.7"/>
+    </svg>
+  </button>
+</div>
+
+<div id="bot-panel">
+  <div class="bot-panel-header">
+    <div class="bot-header-avatar">
+      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="5" y="9" width="26" height="20" rx="5" fill="white" fill-opacity="0.95"/>
+        <rect x="9" y="14" width="6" height="5" rx="2" fill="#8b5cf6"/>
+        <rect x="21" y="14" width="6" height="5" rx="2" fill="#8b5cf6"/>
+        <path d="M11 23 Q18 28 25 23" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="bot-header-info">
+      <h4>Cara — CareerOS Guide</h4>
+      <span>Online &amp; ready to help</span>
+    </div>
+    <button class="bot-close-btn" id="bot-close" aria-label="Close">✕</button>
+  </div>
+  <div id="bot-messages"></div>
+  <div id="bot-quick-replies">
+    <button class="bot-qr" onclick="botQuickReply('What can CareerOS do?')">What can CareerOS do?</button>
+    <button class="bot-qr" onclick="botQuickReply('How does pricing work?')">Pricing?</button>
+    <button class="bot-qr" onclick="botQuickReply('How do I get started?')">Get started</button>
+    <button class="bot-qr" onclick="botQuickReply('Tell me about the AI coach')">AI Coach</button>
+  </div>
+  <div class="bot-input-row">
+    <input type="text" id="bot-input" placeholder="Ask me anything…" autocomplete="off"/>
+    <button id="bot-send">➤</button>
+  </div>
+</div>
+
+</body>
+</html>

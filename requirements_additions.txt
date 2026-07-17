@@ -1,0 +1,52 @@
+# Add these to your requirements.txt (append, don't replace — keep whatever
+# you already had for flask, flask_sqlalchemy, flask_mail, pymysql, etc.)
+
+google-generativeai
+python-dotenv
+openai
+requests
+
+# ── SETUP STEPS ──
+#
+# 1. pip install google-generativeai python-dotenv openai --break-system-packages
+#    (drop the flag if you're not on a system-managed Python)
+#
+# 2. Get a free Gemini API key: https://aistudio.google.com/app/apikey
+#    Get an OpenRouter API key: https://openrouter.ai/keys
+#
+# 3. Create a file named `.env` in the same folder as app.py (never commit
+#    this to git — add it to .gitignore) containing ALL of the following.
+#    Nothing below has a safe default anymore, so the app will warn on
+#    startup if any are missing:
+#
+#    MYSQL_HOST=localhost
+#    MYSQL_USER=root
+#    MYSQL_PASSWORD=your-actual-mysql-password
+#    MYSQL_DB=application
+#    SECRET_KEY=generate-a-long-random-string-here
+#    MAIL_USERNAME=your-gmail-address@gmail.com
+#    MAIL_PASSWORD=your-gmail-app-password
+#    OPENROUTER_API_KEY=your-actual-openrouter-key
+#    GEMINI_API_KEY=your-actual-gemini-key
+#
+#    Optional but recommended — without it, roadmap/pathfinder resource
+#    links fall back to a YouTube search page instead of a specific video:
+#    YOUTUBE_API_KEY=your-actual-youtube-data-api-key
+#
+#    NOTE: this used to be called GOOGLE_API_KEY in this file, but app.py
+#    reads os.getenv("GEMINI_API_KEY") — they must match, so GEMINI_API_KEY
+#    is the correct name to use.
+#
+# 4. If the real MySQL password or Gmail app password were ever committed,
+#    hardcoded in a script, or pasted anywhere outside your own machine,
+#    rotate both credentials before deploying.
+#
+# 5. Create the new chat_messages table. Easiest: since you're not using
+#    Flask-Migrate, just add this once near the bottom of app.py (before
+#    app.run) and run the app once, then remove it:
+#
+#      with app.app_context():
+#          db.create_all()
+#
+#    This creates any missing tables (like chat_messages) without touching
+#    your existing users / otp_verification tables.

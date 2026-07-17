@@ -1,0 +1,79 @@
+<!--
+  ONE shared sidebar, included on every page (Dashboard, Profile, Roadmap,
+  Resume Builder, Resume Analyzer, Settings). Visual style matches the
+  original Profile page design. Edit this file only — do not duplicate
+  sidebar markup back into individual pages.
+-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  .app-sidebar{
+    position:fixed; top:0; left:0; width:250px; height:100vh;
+    background:rgba(15,23,42,.85); backdrop-filter:blur(15px);
+    padding:20px; display:flex; flex-direction:column;
+    border-right:1px solid rgba(255,255,255,.06);
+    z-index:100; overflow-y:auto; box-sizing:border-box;
+  }
+  [data-theme="light"] .app-sidebar{
+    background:rgba(255,255,255,.9); border-right-color:rgba(15,23,42,.08);
+  }
+  .app-sidebar .app-logo{
+    font-family:Arial,sans-serif; font-size:28px; font-weight:700;
+    margin-bottom:25px; color:#fff;
+  }
+  [data-theme="light"] .app-sidebar .app-logo{ color:#0f172a; }
+  .app-sidebar .app-logo span{ color:#8b5cf6; }
+  .app-sidebar a{
+    display:flex; align-items:center; gap:10px; color:#94a3b8; text-decoration:none;
+    padding:12px; border-radius:10px; margin:6px 0; font-family:Arial,sans-serif; font-size:14.5px;
+    transition:background .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1), color .25s ease;
+  }
+  [data-theme="light"] .app-sidebar a{ color:#5b6472; }
+  .app-sidebar a:hover, .app-sidebar a.active{
+    background:#8b5cf633; transform:translateX(6px); color:#fff;
+  }
+  [data-theme="light"] .app-sidebar a:hover, [data-theme="light"] .app-sidebar a.active{
+    color:#0f172a;
+  }
+  .app-sidebar a i{ transition:transform .25s ease; width:18px; text-align:center; flex-shrink:0; }
+  .app-sidebar a:hover i{ transform:scale(1.15); }
+  .app-sidebar-footer{ margin-top:auto; padding-top:20px; font-size:11px; color:#6b7280; }
+
+  @media (max-width:900px){
+    .app-sidebar{ position:relative; width:100%; height:auto; }
+  }
+</style>
+
+<nav class="app-sidebar">
+  <div class="app-logo">Career<span>OS</span></div>
+
+  <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">
+    <i class="ti ti-home"></i>Dashboard
+  </a>
+  <a href="{{ url_for('profile') }}" class="{{ 'active' if request.endpoint == 'profile' else '' }}">
+    <i class="ti ti-user"></i>Profile
+  </a>
+  <a href="{{ url_for('roadmap') }}" class="{{ 'active' if request.endpoint == 'roadmap' else '' }}">
+    <i class="ti ti-map"></i>Roadmap
+  </a>
+  <a href="{{ url_for('learning_hub') }}" class="{{ 'active' if request.endpoint == 'learning_hub' else '' }}">
+  <i class="ti ti-book"></i>Learning Hub
+</a>
+  <a href="{{ url_for('resume_builder') }}" class="{{ 'active' if request.endpoint == 'resume_builder' else '' }}">
+    <i class="ti ti-file-text"></i>Resume Builder
+  </a>
+  <a href="{{ url_for('resume_analyzer') }}" class="{{ 'active' if request.endpoint == 'resume_analyzer' else '' }}">
+    <i class="ti ti-search"></i>Resume Analyzer
+  </a>
+  <a href="{{ url_for('career_center') }}"
+   class="{{ 'active' if request.endpoint == 'career_center' else '' }}">
+    <i class="ti ti-briefcase"></i>Career Center
+  </a>
+  <a href="{{ url_for('coding_arena') }}" class="{{ 'active' if request.endpoint == 'coding_arena' else '' }}">
+  <i class="ti ti-code"></i>Coding Arena
+</a>
+  <a href="{{ url_for('settings') }}" class="{{ 'active' if request.endpoint == 'settings' else '' }}">
+    <i class="ti ti-settings"></i>Settings
+  </a>
+
+  <div class="app-sidebar-footer">© 2026 CareerOS</div>
+</nav>

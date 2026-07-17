@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — CareerOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+  <ul class="nav-links">
+     <li><a href="{{ url_for('home') }}" class="active">Home</a></li>
+    <li><a href="{{ url_for('about') }}">About</a></li>
+<li><a href="{{ url_for('features') }}">Features</a></li>
+<li><a href="{{ url_for('stories') }}">Stories</a></li>
+<li><a href="{{ url_for('pricing') }}">Pricing</a></li>
+<li><a href="{{ url_for('faq') }}">FAQ</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <span class="icon-light">☀️</span>
+      <span class="icon-dark">🌙</span>
+    </button>
+    <a href="{{ url_for('login') }}" class="btn-nav">Login</a>
+    <a href="{{ url_for('signup') }}" class="btn-nav">Sign Up</a>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <ul>
+    <li><a href="{{ url_for('home') }}" onclick="closeMobile()">Home</a></li>
+    <li><a href="{{ url_for('features') }}" onclick="closeMobile()">Features</a></li>
+    <li><a href="{{ url_for('stories') }}" onclick="closeMobile()">Stories</a></li>
+    <li><a href="{{ url_for('pricing') }}" onclick="closeMobile()">Pricing</a></li>
+    <li><a href="{{ url_for('faq') }}" onclick="closeMobile()">FAQ</a></li>
+    <li><a href="{{ url_for('home') }}#chat" class="btn-nav" onclick="closeMobile()">Get Started Free</a></li>
+  </ul>
+</div>
+
+<!-- PRICING -->
+<section id="pricing" style="padding-top:8rem">
+  <div class="section-inner">
+    <div class="fade-in" style="text-align:center">
+      <p class="section-label">Pricing</p>
+      <h2 class="section-title">Simple, honest pricing</h2>
+      <p class="section-sub" style="margin:0 auto 2rem">Start free. Upgrade when you're ready. No credit card needed.</p>
+      <div class="pricing-toggle-wrap">
+        <span class="toggle-label active" id="lbl-monthly">Monthly</span>
+        <button class="toggle-track" id="billingToggle" aria-label="Toggle billing period"><div class="toggle-thumb"></div></button>
+        <span class="toggle-label" id="lbl-yearly">Yearly <span class="save-badge">Save 30%</span></span>
+      </div>
+    </div>
+    <div class="pricing-grid fade-in">
+      <div class="price-card">
+        <div class="price-name">Free</div>
+        <div class="price-amount">₹0</div>
+        <div class="price-period">forever</div>
+        <ul class="price-features">
+          <li>10 AI chats per day</li>
+          <li>1 career roadmap</li>
+          <li>15-day full access trial</li>
+          <li class="no">Voice AI</li>
+          <li class="no">Unlimited coaching</li>
+        </ul>
+        <a href="{{ url_for('home') }}#chat"><button class="btn-price">Get Started Free</button></a>
+      </div>
+      <div class="price-card featured">
+        <div class="popular-badge">Most Popular</div>
+        <div class="price-name">Pro</div>
+        <div class="price-amount" id="price-pro">₹499 <span>/mo</span></div>
+        <div class="price-period" id="period-pro">billed monthly</div>
+        <ul class="price-features">
+          <li>Unlimited AI coaching</li>
+          <li>Voice AI (speak &amp; listen)</li>
+          <li>All career roadmaps</li>
+          <li>Priority support</li>
+          <li>Interview mock sessions</li>
+        </ul>
+        <button class="btn-price primary">Upgrade to Pro</button>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Team</div>
+        <div class="price-amount" id="price-team">₹1,999 <span>/mo</span></div>
+        <div class="price-period" id="period-team">billed monthly · up to 10 users</div>
+        <ul class="price-features">
+          <li>Everything in Pro</li>
+          <li>10 team seats</li>
+          <li>Analytics dashboard</li>
+          <li>Custom career paths</li>
+          <li>Dedicated account manager</li>
+        </ul>
+        <button class="btn-price">Contact Us</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="text-align:center;padding-top:0">
+  <a href="{{ url_for('signup') }}" class="btn-primary">Start Your Own Story →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+        <p>AI-powered career guidance for India's next generation of professionals.</p>
+        <div class="social-links">
+          <a href="#" aria-label="LinkedIn">in</a>
+          <a href="#" aria-label="Twitter">𝕏</a>
+          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="{{ url_for('features') }}">Features</a></li>
+          <li><a href="{{ url_for('pricing') }}">Pricing</a></li>
+          <li><a href="{{ url_for('home') }}#roadmap">Roadmaps</a></li>
+          <li><a href="{{ url_for('home') }}#chat">AI Chat</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Weekly career tips</h4>
+        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:0.5rem">Get actionable advice every Monday, free.</p>
+        <div class="newsletter-form">
+          <input type="email" class="newsletter-input" placeholder="your@email.com">
+          <button class="btn-subscribe">→</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 CareerOS. Made with ❤️ in India 🇮🇳</p>
+      <p style="color:var(--muted);font-size:0.75rem">Privacy Policy · Terms of Service</p>
+    </div>
+  </div>
+</footer>
+
+<!-- FLOATING ROBOT ASSISTANT -->
+<div id="bot-launcher">
+  <div id="bot-intro-bubble" class="hidden">👋 Hi! I'm <strong>Cara</strong>, your CareerOS guide.<br>Ask me anything about the site!</div>
+  <button id="bot-btn" aria-label="Open CareerOS assistant">
+    <div id="bot-notif">1</div>
+    <svg class="bot-face" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="9" width="26" height="20" rx="5" fill="white" fill-opacity="0.95"/>
+      <rect x="17" y="3" width="2" height="6" rx="1" fill="white" fill-opacity="0.9"/>
+      <circle cx="18" cy="3" r="2.5" fill="white"/>
+      <rect x="9" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+      <rect x="21" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+      <rect x="10" y="15" width="2" height="2" rx="0.5" fill="white" fill-opacity="0.7"/>
+      <rect x="22" y="15" width="2" height="2" rx="0.5" fill="white" fill-opacity="0.7"/>
+      <path d="M11 23 Q18 28 25 23" stroke="#00D4AA" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <rect x="2" y="15" width="3" height="6" rx="1.5" fill="white" fill-opacity="0.7"/>
+      <rect x="31" y="15" width="3" height="6" rx="1.5" fill="white" fill-opacity="0.7"/>
+    </svg>
+  </button>
+</div>
+
+<div id="bot-panel">
+  <div class="bot-panel-header">
+    <div class="bot-header-avatar">
+      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="5" y="9" width="26" height="20" rx="5" fill="white" fill-opacity="0.95"/>
+        <rect x="9" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+        <rect x="21" y="14" width="6" height="5" rx="2" fill="#7B61FF"/>
+        <path d="M11 23 Q18 28 25 23" stroke="#00D4AA" stroke-width="2" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="bot-header-info">
+      <h4>Cara — CareerOS Guide</h4>
+      <span>Online &amp; ready to help</span>
+    </div>
+    <button class="bot-close-btn" id="bot-close" aria-label="Close">✕</button>
+  </div>
+  <div id="bot-messages"></div>
+  <div id="bot-quick-replies">
+    <button class="bot-qr" onclick="botQuickReply('What can CareerOS do?')">What can CareerOS do?</button>
+    <button class="bot-qr" onclick="botQuickReply('How does pricing work?')">Pricing?</button>
+    <button class="bot-qr" onclick="botQuickReply('How do I get started?')">Get started</button>
+    <button class="bot-qr" onclick="botQuickReply('Tell me about the AI coach')">AI Coach</button>
+  </div>
+  <div class="bot-input-row">
+    <input type="text" id="bot-input" placeholder="Ask me anything…" autocomplete="off"/>
+    <button id="bot-send">➤</button>
+  </div>
+</div>
+
+<script>
+// ── PRICING TOGGLE ──
+document.addEventListener('DOMContentLoaded', function () {
+  let yearly = false;
+  const toggle = document.getElementById('billingToggle');
+  if (!toggle) return; // safety: don't crash if element isn't on this page
+
+  const lblMonthly = document.getElementById('lbl-monthly');
+  const lblYearly  = document.getElementById('lbl-yearly');
+  const pricePro   = document.getElementById('price-pro');
+  const periodPro  = document.getElementById('period-pro');
+  const priceTeam  = document.getElementById('price-team');
+  const periodTeam = document.getElementById('period-team');
+
+  toggle.addEventListener('click', () => {
+    yearly = !yearly;
+    toggle.classList.toggle('on', yearly);
+    if (lblMonthly) lblMonthly.classList.toggle('active', !yearly);
+    if (lblYearly)  lblYearly.classList.toggle('active', yearly);
+    if (pricePro)   pricePro.innerHTML = yearly ? '₹349 <span>/mo</span>' : '₹499 <span>/mo</span>';
+    if (periodPro)  periodPro.textContent = yearly ? 'billed ₹4,188/year (save ₹1,800)' : 'billed monthly';
+    if (priceTeam)  priceTeam.innerHTML = yearly ? '₹1,399 <span>/mo</span>' : '₹1,999 <span>/mo</span>';
+    if (periodTeam) periodTeam.textContent = yearly ? 'billed ₹16,788/year · up to 10 users' : 'billed monthly · up to 10 users';
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Roadmap — CareerOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="/static/theme.js"></script>
+<style>
+  :root{
+    --bg-0:#070a12; --sidebar:#0a0d18; --card:#121629; --card-2:#141a2e;
+    --border:rgba(255,255,255,.07); --border-soft:rgba(255,255,255,.04);
+    --purple:#6366F1; --purple-2:#818CF8; --blue:#06B6D4;
+    --text-hi:#f4f5f9; --text-mid:#b7bcd0; --text-low:#7d8299; --radius:16px;
+    --grad-a:rgba(6,182,212,.16); --grad-b:rgba(99,102,241,.10);
+    --green:#4ade80; --amber:#fbbf24; --tap:46px;
+  }
+  [data-theme="light"]{
+    --bg-0:#f3f4f9; --sidebar:#ffffff; --card:#ffffff; --card-2:#f1f2f8;
+    --border:rgba(15,23,42,.08); --border-soft:rgba(15,23,42,.05);
+    --text-hi:#0f172a; --text-mid:#4b5468; --text-low:#6b7280;
+    --purple:#4F46E5; --purple-2:#6366F1;
+    --grad-a:rgba(6,182,212,.08); --grad-b:rgba(99,102,241,.06);
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:
+      radial-gradient(circle at 85% 90%, var(--grad-a), transparent 45%),
+      radial-gradient(circle at 10% 0%, var(--grad-b), transparent 40%),
+      var(--bg-0);
+    color:var(--text-hi); min-height:100vh;
+    transition:background .3s, color .3s;
+  }
+  a{color:inherit; text-decoration:none;}
+  .main{margin-left:250px; min-width:0;}
+  .topbar{display:flex; justify-content:space-between; align-items:center; padding:22px 40px; border-bottom:1px solid var(--border-soft);}
+  .page-title{font-family:'Poppins',sans-serif; font-weight:700; font-size:1.25rem;}
+  .bell{width:var(--tap); height:var(--tap); border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--card); border:1px solid var(--border); transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;}
+  .bell:hover{box-shadow:0 6px 18px rgba(99,102,241,.25);}
+  .bell:active{transform:scale(.88);}
+  .bell svg{width:17px; height:17px; color:var(--text-mid);}
+  .content{padding:60px 40px;}
+  @keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes floatIcon{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes softPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.45)}50%{box-shadow:0 0 0 8px rgba(99,102,241,0)}}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+  }
+  .empty-card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:60px 40px; text-align:center; max-width:520px; margin:0 auto;
+    animation:riseIn .55s cubic-bezier(.16,1,.3,1) both;
+    transition:border-color .3s ease, transform .3s ease, box-shadow .3s ease;
+  }
+  .empty-card:hover{transform:translateY(-4px); border-color:var(--purple-2); box-shadow:0 20px 44px -20px rgba(0,0,0,.5);}
+  .empty-card .icon-wrap{
+    width:64px; height:64px; border-radius:50%; margin:0 auto 20px;
+    background:linear-gradient(135deg, rgba(99,102,241,.24), rgba(6,182,212,.14));
+    display:flex; align-items:center; justify-content:center;
+    animation:floatIcon 3.2s ease-in-out infinite;
+  }
+  .empty-card .icon-wrap svg{width:28px; height:28px; color:var(--purple-2);}
+  .empty-card h2{font-family:'Poppins',sans-serif; font-size:1.3rem; margin-bottom:10px; animation:riseIn .5s ease .1s both;}
+  .empty-card p{color:var(--text-mid); font-size:.92rem; line-height:1.6; margin-bottom:26px; animation:riseIn .5s ease .18s both;}
+
+  .btn-primary{
+    position:relative; overflow:hidden;
+    background:linear-gradient(135deg, var(--purple), var(--blue));
+    color:#fff; border:none; border-radius:11px; padding:13px 26px; min-height:var(--tap);
+    font-family:'Inter',sans-serif; font-weight:600; font-size:.92rem;
+    cursor:pointer; transition:transform .15s ease, opacity .15s ease, box-shadow .2s ease;
+  }
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 10px 24px -8px rgba(99,102,241,.5);}
+  .btn-primary:active{transform:translateY(0) scale(.96);}
+  .btn-primary:disabled{opacity:.6; cursor:not-allowed; transform:none;}
+  .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:scale(0);animation:rippleAnim .6s ease-out;pointer-events:none}
+  @keyframes rippleAnim{to{transform:scale(3);opacity:0}}
+
+  .roadmap-header{max-width:760px; margin:0 auto 34px;}
+  .roadmap-header h2{font-family:'Poppins',sans-serif; font-size:1.4rem; margin-bottom:6px;}
+  .roadmap-header p{color:var(--text-mid); font-size:.9rem;}
+
+  /* ---------- Milestone path (the signature element) ---------- */
+  .milestone-path{position:relative; max-width:760px; margin:0 auto; padding-left:76px;}
+  .milestone-path::before{
+    content:''; position:absolute; left:22px; top:4px; bottom:4px; width:4px;
+    background:linear-gradient(180deg, var(--purple), var(--blue) 55%, var(--green));
+    border-radius:4px; opacity:.4;
+  }
+  .milestone-item{position:relative; margin-bottom:22px; opacity:0; transition:opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);}
+  .milestone-item.from-left{transform:translate(-26px, 14px);}
+  .milestone-item.from-right{transform:translate(26px, 14px);}
+  .milestone-item.reveal{opacity:1; transform:translate(0,0);}
+  .milestone-item:last-child{margin-bottom:0;}
+
+  .milestone-node{
+    position:absolute; left:-76px; top:16px; width:48px; height:48px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Poppins',sans-serif; font-weight:800; font-size:.92rem; color:#0b0f1c;
+    border:4px solid var(--bg-0); z-index:2; box-shadow:0 6px 16px rgba(0,0,0,.35);
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .milestone-item:hover .milestone-node{transform:scale(1.14) rotate(-6deg);}
+  .milestone-node.new{background:linear-gradient(135deg,#6ee7a7,var(--green)); color:#083a1f;}
+  .milestone-node.revision{background:linear-gradient(135deg,#fde08a,var(--amber)); color:#4a2c02;}
+
+  .milestone-card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:22px 26px;
+    transition:border-color .25s ease, transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s ease;
+  }
+  .milestone-card:hover{border-color:var(--purple-2); transform:translateY(-4px); box-shadow:0 22px 44px -22px rgba(0,0,0,.55);}
+  .milestone-week{
+    display:inline-block; font-size:.72rem; font-weight:700; letter-spacing:.04em;
+    color:var(--purple-2); background:rgba(99,102,241,.14); border-radius:20px;
+    padding:4px 12px; margin-bottom:10px; margin-right:6px;
+  }
+  .milestone-badge{
+    display:inline-block; font-size:.72rem; font-weight:700; letter-spacing:.04em;
+    border-radius:20px; padding:4px 12px; margin-bottom:10px;
+  }
+  .milestone-badge.revision{ color:var(--amber); background:rgba(251,191,36,.14); }
+  .milestone-badge.new{ color:var(--green); background:rgba(74,222,128,.14); }
+  .milestone-card h3{font-family:'Poppins',sans-serif; font-size:1.05rem; margin-bottom:6px;}
+  .milestone-card p{color:var(--text-mid); font-size:.88rem; line-height:1.55; margin-bottom:12px;}
+  .milestone-footer{display:flex; justify-content:flex-end; align-items:center; font-size:.82rem; margin-top:12px;}
+  .milestone-footer a{color:var(--blue); font-weight:600; transition:opacity .15s;}
+  .milestone-footer a:hover{text-decoration:underline;}
+  .milestone-footer a:active{opacity:.7;}
+  .milestone-hours{color:var(--text-low);}
+
+  /* ---------- Rich video resource card ---------- */
+  .video-card{
+    border:1px solid var(--border); border-radius:12px; overflow:hidden;
+    background:var(--card-2); margin-top:4px; transition:border-color .2s ease;
+  }
+  .video-thumb-wrap{
+    position:relative; width:100%; aspect-ratio:16/9; background:#000;
+    cursor:pointer; overflow:hidden;
+  }
+  .video-thumb-wrap img{width:100%; height:100%; object-fit:cover; display:block; opacity:.85; transition:opacity .25s ease, transform .35s cubic-bezier(.16,1,.3,1);}
+  .video-thumb-wrap:hover img{opacity:1; transform:scale(1.05);}
+  .video-thumb-wrap iframe{width:100%; height:100%; border:0; display:block;}
+  .video-play-btn{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:52px; height:52px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(20,16,32,.75); color:#fff; font-size:18px;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .15s ease, background .15s ease;
+    animation:softPulse 2.6s ease-in-out infinite;
+  }
+  .video-thumb-wrap:hover .video-play-btn{transform:translate(-50%,-50%) scale(1.1); background:linear-gradient(135deg, var(--purple), var(--blue)); animation:none;}
+  .video-thumb-wrap:active .video-play-btn{transform:translate(-50%,-50%) scale(.94);}
+  .video-duration{
+    position:absolute; right:8px; bottom:8px; background:rgba(0,0,0,.8);
+    color:#fff; font-size:.72rem; font-weight:600; padding:2px 6px; border-radius:5px;
+  }
+  .video-meta{padding:10px 12px;}
+  .video-title{display:block; font-size:.86rem; font-weight:600; line-height:1.4; margin-bottom:3px;}
+  .video-sub{display:block; font-size:.76rem; color:var(--text-low);}
+
+  @media (max-width: 900px){ .app-sidebar{display:none;} .main{margin-left:0;} }
+  @media (max-width: 640px){
+    .topbar{padding:16px 18px;}
+    .content{padding:34px 16px;}
+    .roadmap-header{flex-direction:column;}
+    .roadmap-header h2{font-size:1.2rem;}
+    .milestone-path{padding-left:46px;}
+    .milestone-path::before{left:14px;}
+    .milestone-node{left:-46px; width:34px; height:34px; font-size:.76rem; border-width:3px;}
+    .milestone-card{padding:18px;}
+    .btn-primary{width:100%;}
+    #change-topic-btn{width:auto !important;}
+  }
+
+  /* ---------- Roadmap chat assistant ---------- */
+  .chat-overlay{
+    position:fixed; inset:0; background:rgba(3,4,10,.55);
+    display:none; align-items:center; justify-content:center; z-index:100;
+    backdrop-filter:blur(3px);
+  }
+  .chat-overlay.open{display:flex;}
+  .chat-window{
+    width:420px; max-width:92vw; height:560px; max-height:85vh;
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    display:flex; flex-direction:column; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.45);
+    animation:riseIn .3s cubic-bezier(.16,1,.3,1) both;
+  }
+  .chat-header{
+    padding:16px 18px; border-bottom:1px solid var(--border-soft);
+    display:flex; align-items:center; gap:10px;
+  }
+  .chat-avatar{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg, var(--purple), var(--blue));
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+  }
+  .chat-header-text strong{display:block; font-size:.88rem; font-family:'Poppins',sans-serif;}
+  .chat-header-text span{font-size:.76rem; color:var(--text-low);}
+  .chat-close{
+    margin-left:auto; background:none; border:none; color:var(--text-low);
+    font-size:18px; cursor:pointer; line-height:1; padding:8px;
+    width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    transition:background .2s, color .2s;
+  }
+  .chat-close:hover{color:var(--text-hi); background:var(--border-soft);}
+  .chat-close:active{transform:scale(.9);}
+  .chat-body{flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:12px;}
+  .msg{max-width:82%; padding:11px 14px; border-radius:14px; font-size:.87rem; line-height:1.5; animation:riseIn .3s cubic-bezier(.16,1,.3,1) both;}
+  .msg.bot{
+    background:var(--card-2); border:1px solid var(--border);
+    align-self:flex-start; border-bottom-left-radius:4px;
+  }
+  .msg.user{
+    background:linear-gradient(135deg, var(--purple), var(--blue)); color:#fff;
+    align-self:flex-end; border-bottom-right-radius:4px;
+  }
+  .typing{display:flex; gap:4px; align-self:flex-start; padding:12px 14px;}
+  .typing span{width:6px; height:6px; border-radius:50%; background:var(--text-low); animation:blink 1.2s infinite ease-in-out;}
+  .typing span:nth-child(2){animation-delay:.2s;}
+  .typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.25;} 40%{opacity:1;}}
+  .chat-input-row{display:flex; gap:8px; padding:14px; border-top:1px solid var(--border-soft);}
+  .chat-input-row input{
+    flex:1; background:var(--card-2); border:1px solid var(--border); border-radius:10px;
+    padding:11px 14px; color:var(--text-hi); font-size:.87rem; font-family:'Inter',sans-serif; outline:none;
+    min-height:var(--tap);
+  }
+  .chat-input-row input:focus{border-color:var(--purple-2);}
+  .chat-send{
+    background:linear-gradient(135deg, var(--purple), var(--blue)); border:none; color:#fff;
+    width:var(--tap); border-radius:10px; cursor:pointer; font-size:15px; flex-shrink:0;
+    transition:transform .15s;
+  }
+  .chat-send:active{transform:scale(.9);}
+  .chat-send:disabled{opacity:.5; cursor:not-allowed;}
+
+  @media (max-width: 640px){
+    .chat-overlay{align-items:flex-end; padding:0;}
+    .chat-window{width:100%; max-width:100%; height:78vh; max-height:88vh; border-radius:20px 20px 0 0; animation:slideUp .3s cubic-bezier(.16,1,.3,1) both;}
+  }
+  @keyframes slideUp{from{transform:translateY(30px);opacity:.6}to{transform:translateY(0);opacity:1}}
+
+  /* ---------- Study notes modal ---------- */
+  .notes-overlay{
+    position:fixed; inset:0; background:rgba(3,4,10,.55);
+    display:none; align-items:center; justify-content:center; z-index:110;
+    backdrop-filter:blur(3px); padding:20px;
+  }
+  .notes-overlay.open{display:flex;}
+  .notes-window{
+    width:560px; max-width:100%; max-height:85vh;
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    display:flex; flex-direction:column; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.45);
+    animation:riseIn .3s cubic-bezier(.16,1,.3,1) both;
+  }
+  .notes-header{
+    padding:18px 22px; border-bottom:1px solid var(--border-soft);
+    display:flex; align-items:center; gap:10px;
+  }
+  .notes-header strong{font-family:'Poppins',sans-serif; font-size:.98rem; display:block;}
+  .notes-header span{font-size:.78rem; color:var(--text-low);}
+  .notes-close{
+    margin-left:auto; background:none; border:none; color:var(--text-low);
+    font-size:18px; cursor:pointer; line-height:1; padding:8px;
+    width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    transition:background .2s, color .2s;
+  }
+  .notes-close:hover{color:var(--text-hi); background:var(--border-soft);}
+  .notes-body{flex:1; overflow-y:auto; padding:22px;}
+  .notes-loading{color:var(--text-mid); font-size:.88rem; text-align:center; padding:30px 0;}
+  .notes-error{color:#f87171; font-size:.86rem; text-align:center; padding:20px 0;}
+  .notes-section-title{
+    font-family:'Poppins',sans-serif; font-size:.82rem; font-weight:700; letter-spacing:.03em;
+    text-transform:uppercase; color:var(--purple-2); margin:0 0 10px;
+  }
+  .notes-block{margin-bottom:18px;}
+  .notes-heading{
+    font-family:'Poppins',sans-serif; font-size:.92rem; font-weight:700;
+    color:var(--text-hi); margin:0 0 8px;
+  }
+  .notes-list{
+    margin:0; padding-left:20px; color:var(--text-mid); font-size:.88rem; line-height:1.65;
+  }
+  .notes-list li{margin-bottom:6px;}
+  .notes-list li::marker{color:var(--purple-2);}
+  .qa-item{
+    border:1px solid var(--border); border-radius:12px; margin-bottom:8px; overflow:hidden;
+    background:var(--card-2);
+  }
+  .qa-question{
+    padding:13px 16px; cursor:pointer; font-size:.87rem; font-weight:600;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .qa-question .qa-caret{transition:transform .2s ease; color:var(--text-low); flex-shrink:0;}
+  .qa-item.open .qa-caret{transform:rotate(180deg);}
+  .qa-answer{
+    max-height:0; overflow:hidden; transition:max-height .25s ease, padding .25s ease;
+    padding:0 16px; font-size:.86rem; color:var(--text-mid); line-height:1.6;
+  }
+  .qa-item.open .qa-answer{max-height:400px; padding:0 16px 14px;}
+  .notes-regen{
+    display:block; margin:18px auto 0; background:none; border:1px solid var(--border);
+    color:var(--text-low); font-size:.78rem; padding:8px 14px; border-radius:8px; cursor:pointer;
+    transition:border-color .2s, color .2s;
+  }
+  .notes-regen:hover{border-color:var(--purple-2); color:var(--text-hi);}
+
+  @media (max-width: 640px){
+    .notes-overlay{align-items:flex-end; padding:0;}
+    .notes-window{width:100%; max-width:100%; max-height:88vh; border-radius:20px 20px 0 0; animation:slideUp .3s cubic-bezier(.16,1,.3,1) both;}
+  }
+</style>
+</head>
+<body>
+
+{% include "_sidebar.html" %}
+
+<main class="main">
+  <div class="topbar">
+    <div class="page-title">Roadmap</div>
+    <div class="bell">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+    </div>
+  </div>
+
+  <div class="content">
+    {% if not roadmap %}
+      <div class="empty-card">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3 4 5v16l5-2 6 2 5-2V3l-5 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg>
+        </div>
+        <h2>Your roadmap is on the way</h2>
+        <p>This is where {{ user.name or "your" }} personalized career roadmap will live — step-by-step guidance toward {{ user.target_role or "your target role" }}.</p>
+        <button id="generate-btn" class="btn-primary" onclick="openRoadmapChat()">Generate My Roadmap</button>
+      </div>
+    {% else %}
+      <div class="roadmap-header" style="display:flex; align-items:flex-start; justify-content:space-between; gap:20px;">
+        <div>
+          <h2>{{ roadmap.title }}</h2>
+          <p>{{ roadmap.total_weeks }}-Day plan toward {{ roadmap.target_role }}</p>
+        </div>
+        <button id="change-topic-btn" class="btn-primary" style="flex-shrink:0; white-space:nowrap;" onclick="confirmChangeTopic()">Change Topic</button>
+      </div>
+      <div class="milestone-path" id="milestonePath">
+        {% for m in milestones %}
+          <div class="milestone-item {{ 'from-left' if loop.index0 is even else 'from-right' }}">
+            <div class="milestone-node {{ 'revision' if m.milestone_type == 'revision' else 'new' }}">{{ m.week }}</div>
+            <div class="milestone-card">
+              <span class="milestone-week">Day {{ m.week }}</span>
+              <span class="milestone-badge {{ 'revision' if m.milestone_type == 'revision' else 'new' }}">
+                {{ 'Revision' if m.milestone_type == 'revision' else 'New' }}
+              </span>
+              <h3>{{ m.title }}</h3>
+              <p>{{ m.task }}</p>
+
+              {% if m.resource_video_id %}
+                <div class="video-card" data-video-id="{{ m.resource_video_id }}">
+                  <div class="video-thumb-wrap" onclick="playMilestoneVideo(this)">
+                    {% if m.resource_thumbnail %}
+                      <img src="{{ m.resource_thumbnail }}" alt="{{ m.resource_title }}" loading="lazy">
+                    {% endif %}
+                    <button class="video-play-btn" aria-label="Play video" onclick="event.stopPropagation(); playMilestoneVideo(this.closest('.video-thumb-wrap'))">▶</button>
+                    {% if m.resource_duration %}<span class="video-duration">{{ m.resource_duration }}</span>{% endif %}
+                  </div>
+                  <div class="video-meta">
+                    <span class="video-title">{{ m.resource_title }}</span>
+                    <span class="video-sub">
+                      {{ m.resource_channel }}{% if m.resource_views %} · {{ m.resource_views }}{% endif %}
+                    </span>
+                  </div>
+                </div>
+              {% else %}
+                <div class="milestone-footer" style="justify-content:flex-start; margin-top:4px;">
+                  <a href="{{ m.resource_url }}" target="_blank">
+                    ▶ {{ m.resource_title or "View Resource" }}{% if m.resource_channel %} · {{ m.resource_channel }}{% endif %} →
+                  </a>
+                </div>
+              {% endif %}
+
+              <div class="milestone-footer" style="justify-content:flex-start; margin-top:10px;">
+                <a href="javascript:void(0)" class="notes-link" data-milestone-id="{{ m.id }}" data-milestone-title="{{ m.title }}">📝 Study Notes &amp; Q&amp;A</a>
+              </div>
+
+              <div class="milestone-footer">
+                <span class="milestone-hours">{{ m.estimated_hours }}h</span>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</main>
+
+<!-- ---------------- Roadmap chat assistant ---------------- -->
+<div class="chat-overlay" id="chat-overlay">
+  <div class="chat-window">
+    <div class="chat-header">
+      <div class="chat-avatar">🤖</div>
+      <div class="chat-header-text">
+        <strong>Roadmap Assistant</strong>
+        <span>Let's build your learning path</span>
+      </div>
+      <button class="chat-close" id="chat-close" onclick="closeRoadmapChat()">✕</button>
+    </div>
+    <div class="chat-body" id="chat-body"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="e.g. React, Data Structures, UI/UX design..." autocomplete="off">
+      <button class="chat-send" id="chat-send" onclick="handleChatSend()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------------- Study notes modal ---------------- -->
+<div class="notes-overlay" id="notes-overlay">
+  <div class="notes-window">
+    <div class="notes-header">
+      <div>
+        <strong id="notes-title">Study Notes</strong>
+        <span>Quick read + Q&amp;A to check yourself</span>
+      </div>
+      <button class="notes-close" id="notes-close" onclick="closeMilestoneNotes()">✕</button>
+    </div>
+    <div class="notes-body" id="notes-body">
+      <div class="notes-loading">Loading notes…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   ROADMAP CHAT ASSISTANT
+   -----------------------------------------------------------------
+   Flow: "Generate My Roadmap" opens this chat -> bot asks what the
+   user wants to learn -> user answers -> bot asks what they've
+   ALREADY learned/worked on in that topic -> user answers (or says
+   "nothing yet") -> we POST both to /api/generate-roadmap -> on
+   success we reload the page so Flask renders the milestones (now
+   split into a short "revision" phase for prior knowledge, then the
+   forward-looking "new" phase) from roadmap/milestones passed into
+   the template.
+   ===================================================================== */
+
+const chatOverlay = document.getElementById('chat-overlay');
+const chatBody = document.getElementById('chat-body');
+const chatInput = document.getElementById('chat-input');
+const chatSend = document.getElementById('chat-send');
+
+// stage progresses: 'topic' -> 'prior' -> 'done'
+let stage = 'topic';
+let pendingTopic = '';
+let chatBusy = false;
+let isTopicSwitch = false; // true when reopened via "Change Topic" on an existing roadmap
+
+function confirmChangeTopic(){
+  const confirmed = window.confirm(
+    "Changing topics will archive your current roadmap and its progress. " +
+    "You'll still be able to see it later in your roadmap history, but it " +
+    "will no longer be your active roadmap. Continue?"
+  );
+  if (!confirmed) return;
+  openRoadmapChat({ switchingTopic: true });
+}
+
+function openRoadmapChat(options){
+  options = options || {};
+  isTopicSwitch = !!options.switchingTopic;
+  chatOverlay.classList.add('open');
+  chatBody.innerHTML = '';
+  stage = 'topic';
+  pendingTopic = '';
+  chatBusy = false;
+  chatInput.disabled = false;
+  chatSend.disabled = false;
+  chatInput.placeholder = 'e.g. React, Data Structures, UI/UX design...';
+  addBotMessage(
+    isTopicSwitch
+      ? "Let's set up a new roadmap. What do you want to learn this time?"
+      : "Hi! I'll help build your personalized roadmap. What do you want to learn?"
+  );
+  chatInput.value = '';
+  chatInput.focus();
+}
+
+function closeRoadmapChat(){
+  chatOverlay.classList.remove('open');
+}
+
+chatOverlay.addEventListener('click', (e) => {
+  if (e.target === chatOverlay) closeRoadmapChat();
+});
+
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleChatSend();
+});
+
+function handleChatSend(){
+  if (chatBusy) return;
+  const value = chatInput.value.trim();
+  if (!value) return;
+
+  addUserMessage(value);
+  chatInput.value = '';
+
+  if (stage === 'topic'){
+    pendingTopic = value;
+    stage = 'prior';
+    chatInput.placeholder = "e.g. I know the basics, or 'nothing yet'";
+    addBotMessage(`Got it — ${value}. Before I build this: what have you already learned or worked on in ${value}? If you're starting completely fresh, just say "nothing yet".`);
+    return;
+  }
+
+  if (stage === 'prior'){
+    submitTopic(pendingTopic, value);
+  }
+}
+
+async function submitTopic(topic, priorKnowledge){
+  chatBusy = true;
+  chatInput.disabled = true;
+  chatSend.disabled = true;
+  showTyping();
+
+  try {
+    const res = await fetch('/api/generate-roadmap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic,
+        prior_knowledge: priorKnowledge,
+        confirm_switch: isTopicSwitch
+      })
+    });
+    const result = await res.json().catch(() => ({}));
+    removeTyping();
+
+    if (res.status === 429) {
+      addBotMessage("AI is busy right now — give it a few seconds and try again.");
+      resetForRetry();
+      return;
+    }
+
+    if (res.status === 409 && result.requires_confirmation) {
+      // Backend guard caught an active roadmap we didn't already know
+      // about client-side (e.g. opened in another tab). Confirm once
+      // more, then resend flagged as a confirmed switch.
+      const confirmed = window.confirm(
+        `You have an active roadmap ("${result.current_roadmap_title}"). ` +
+        "Switching will archive it and start this new one instead. Continue?"
+      );
+      if (confirmed) {
+        isTopicSwitch = true;
+        addBotMessage("Got it — building your new roadmap now...");
+        showTyping();
+        await submitTopic(topic, priorKnowledge);
+      } else {
+        addBotMessage("No problem — keeping your current roadmap. Let me know if you change your mind.");
+        chatBusy = false;
+        chatInput.disabled = false;
+        chatSend.disabled = false;
+        setTimeout(() => closeRoadmapChat(), 900);
+      }
+      return;
+    }
+
+    if (!res.ok) {
+      addBotMessage(result.error || "Something went wrong generating your roadmap. Try again?");
+      resetForRetry();
+      return;
+    }
+
+    stage = 'done';
+    addBotMessage(`Great, your roadmap for "${topic}" is ready — with a quick revision of what you already know, then your path forward. Taking you there now...`);
+    setTimeout(() => location.reload(), 700);
+
+  } catch (err) {
+    removeTyping();
+    addBotMessage("Network error — check your connection and try again.");
+    resetForRetry();
+  }
+}
+
+function resetForRetry(){
+  // Keep the topic already given; let them re-answer the prior-knowledge
+  // question rather than starting the whole conversation over.
+  stage = 'prior';
+  chatBusy = false;
+  chatInput.disabled = false;
+  chatSend.disabled = false;
+  chatInput.focus();
+}
+
+function addBotMessage(text){
+  const el = document.createElement('div');
+  el.className = 'msg bot';
+  el.textContent = text;
+  chatBody.appendChild(el);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function addUserMessage(text){
+  const el = document.createElement('div');
+  el.className = 'msg user';
+  el.textContent = text;
+  chatBody.appendChild(el);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function showTyping(){
+  const el = document.createElement('div');
+  el.className = 'typing';
+  el.id = 'typing-indicator';
+  el.innerHTML = '<span></span><span></span><span></span>';
+  chatBody.appendChild(el);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function removeTyping(){
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+// ---- Rich video card: swap thumbnail for an embedded, autoplaying player ----
+function playMilestoneVideo(thumbWrap){
+  const card = thumbWrap.closest('.video-card');
+  const videoId = card.dataset.videoId;
+  if (!videoId) return;
+
+  const iframe = document.createElement('iframe');
+  iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0`;
+  iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+  iframe.setAttribute('allowfullscreen', '');
+  iframe.setAttribute('title', 'Embedded YouTube video player');
+
+  thumbWrap.innerHTML = '';
+  thumbWrap.appendChild(iframe);
+  thumbWrap.onclick = null; // prevent re-triggering once the player is loaded
+}
+
+// ---- Study notes modal: fetch (and cache) notes + Q&A for a milestone ----
+const notesOverlay = document.getElementById('notes-overlay');
+const notesBody = document.getElementById('notes-body');
+const notesTitleEl = document.getElementById('notes-title');
+let currentNotesMilestoneId = null;
+
+function openMilestoneNotes(milestoneId, milestoneTitle){
+  currentNotesMilestoneId = milestoneId;
+  notesTitleEl.textContent = milestoneTitle || 'Study Notes';
+  notesOverlay.classList.add('open');
+  loadMilestoneNotes(milestoneId, false);
+}
+
+function closeMilestoneNotes(){
+  notesOverlay.classList.remove('open');
+}
+
+notesOverlay.addEventListener('click', (e) => {
+  if (e.target === notesOverlay) closeMilestoneNotes();
+});
+
+async function loadMilestoneNotes(milestoneId, regenerate){
+  notesBody.innerHTML = '<div class="notes-loading">Loading notes…</div>';
+  try {
+    const url = `/api/milestones/${milestoneId}/notes${regenerate ? '?regenerate=1' : ''}`;
+    const res = await fetch(url);
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      notesBody.innerHTML = `<div class="notes-error">${escapeHtml(data.error || 'Could not load notes. Please try again.')}</div>`;
+      return;
+    }
+
+    renderMilestoneNotes(data);
+  } catch (err) {
+    notesBody.innerHTML = '<div class="notes-error">Network error — check your connection and try again.</div>';
+  }
+}
+
+function renderMilestoneNotes(data){
+  const sectionsHtml = (data.sections || []).map(sec => `
+    <div class="notes-block">
+      <h4 class="notes-heading">${escapeHtml(sec.heading)}</h4>
+      <ul class="notes-list">
+        ${(sec.points || []).map(p => `<li>${escapeHtml(p)}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+
+  const qaHtml = (data.qa || []).map((qa, i) => `
+    <div class="qa-item" id="qa-item-${i}">
+      <div class="qa-question" onclick="toggleQaItem(${i})">
+        <span>${escapeHtml(qa.question)}</span>
+        <span class="qa-caret">▾</span>
+      </div>
+      <div class="qa-answer">${escapeHtml(qa.answer)}</div>
+    </div>
+  `).join('');
+
+  notesBody.innerHTML = `
+    <div class="notes-section-title">Study Notes</div>
+    ${sectionsHtml || '<div class="notes-loading">No notes available.</div>'}
+    <div class="notes-section-title" style="margin-top:22px;">Check Yourself</div>
+    ${qaHtml || '<div class="notes-loading">No Q&amp;A available.</div>'}
+    <button class="notes-regen" onclick="loadMilestoneNotes(currentNotesMilestoneId, true)">↻ Regenerate notes</button>
+  `;
+}
+
+function toggleQaItem(i){
+  const item = document.getElementById(`qa-item-${i}`);
+  if (item) item.classList.toggle('open');
+}
+
+// ---- Wire up "Study Notes" links (data attributes, not inline onclick,
+// so milestone titles with quotes/special chars never break the markup) ----
+document.querySelectorAll('.notes-link').forEach(link => {
+  link.addEventListener('click', () => {
+    const milestoneId = link.dataset.milestoneId;
+    const milestoneTitle = link.dataset.milestoneTitle;
+    openMilestoneNotes(milestoneId, milestoneTitle);
+  });
+});
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+// ---- Ripple feedback on primary buttons ----
+document.querySelectorAll('.btn-primary').forEach(btn => {
+  btn.addEventListener('click', function(e){
+    const rect = this.getBoundingClientRect();
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    const size = Math.max(rect.width, rect.height);
+    r.style.width = r.style.height = size + 'px';
+    r.style.left = (e.clientX - rect.left - size/2) + 'px';
+    r.style.top = (e.clientY - rect.top - size/2) + 'px';
+    this.appendChild(r);
+    setTimeout(()=> r.remove(), 600);
+  });
+});
+
+// ---- Milestone path: scroll-reveal cards as they enter the viewport ----
+(function(){
+  const items = document.querySelectorAll('.milestone-item');
+  if (!items.length) return;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting){
+        entry.target.classList.add('reveal');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+  items.forEach(item => io.observe(item));
+})();
+</script>
+</body>
+</html>

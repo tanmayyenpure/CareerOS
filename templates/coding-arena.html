@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coding Arena · CareerOS</title>
+<script src="/static/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/coding-arena.css') }}">
+
+<!-- CodeMirror (self-contained code editor: no build step, matches this app's CDN-only convention) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+</head>
+<body>
+
+<!-- Floating background blobs -->
+<div class="bg-blobs" aria-hidden="true">
+  <div class="blob blob-purple"></div>
+  <div class="blob blob-teal"></div>
+  <div class="blob blob-purple blob-small"></div>
+</div>
+
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR (shared across app) ============ -->
+  {% include "_sidebar.html" %}
+
+  <!-- ============ MAIN ============ -->
+  <div class="main-area">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">Coding Arena</h1>
+        <p class="page-subtitle">Pick a category, get an AI-generated problem, and run + submit real code — instantly graded.</p>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" aria-label="Search">⌕</button>
+        <button class="icon-btn" aria-label="Notifications">🔔</button>
+        <div class="avatar-chip">{{ user_initials or 'U' }}</div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ============ HERO ============ -->
+      <section class="section hero-card glass reveal">
+        <div class="hero-left">
+          <p class="hero-greeting">Sharpen your coding <span aria-hidden="true">💻</span></p>
+          <p class="hero-line">Every category unlocks a fresh set of AI-written problems — write real code, run it, and get an instant verdict.</p>
+
+          <div class="stat-grid">
+            <div class="stat-tile">
+              <span class="stat-value" id="stat-categories">{{ category_labels|length }}</span>
+              <span class="stat-label">Categories Available</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="stat-solved">{{ stats.solved or 0 }}</span>
+              <span class="stat-label">Problems Solved</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="stat-submissions">{{ stats.submissions or 0 }}</span>
+              <span class="stat-label">Submissions Made</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-right" aria-hidden="true">
+          <div class="hub-icon">🧑‍💻</div>
+        </div>
+      </section>
+
+      <!-- ============ BREADCRUMB ============ -->
+      <nav class="hub-breadcrumb" id="arenaBreadcrumb">
+        <span class="crumb active" data-step="category">All Categories</span>
+      </nav>
+
+      <!-- ============ STEP 1 — CATEGORY GRID ============ -->
+      <section class="section reveal" id="categorySection">
+        <div class="section-head">
+          <h2>Choose a Category</h2>
+          <p class="section-desc">Every category unlocks its own AI-generated problem set.</p>
+        </div>
+        <div class="domain-grid" id="categoryGrid">
+          <!-- populated by JS from CATEGORIES constant below -->
+        </div>
+      </section>
+
+      <!-- ============ STEP 2 — PROBLEM GRID (hidden until a category is picked) ============ -->
+      <section class="section reveal" id="problemListSection" style="display:none;">
+        <div class="section-head">
+          <h2 id="problemListTitle">Problems</h2>
+          <p class="section-desc">Pick a problem to open the editor and start solving.</p>
+        </div>
+        <div id="problemGridWrap"></div>
+      </section>
+
+      <!-- ============ STEP 3 — WORKSPACE (hidden until a problem is picked) ============ -->
+      <section class="section reveal" id="workspaceSection" style="display:none;">
+        <div class="arena-workspace" id="workspaceWrap"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CODING ARENA
+   -----------------------------------------------------------------
+   Flow: Category -> AI generates Problems -> pick a Problem -> AI
+   generates full statement + test cases + starter code -> user writes
+   code -> Run (samples) / Submit (all test cases via Piston).
+
+   Backend endpoints (see coding_arena_app_py_patch.txt):
+
+   POST /api/coding-arena/problems   { category }              -> { problems: [...] }
+   POST /api/coding-arena/problem    { category, title }        -> { statement, constraints, examples, starter_code, difficulty }
+   POST /api/coding-arena/run        { category, title, language, code, stdin? } -> sample results or custom-run result
+   POST /api/coding-arena/submit     { category, title, language, code } -> { verdict, passed, total, failure }
+   ===================================================================== */
+
+const CATEGORY_META = {
+  "Arrays & Strings":         { icon: "🔢", desc: "Two pointers, sliding window, hashing." },
+  "Linked Lists":             { icon: "🔗", desc: "Traversal, reversal, cycle detection." },
+  "Recursion & Backtracking": { icon: "🌀", desc: "Divide, conquer, and explore." },
+  "Trees & Graphs":           { icon: "🌳", desc: "Traversals, BFS/DFS, shortest paths." },
+  "Dynamic Programming":      { icon: "🧩", desc: "Memoization and tabulation patterns." },
+  "Sorting & Searching":      { icon: "📊", desc: "Classic algorithms, binary search." },
+  "Databases (SQL)":          { icon: "🗄️", desc: "Queries, joins, aggregation." },
+};
+
+const LANGUAGE_META = {
+  python:     { label: "Python 3",   mode: "python" },
+  javascript: { label: "JavaScript", mode: "javascript" },
+  typescript: { label: "TypeScript", mode: "javascript" },
+  cpp:        { label: "C++",       mode: "text/x-c++src" },
+  c:          { label: "C",         mode: "text/x-csrc" },
+  java:       { label: "Java",      mode: "text/x-java" },
+  csharp:     { label: "C#",        mode: "text/x-csharp" },
+  go:         { label: "Go",        mode: null },
+  ruby:       { label: "Ruby",      mode: null },
+  php:        { label: "PHP",       mode: null },
+  rust:       { label: "Rust",      mode: null },
+  kotlin:     { label: "Kotlin",    mode: null },
+  swift:      { label: "Swift",     mode: null },
+  sql:        { label: "SQL",       mode: "text/x-sql" },
+};
+// Languages the AI writes starter code for. Anything else still runs fine
+// on Piston, just starts from a blank stdin/stdout template.
+const STARTER_LANGS = ["python", "javascript", "cpp", "java", "c"];
+
+const CATEGORIES = JSON.parse('{{ category_labels.values() | list | tojson | safe }}')
+  .map(name => ({ name, ...(CATEGORY_META[name] || { icon: "📘", desc: "" }) }));
+
+const SUPPORTED_LANGUAGES = JSON.parse('{{ languages | tojson | safe }}');
+
+// ---------- HTML-escaping helpers ----------
+function escapeHtml(str){
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+const breadcrumb = document.getElementById('arenaBreadcrumb');
+const categorySection = document.getElementById('categorySection');
+const categoryGrid    = document.getElementById('categoryGrid');
+const problemListSection = document.getElementById('problemListSection');
+const problemListTitle   = document.getElementById('problemListTitle');
+const problemGridWrap     = document.getElementById('problemGridWrap');
+const workspaceSection = document.getElementById('workspaceSection');
+const workspaceWrap    = document.getElementById('workspaceWrap');
+
+let currentCategory = null;
+let currentTitle = null;
+let editor = null;          // CodeMirror instance
+let starterCodeMap = {};    // language -> starter code for current problem
+let lastAppliedStarter = ''; // to detect "user hasn't touched it yet" on lang switch
+
+// ---------- Step 1: render category cards ----------
+function renderCategories(){
+  categoryGrid.innerHTML = CATEGORIES.map(c => `
+    <div class="glass domain-card" data-category="${escapeAttr(c.name)}">
+      <div class="domain-icon">${c.icon}</div>
+      <h3>${escapeHtml(c.name)}</h3>
+      <p>${escapeHtml(c.desc)}</p>
+    </div>
+  `).join('');
+
+  categoryGrid.querySelectorAll('.domain-card').forEach(card => {
+    card.addEventListener('click', () => selectCategory(card.dataset.category));
+  });
+}
+renderCategories();
+
+// ---------- breadcrumb ----------
+function renderBreadcrumb(){
+  let html = `<span class="crumb ${!currentCategory ? 'active' : ''}" data-step="category">All Categories</span>`;
+  if (currentCategory){
+    html += `<span class="sep">›</span><span class="crumb ${!currentTitle ? 'active' : ''}" data-step="problems">${escapeHtml(currentCategory)}</span>`;
+  }
+  if (currentTitle){
+    html += `<span class="sep">›</span><span class="crumb active" data-step="workspace">${escapeHtml(currentTitle)}</span>`;
+  }
+  breadcrumb.innerHTML = html;
+
+  breadcrumb.querySelectorAll('.crumb').forEach(c => {
+    c.addEventListener('click', () => {
+      const step = c.dataset.step;
+      if (step === 'category') backToCategories();
+      else if (step === 'problems') backToProblems();
+    });
+  });
+}
+
+function backToCategories(){
+  currentCategory = null;
+  currentTitle = null;
+  renderBreadcrumb();
+  categorySection.style.display = '';
+  problemListSection.style.display = 'none';
+  workspaceSection.style.display = 'none';
+}
+
+function backToProblems(){
+  currentTitle = null;
+  renderBreadcrumb();
+  problemListSection.style.display = '';
+  workspaceSection.style.display = 'none';
+}
+
+// ---------- Step 1 -> 2: pick a category, AI generates problems ----------
+async function selectCategory(categoryName){
+  currentCategory = categoryName;
+  currentTitle = null;
+  renderBreadcrumb();
+
+  categorySection.style.display = 'none';
+  workspaceSection.style.display = 'none';
+  problemListSection.style.display = '';
+  problemListTitle.textContent = `${categoryName} — Problems`;
+  problemGridWrap.innerHTML = `
+    <div class="hub-loading">
+      <div class="hub-spinner"></div>
+      Generating problems for ${escapeHtml(categoryName)}…
+    </div>`;
+
+  try {
+    const res = await fetch('/api/coding-arena/problems', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: categoryName })
+    });
+    if (!res.ok) throw new Error('Request failed');
+    const data = await res.json();
+    renderProblems(categoryName, data.problems || []);
+  } catch (err) {
+    problemGridWrap.innerHTML = `<div class="hub-error">Couldn't generate problems right now. Please try again.</div>`;
+    console.error(err);
+  }
+}
+
+function renderProblems(categoryName, problems){
+  const grid = document.createElement('div');
+  grid.className = 'subject-grid';
+  grid.innerHTML = problems.map(p => `
+    <div class="glass subject-card" data-title="${escapeAttr(p.title)}">
+      <div class="subject-card-head">
+        <h4>${escapeHtml(p.title)}</h4>
+        <span class="difficulty-badge ${(p.difficulty || 'medium').toLowerCase()}">${escapeHtml(p.difficulty || 'Medium')}</span>
+      </div>
+      <p>${escapeHtml(p.one_liner || '')}</p>
+      ${p.tags && p.tags.length ? `<div class="subject-tags">${p.tags.map(t => `<span class="tag-chip">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+      ${p.solved ? `<span class="solved-check">✓ Solved</span>` : ''}
+    </div>
+  `).join('');
+  problemGridWrap.innerHTML = '';
+  problemGridWrap.appendChild(grid);
+
+  grid.querySelectorAll('.subject-card').forEach(card => {
+    card.addEventListener('click', () => selectProblem(categoryName, card.dataset.title));
+  });
+}
+
+// ---------- Step 2 -> 3: pick a problem, AI generates full statement + starter code ----------
+async function selectProblem(categoryName, title){
+  currentTitle = title;
+  renderBreadcrumb();
+
+  problemListSection.style.display = 'none';
+  workspaceSection.style.display = '';
+  workspaceWrap.innerHTML = `
+    <div class="glass" style="grid-column:1/-1;">
+      <div class="hub-loading">
+        <div class="hub-spinner"></div>
+        Building "${escapeHtml(title)}"…
+      </div>
+    </div>`;
+
+  try {
+    const res = await fetch('/api/coding-arena/problem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: categoryName, title })
+    });
+    if (!res.ok) throw new Error('Request failed');
+    const data = await res.json();
+    renderWorkspace(categoryName, title, data);
+  } catch (err) {
+    workspaceWrap.innerHTML = `<div class="glass" style="grid-column:1/-1;"><div class="hub-error">Couldn't generate this problem right now. Please try again.</div></div>`;
+    console.error(err);
+  }
+}
+
+// ---------- Step 3: problem statement + code editor ----------
+function renderWorkspace(categoryName, title, data){
+  starterCodeMap = data.starter_code || {};
+
+  const constraintsHtml = (data.constraints || []).map(c => `<li>${escapeHtml(c)}</li>`).join('');
+  const examplesHtml = (data.examples || []).map((ex, i) => `
+    <div class="example-block">
+      <div class="example-label">Example ${i + 1}</div>
+      <div class="example-io">
+        <div><strong>Input</strong><pre>${escapeHtml(ex.input || '')}</pre></div>
+        <div><strong>Output</strong><pre>${escapeHtml(ex.output || '')}</pre></div>
+      </div>
+      ${ex.explanation ? `<p class="example-explanation">${escapeHtml(ex.explanation)}</p>` : ''}
+    </div>
+  `).join('');
+
+  const langOptions = SUPPORTED_LANGUAGES.map(l => {
+    const meta = LANGUAGE_META[l] || { label: l.charAt(0).toUpperCase() + l.slice(1) };
+    return `<option value="${escapeAttr(l)}">${escapeHtml(meta.label)}</option>`;
+  }).join('');
+
+  workspaceWrap.innerHTML = `
+    <div class="glass problem-panel">
+      <div class="problem-panel-head">
+        <div>
+          <h2>${escapeHtml(title)}</h2>
+          <span class="difficulty-badge ${(data.difficulty || 'medium').toLowerCase()}">${escapeHtml(data.difficulty || 'Medium')}</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="backToProblemsBtn">← All Problems</button>
+      </div>
+      <p class="problem-statement">${escapeHtml(data.statement || '')}</p>
+      ${constraintsHtml ? `<ul class="constraints-list">${constraintsHtml}</ul>` : ''}
+      ${examplesHtml}
+    </div>
+
+    <div class="glass editor-panel">
+      <div class="editor-toolbar">
+        <div class="editor-toolbar-left">
+          <select class="lang-select" id="langSelect">${langOptions}</select>
+          <button class="toggle-link" id="toggleCustomInput">+ Custom input</button>
+        </div>
+        <div class="editor-toolbar-right">
+          <button class="btn btn-ghost btn-sm" id="runBtn">▶ Run</button>
+          <button class="btn btn-secondary btn-sm" id="submitBtn">✓ Submit</button>
+        </div>
+      </div>
+
+      <textarea id="codeArea"></textarea>
+
+      <div class="custom-input-row hidden" id="customInputRow">
+        <label style="font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.4px;">Custom stdin (used only by Run, not Submit)</label>
+        <textarea id="customStdin" placeholder="Type input here, then hit Run"></textarea>
+      </div>
+
+      <div class="console-panel" id="consolePanel">
+        <div class="console-empty">Run your code against the sample cases, or submit to grade against all test cases.</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('backToProblemsBtn').addEventListener('click', backToProblems);
+
+  // ---- init CodeMirror ----
+  const defaultLang = STARTER_LANGS.find(l => SUPPORTED_LANGUAGES.includes(l)) || SUPPORTED_LANGUAGES[0];
+  const textarea = document.getElementById('codeArea');
+  editor = CodeMirror.fromTextArea(textarea, {
+    lineNumbers: true,
+    tabSize: 4,
+    indentUnit: 4,
+    theme: 'default',
+    mode: (LANGUAGE_META[defaultLang] || {}).mode || null,
+  });
+
+  const langSelect = document.getElementById('langSelect');
+  langSelect.value = defaultLang;
+  loadStarterFor(defaultLang, /*force=*/true);
+
+  langSelect.addEventListener('change', () => loadStarterFor(langSelect.value, /*force=*/false));
+
+  document.getElementById('toggleCustomInput').addEventListener('click', (e) => {
+    const row = document.getElementById('customInputRow');
+    const isHidden = row.classList.contains('hidden');
+    row.classList.toggle('hidden');
+    e.target.textContent = isHidden ? '− Custom input' : '+ Custom input';
+  });
+
+  document.getElementById('runBtn').addEventListener('click', () => runCode(categoryName, title));
+  document.getElementById('submitBtn').addEventListener('click', () => submitCode(categoryName, title));
+}
+
+function loadStarterFor(language, force){
+  const meta = LANGUAGE_META[language] || {};
+  editor.setOption('mode', meta.mode || null);
+
+  const starter = starterCodeMap[language] ||
+    `// Starter code isn't available for ${meta.label || language} yet.\n// Read input from stdin and print your answer to stdout.\n`;
+
+  const current = editor.getValue();
+  if (force || current.trim() === '' || current === lastAppliedStarter){
+    editor.setValue(starter);
+    lastAppliedStarter = starter;
+  } else if (!confirm('Switching language will replace your current code with starter code for the new language. Continue?')) {
+    // revert the dropdown silently
+    document.getElementById('langSelect').value = Object.keys(LANGUAGE_META).find(k => editor.getOption('mode') === (LANGUAGE_META[k]||{}).mode) || language;
+    return;
+  } else {
+    editor.setValue(starter);
+    lastAppliedStarter = starter;
+  }
+}
+
+// ---------- Run against sample cases (or custom stdin) ----------
+async function runCode(categoryName, title){
+  const language = document.getElementById('langSelect').value;
+  const code = editor.getValue();
+  const customRow = document.getElementById('customInputRow');
+  const usingCustom = !customRow.classList.contains('hidden');
+  const consolePanel = document.getElementById('consolePanel');
+  const runBtn = document.getElementById('runBtn');
+
+  runBtn.disabled = true;
+  consolePanel.innerHTML = `<div class="hub-loading"><div class="hub-spinner sm"></div> Running…</div>`;
+
+  try {
+    const body = { category: categoryName, title, language, code };
+    if (usingCustom) body.stdin = document.getElementById('customStdin').value;
+
+    const res = await fetch('/api/coding-arena/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Run failed');
+
+    if (data.mode === 'custom'){
+      renderCustomResult(data.result);
+    } else {
+      renderSampleResults(data.results || []);
+    }
+  } catch (err) {
+    consolePanel.innerHTML = `<div class="hub-error">${escapeHtml(err.message || 'Something went wrong while running your code.')}</div>`;
+  } finally {
+    runBtn.disabled = false;
+  }
+}
+
+function renderCustomResult(result){
+  const consolePanel = document.getElementById('consolePanel');
+  consolePanel.innerHTML = `
+    <div class="diff-block" style="grid-template-columns:1fr;">
+      <div><strong>Stdout</strong><pre>${escapeHtml(result.stdout || '(empty)')}</pre></div>
+    </div>
+    ${result.stderr ? `<div class="stderr-block"><strong>Stderr</strong><pre>${escapeHtml(result.stderr)}</pre></div>` : ''}
+  `;
+}
+
+function renderSampleResults(results){
+  const consolePanel = document.getElementById('consolePanel');
+  if (!results.length){
+    consolePanel.innerHTML = `<div class="console-empty">No sample cases to run.</div>`;
+    return;
+  }
+  consolePanel.innerHTML = results.map((r, i) => `
+    <div class="test-result-row ${r.passed ? 'pass' : 'fail'}" style="flex-direction:column;align-items:stretch;">
+      <div style="display:flex;justify-content:space-between;">
+        <span>Sample ${i + 1}</span>
+        <span class="test-result-status ${r.passed ? 'pass' : 'fail'}">${r.passed ? '✓ Passed' : '✗ Failed'}</span>
+      </div>
+      ${!r.passed ? `
+        <div class="diff-block">
+          <div><strong>Expected</strong><pre>${escapeHtml(r.expected)}</pre></div>
+          <div><strong>Got</strong><pre>${escapeHtml(r.stdout)}</pre></div>
+        </div>
+        ${r.stderr ? `<div class="stderr-block"><pre>${escapeHtml(r.stderr)}</pre></div>` : ''}
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+// ---------- Submit against all test cases ----------
+async function submitCode(categoryName, title){
+  const language = document.getElementById('langSelect').value;
+  const code = editor.getValue();
+  const consolePanel = document.getElementById('consolePanel');
+  const submitBtn = document.getElementById('submitBtn');
+
+  submitBtn.disabled = true;
+  consolePanel.innerHTML = `<div class="hub-loading"><div class="hub-spinner sm"></div> Grading against all test cases…</div>`;
+
+  try {
+    const res = await fetch('/api/coding-arena/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: categoryName, title, language, code })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Submission failed');
+
+    const accepted = data.verdict === 'Accepted';
+    let html = `
+      <div class="verdict-banner ${accepted ? 'accepted' : 'failed'}">
+        <span>${accepted ? '✓ Accepted' : '✗ ' + escapeHtml(data.verdict)}</span>
+        <span class="verdict-sub">${data.passed}/${data.total} test cases passed</span>
+      </div>`;
+
+    if (!accepted && data.failure){
+      if (data.failure.stderr){
+        html += `<div class="stderr-block"><strong>Stderr</strong><pre>${escapeHtml(data.failure.stderr)}</pre></div>`;
+      }
+      if (data.failure.input !== undefined){
+        html += `
+          <div class="diff-block">
+            <div><strong>Input</strong><pre>${escapeHtml(data.failure.input)}</pre></div>
+            ${data.failure.expected !== undefined ? `<div><strong>Expected</strong><pre>${escapeHtml(data.failure.expected)}</pre></div>` : ''}
+          </div>`;
+        if (data.failure.stdout !== undefined){
+          html += `<div class="diff-block"><div><strong>Your output</strong><pre>${escapeHtml(data.failure.stdout)}</pre></div></div>`;
+        }
+      }
+    }
+
+    consolePanel.innerHTML = html;
+
+    if (accepted){
+      const statTile = document.getElementById('stat-solved');
+      if (statTile) statTile.textContent = String((parseInt(statTile.textContent, 10) || 0) + 0); // refreshed on next page load; left as-is here
+    }
+    const subStat = document.getElementById('stat-submissions');
+    if (subStat) subStat.textContent = String((parseInt(subStat.textContent, 10) || 0) + 1);
+
+  } catch (err) {
+    consolePanel.innerHTML = `<div class="hub-error">${escapeHtml(err.message || 'Something went wrong while grading your code.')}</div>`;
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+// ---------- reveal-on-scroll ----------
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+
+</body>
+</html>

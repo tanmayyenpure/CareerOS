@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning Hub · CareerOS</title>
+<script src="/static/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/learning-hub.css') }}">
+</head>
+<body>
+
+<!-- Floating background blobs -->
+<div class="bg-blobs" aria-hidden="true">
+  <div class="blob blob-purple"></div>
+  <div class="blob blob-teal"></div>
+  <div class="blob blob-purple blob-small"></div>
+</div>
+
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR (shared across app) ============ -->
+  {% include "_sidebar.html" %}
+
+  <!-- ============ MAIN ============ -->
+  <div class="main-area">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">Learning Hub</h1>
+        <p class="page-subtitle">Pick a domain, drill into a subject, and get AI-curated study material — instantly.</p>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" aria-label="Search">⌕</button>
+        <button class="icon-btn" aria-label="Notifications">🔔</button>
+        <div class="avatar-chip">{{ user_initials or 'U' }}</div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ============ HERO ============ -->
+      <section class="section hero-card glass reveal">
+        <div class="hero-left">
+          <p class="hero-greeting">Explore any domain <span aria-hidden="true">📚</span></p>
+          <p class="hero-line">From engineering to law — pick a field, and CareerOS builds the syllabus for you.</p>
+
+          <div class="stat-grid">
+            <div class="stat-tile">
+              <span class="stat-value" id="stat-domains">7</span>
+              <span class="stat-label">Domains Available</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="stat-subjects-viewed" data-count="{{ stats.subjects_viewed or 0 }}">0</span>
+              <span class="stat-label">Subjects Explored</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="stat-materials-generated" data-count="{{ stats.materials_generated or 0 }}">0</span>
+              <span class="stat-label">Study Materials Generated</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-right" aria-hidden="true">
+          <div class="hub-icon">🧠</div>
+        </div>
+      </section>
+
+      <!-- ============ BREADCRUMB ============ -->
+      <nav class="hub-breadcrumb" id="hubBreadcrumb">
+        <span class="crumb active" data-step="domain">All Domains</span>
+      </nav>
+
+      <!-- ============ STEP 1 — DOMAIN GRID ============ -->
+      <section class="section reveal" id="domainSection">
+        <div class="section-head">
+          <h2>Choose a Domain</h2>
+          <p class="section-desc">Every domain unlocks its own AI-generated subject list.</p>
+        </div>
+        <div class="domain-grid" id="domainGrid">
+          <!-- populated by JS from DOMAINS constant below -->
+        </div>
+      </section>
+
+      <!-- ============ STEP 2 — SUBJECT GRID (hidden until a domain is picked) ============ -->
+      <section class="section reveal" id="subjectSection" style="display:none;">
+        <div class="section-head">
+          <h2 id="subjectSectionTitle">Subjects</h2>
+          <p class="section-desc">Pick a subject to get a full study breakdown — topics, videos, notes, and resources.</p>
+        </div>
+        <div id="subjectGridWrap"></div>
+      </section>
+
+      <!-- ============ STEP 3 — STUDY MATERIAL (hidden until a subject is picked) ============ -->
+      <section class="section reveal" id="materialSection" style="display:none;">
+        <div class="glass material-panel" id="materialPanel"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   LEARNING HUB
+   -----------------------------------------------------------------
+   Flow: Domain -> AI generates Subjects -> AI generates Study Material
+   Both AI steps call your Flask backend, which in turn calls Gemini
+   (same pattern as roadmap.html's /api/generate-roadmap).
+
+   Expected backend endpoints:
+
+   POST /api/learning-hub/subjects
+     body: { "domain": "Engineering & Technology" }
+     returns: { "subjects": [ { "name": str, "description": str, "tags": [str, ...] }, ... ] }
+
+   POST /api/learning-hub/material
+     body: { "domain": "...", "subject": "..." }
+     returns: {
+       "overview": str,
+       "topics": [
+         {
+           "title": str, "explanation": str, "notes": [str, ...],
+           "resource_video_id": str|null, "resource_title": str|null
+         }, ...
+       ],
+       "resources": [ { "label": str, "url": str }, ... ]
+     }
+   ===================================================================== */
+
+// Domain labels come from the backend's DOMAIN_LABELS dict (same source
+// used by the assessment feature), so this list never drifts out of sync.
+// Icon + short description are cosmetic only and safe to keep client-side.
+const DOMAIN_META = {
+  "Engineering & Technology":    { icon: "⚙️", desc: "CS, mechanical, electrical, civil & more." },
+  "Medical & Healthcare":        { icon: "🩺", desc: "MBBS, nursing, pharmacy, allied health." },
+  "Commerce & Finance":          { icon: "📊", desc: "Accounting, economics, banking, CA/CS." },
+  "Law":                         { icon: "⚖️", desc: "Constitutional, corporate, criminal law." },
+  "Design & Creative Arts":      { icon: "🎨", desc: "UI/UX, graphic, product & industrial design." },
+  "Government & Public Services":{ icon: "🏛️", desc: "UPSC, state PSCs, public administration." },
+  "Agriculture":                 { icon: "🌾", desc: "Agronomy, horticulture, agri-business." },
+};
+
+const DOMAINS = JSON.parse('{{ domain_labels.values() | list | tojson | safe }}')
+  .map(name => ({ name, ...(DOMAIN_META[name] || { icon: "📘", desc: "" }) }));
+
+const breadcrumb   = document.getElementById('hubBreadcrumb');
+const domainSection  = document.getElementById('domainSection');
+const domainGrid     = document.getElementById('domainGrid');
+const subjectSection = document.getElementById('subjectSection');
+const subjectTitle   = document.getElementById('subjectSectionTitle');
+const subjectWrap    = document.getElementById('subjectGridWrap');
+const materialSection = document.getElementById('materialSection');
+const materialPanel   = document.getElementById('materialPanel');
+
+// ---------- HTML-escaping helpers (used everywhere below to safely insert
+// AI-generated text into the page) ----------
+function escapeHtml(str){
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escapeAttr(str){
+  return escapeHtml(str);
+}
+
+let currentDomain = null;
+let currentSubject = null;
+
+// ---------- render domain cards ----------
+function renderDomains(){
+  domainGrid.innerHTML = DOMAINS.map(d => `
+    <div class="glass domain-card" data-domain="${d.name}">
+      <div class="domain-icon">${d.icon}</div>
+      <h3>${d.name}</h3>
+      <p>${d.desc}</p>
+    </div>
+  `).join('');
+
+  domainGrid.querySelectorAll('.domain-card').forEach(card => {
+    card.addEventListener('click', () => selectDomain(card.dataset.domain));
+  });
+}
+renderDomains();
+
+// ---------- breadcrumb ----------
+function renderBreadcrumb(){
+  let html = `<span class="crumb ${!currentDomain ? 'active' : ''}" data-step="domain">All Domains</span>`;
+  if (currentDomain){
+    html += `<span class="sep">›</span><span class="crumb ${!currentSubject ? 'active' : ''}" data-step="subject">${currentDomain}</span>`;
+  }
+  if (currentSubject){
+    html += `<span class="sep">›</span><span class="crumb active" data-step="material">${currentSubject}</span>`;
+  }
+  breadcrumb.innerHTML = html;
+
+  breadcrumb.querySelectorAll('.crumb').forEach(c => {
+    c.addEventListener('click', () => {
+      const step = c.dataset.step;
+      if (step === 'domain') resetToDomains();
+      if (step === 'subject') backToSubjects();
+    });
+  });
+}
+
+function resetToDomains(){
+  currentDomain = null;
+  currentSubject = null;
+  subjectSection.style.display = 'none';
+  materialSection.style.display = 'none';
+  domainSection.style.display = '';
+  renderBreadcrumb();
+}
+
+function backToSubjects(){
+  currentSubject = null;
+  materialSection.style.display = 'none';
+  subjectSection.style.display = '';
+  renderBreadcrumb();
+}
+
+// ---------- Step 1 -> 2: pick a domain, AI generates subjects ----------
+async function selectDomain(domainName){
+  currentDomain = domainName;
+  currentSubject = null;
+  renderBreadcrumb();
+
+  domainSection.style.display = 'none';
+  materialSection.style.display = 'none';
+  subjectSection.style.display = '';
+  subjectTitle.textContent = `${domainName} — Subjects`;
+  subjectWrap.innerHTML = `
+    <div class="glass hub-loading">
+      <div class="hub-spinner"></div>
+      Generating subjects for ${escapeHtml(domainName)}…
+    </div>`;
+
+  try {
+    const res = await fetch('/api/learning-hub/subjects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: domainName })
+    });
+    if (!res.ok) throw new Error('Request failed');
+    const data = await res.json();
+    renderSubjects(data.subjects || []);
+  } catch (err) {
+    subjectWrap.innerHTML = `<div class="glass hub-error">Couldn't generate subjects right now. Please try again.</div>`;
+    console.error(err);
+  }
+}
+
+function renderSubjects(subjects){
+  if (!subjects.length){
+    subjectWrap.innerHTML = `<div class="glass hub-error">No subjects came back — try a different domain.</div>`;
+    return;
+  }
+  const grid = document.createElement('div');
+  grid.className = 'subject-grid';
+  grid.innerHTML = subjects.map(s => `
+    <div class="glass subject-card" data-subject="${escapeHtml(s.name)}">
+      <h4>${escapeHtml(s.name)}</h4>
+      <p>${escapeHtml(s.description || '')}</p>
+      ${s.tags && s.tags.length ? `<div class="subject-tags">${s.tags.map(t => `<span class="tag-chip">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+    </div>
+  `).join('');
+  subjectWrap.innerHTML = '';
+  subjectWrap.appendChild(grid);
+
+  grid.querySelectorAll('.subject-card').forEach(card => {
+    card.addEventListener('click', () => selectSubject(card.dataset.subject));
+  });
+}
+
+// ---------- Step 2 -> 3: pick a subject, AI generates study material ----------
+async function selectSubject(subjectName){
+  currentSubject = subjectName;
+  renderBreadcrumb();
+
+  subjectSection.style.display = 'none';
+  materialSection.style.display = '';
+  materialPanel.innerHTML = `
+    <div class="hub-loading">
+      <div class="hub-spinner"></div>
+      Building study material for ${escapeHtml(subjectName)}…
+    </div>`;
+
+  try {
+    const res = await fetch('/api/learning-hub/material', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: currentDomain, subject: subjectName })
+    });
+    if (!res.ok) throw new Error('Request failed');
+    const data = await res.json();
+    renderMaterial(subjectName, data);
+  } catch (err) {
+    materialPanel.innerHTML = `<div class="hub-error">Couldn't generate study material right now. Please try again.</div>`;
+    console.error(err);
+  }
+}
+
+// ---------- Step 3: render topics (with inline video + notes) + resources ----------
+function renderMaterial(subjectName, data){
+  const topicsHtml = (data.topics || []).map((t, i) => {
+    const notesId = `topic-notes-${i}`;
+    const hasVideo = !!t.resource_video_id;
+    const notesList = (t.notes || []).map(n => `<li>${escapeHtml(n)}</li>`).join('');
+
+    return `
+    <div class="topic-item" data-topic-index="${i}">
+      <div class="topic-item-main">
+        <div class="topic-num">${i + 1}</div>
+        <div class="topic-body">
+          <strong>${escapeHtml(t.title)}</strong>
+          <span>${escapeHtml(t.explanation || '')}</span>
+          ${(hasVideo || notesList) ? `
+            <button class="topic-toggle" data-target="${notesId}">
+              ${hasVideo ? '📺 Watch + Notes' : '📝 Notes'}
+            </button>` : ''}
+        </div>
+      </div>
+      ${(hasVideo || notesList) ? `
+      <div class="topic-expand" id="${notesId}" style="display:none;">
+        ${hasVideo ? `
+          <div class="topic-video">
+            <iframe
+              src="https://www.youtube.com/embed/${escapeAttr(t.resource_video_id)}"
+              title="${escapeAttr(t.resource_title || t.title)}"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>
+          </div>` : ''}
+        ${notesList ? `<ul class="topic-notes-list">${notesList}</ul>` : ''}
+      </div>` : ''}
+    </div>
+  `;
+  }).join('');
+
+  const resourcesHtml = (data.resources || []).map(r => `
+    <a class="resource-link-item"
+       href="${escapeAttr(r.url)}"
+       data-resource-url="${escapeAttr(r.url)}"
+       data-resource-label="${escapeAttr(r.label)}">
+      📎 ${escapeHtml(r.label)}
+    </a>
+  `).join('');
+
+  materialPanel.innerHTML = `
+    <div class="material-header">
+      <div>
+        <h2>${escapeHtml(subjectName)}</h2>
+        <p>${escapeHtml(data.overview || '')}</p>
+      </div>
+      <button class="btn btn-ghost" id="backToSubjectsBtn">← All Subjects</button>
+    </div>
+
+    ${topicsHtml ? `
+    <div class="material-block">
+      <h3>📖 Key Topics</h3>
+      <div class="topic-list">${topicsHtml}</div>
+    </div>` : ''}
+
+    ${resourcesHtml ? `
+    <div class="material-block">
+      <h3>🔗 Resources</h3>
+      <div class="resource-links">${resourcesHtml}</div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('backToSubjectsBtn')?.addEventListener('click', backToSubjects);
+
+  // Expand/collapse per-topic notes + video
+  materialPanel.querySelectorAll('.topic-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+      const isOpen = target.style.display !== 'none';
+      target.style.display = isOpen ? 'none' : 'block';
+    });
+  });
+
+  // Keep resource links inside the app via a modal instead of a new tab
+  materialPanel.querySelectorAll('.resource-link-item').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      openResourceModal(link.dataset.resourceUrl, link.dataset.resourceLabel);
+    });
+  });
+}
+
+// ---------- in-app resource preview modal ----------
+async function openResourceModal(url, label){
+  let modal = document.getElementById('hubResourceModal');
+  if (!modal){
+    modal = document.createElement('div');
+    modal.id = 'hubResourceModal';
+    modal.className = 'hub-modal-overlay';
+    modal.innerHTML = `
+      <div class="hub-modal">
+        <div class="hub-modal-header">
+          <span id="hubModalTitle"></span>
+          <div class="hub-modal-actions">
+            <a id="hubModalOpenNew" target="_blank" rel="noopener" class="btn btn-ghost">Open in new tab ↗</a>
+            <button id="hubModalClose" class="icon-btn" aria-label="Close">✕</button>
+          </div>
+        </div>
+        <div class="hub-modal-body">
+          <iframe id="hubModalIframe" title="Resource preview" style="display:none;"></iframe>
+          <div class="hub-modal-loading" id="hubModalLoading">
+            <div class="hub-spinner"></div> Checking preview availability…
+          </div>
+          <div class="hub-modal-fallback" id="hubModalFallback" style="display:none;">
+            This site doesn't allow an embedded preview. Use "Open in new tab" above.
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeResourceModal(); });
+    document.getElementById('hubModalClose').addEventListener('click', closeResourceModal);
+  }
+
+  document.getElementById('hubModalTitle').textContent = label;
+  document.getElementById('hubModalOpenNew').href = url;
+
+  const iframe = document.getElementById('hubModalIframe');
+  const loading = document.getElementById('hubModalLoading');
+  const fallback = document.getElementById('hubModalFallback');
+  iframe.style.display = 'none';
+  fallback.style.display = 'none';
+  loading.style.display = 'flex';
+  modal.classList.add('open');
+
+  try {
+    const res = await fetch(`/api/learning-hub/check-embed?url=${encodeURIComponent(url)}`);
+    const data = await res.json();
+    loading.style.display = 'none';
+    if (data.embeddable){
+      iframe.src = url;
+      iframe.style.display = 'block';
+    } else {
+      fallback.style.display = 'block';
+    }
+  } catch (err) {
+    loading.style.display = 'none';
+    fallback.style.display = 'block';
+  }
+}
+
+// ---------- reveal-on-scroll ----------
+// Every .reveal section starts at opacity:0 (see learning-hub.css) and only
+// becomes visible once JS adds .in-view. This page never did that, so the
+// hero card, "Choose a Domain" section, and everything else stayed invisible.
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+
+</body>
+</html>

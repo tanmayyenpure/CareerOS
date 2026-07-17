@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Pathfinder — CareerOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-widget.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/skill_pathfinder.css') }}">
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/skill_pathfinder.js') }}" defer></script>
+<script src="/static/theme.js" onerror="console.log('Skipping missing theme.js')"></script>
+<style>
+  :root{
+    --bg-0:#070a12; --sidebar:#0a0d18; --card:#121629; --card-2:#141a2e;
+    --border:rgba(255,255,255,.07); --border-soft:rgba(255,255,255,.04);
+    --purple:#6366F1; --purple-2:#818CF8; --blue:#06B6D4;
+    --text-hi:#f4f5f9; --text-mid:#b7bcd0; --text-low:#7d8299; --radius:16px;
+    --grad-a:rgba(99,102,241,.16); --grad-b:rgba(6,182,212,.10);
+  }
+  [data-theme="light"]{
+    --bg-0:#f3f4f9; --sidebar:#ffffff; --card:#ffffff; --card-2:#f1f2f8;
+    --border:rgba(15,23,42,.08); --border-soft:rgba(15,23,42,.05);
+    --purple:#4F46E5; --purple-2:#6366F1;
+    --text-hi:#0f172a; --text-mid:#4b5468; --text-low:#6b7280;
+    --grad-a:rgba(79,70,229,.08); --grad-b:rgba(6,182,212,.06);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:
+      radial-gradient(circle at 85% 90%, var(--grad-a), transparent 45%),
+      radial-gradient(circle at 10% 0%, var(--grad-b), transparent 40%),
+      var(--bg-0);
+    color:var(--text-hi); min-height:100vh; display:flex;
+    transition:background .3s, color .3s;
+    overflow-x: hidden;
+  }
+  a{color:inherit; text-decoration:none;}
+  .main{flex:1; min-width:0; margin-left:250px;}
+  @media (max-width:900px){
+    .app-sidebar{ position:relative; width:100%; height:auto; }
+    .main{ margin-left:0; }
+  }
+  .topbar{display:flex; justify-content:space-between; align-items:center; padding:22px 40px; border-bottom:1px solid var(--border-soft);}
+  .page-title{font-family:'Poppins',sans-serif; font-weight:700; font-size:1.25rem;}
+  .bell{width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--card); border:1px solid var(--border); cursor:pointer;}
+  .bell svg{width:17px; height:17px; color:var(--text-mid);}
+  .content{padding:40px 40px;}
+  @keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- ============ SIDEBAR (shared across app) ============ -->
+{% include "_sidebar.html" %}
+
+<main class="main">
+  <div class="topbar">
+    <div class="page-title">Skill Pathfinder</div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      {% if not user %}
+        <a href="{{ url_for('login') }}" class="btn-nav" style="box-shadow:none;">Login</a>
+        <a href="{{ url_for('signup') }}" class="btn-nav">Sign Up</a>
+      {% else %}
+        <div style="font-size:0.85rem; color:var(--text-mid);">
+          Logged in as <strong>{{ user.name or user.email }}</strong>
+        </div>
+      {% endif %}
+      <div class="bell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div style="margin-bottom: 24px;">
+      <p style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--purple-2); letter-spacing: 0.1em; margin-bottom: 6px;">Career R&D Sandbox</p>
+      <h1 style="font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.8rem; margin-bottom: 6px;">
+        Interactive Skill Pathfinder
+      </h1>
+      <p style="color: var(--text-mid); font-size: 0.92rem; max-width: 700px;">
+        Define your transition path below. Choose your current role and your dream target role to generate a dependency-mapped skill tree. Master prerequisites to unlock next stages.
+      </p>
+    </div>
+
+    <!-- Role Selector Panel -->
+    <div class="selector-panel">
+      <div class="selector-group">
+        <label for="currentRoleSelect">Current Role</label>
+        <select id="currentRoleSelect" class="selector-select">
+          <option value="frontend" {% if user and user.target_role and 'frontend' in user.target_role.lower() %}selected{% endif %}>Frontend Developer</option>
+          <option value="backend" {% if user and user.target_role and 'backend' in user.target_role.lower() %}selected{% endif %}>Backend Developer</option>
+          <option value="qa" {% if user and user.target_role and 'qa' in user.target_role.lower() %}selected{% endif %}>QA Engineer</option>
+          <option value="student" {% if not user or not user.target_role %}selected{% endif %}>Student / Explorer</option>
+        </select>
+      </div>
+
+      <div class="selector-group">
+        <label for="targetRoleSelect">Target Role</label>
+        <select id="targetRoleSelect" class="selector-select">
+          <!-- populated dynamically by JS based on current role selection -->
+        </select>
+      </div>
+
+      <button id="btnGenerate" class="btn-generate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px; height:16px;"><path d="M5 3l14 9-14 9V3z"/></svg>
+        Generate Pathfinder
+      </button>
+    </div>
+
+    <!-- Split Pathfinder Layout -->
+    <div class="pathfinder-content" style="margin-top: 24px;">
+      <!-- Skill Tree Canvas (Left) -->
+      <div>
+        <h3 style="font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text-hi); margin-bottom: 12px;" id="pathfinder-title-text">
+          Pathfinder Tree
+        </h3>
+        <div class="tree-container" id="tree-container-box">
+          <svg id="connections-svg" class="connections-svg"></svg>
+          <div id="tree-columns" style="display:flex; justify-content:space-around; width:100%; gap:24px; position:relative; z-index:2;">
+            <!-- stages & nodes rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Curriculum Detail Panel (Right) -->
+      <div>
+        <h3 style="font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text-hi); margin-bottom: 12px;">
+          Curriculum Details
+        </h3>
+        <div class="detail-panel" id="detail-panel-box">
+          <!-- populated dynamically by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+{% include "_chatbot_widget.html" %}
+
+</body>
+</html>

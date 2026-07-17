@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career Center · CareerOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/career-center.css') }}">
+<script src="/static/theme.js"></script>
+</head>
+<body>
+
+<!-- Floating background blobs -->
+<div class="bg-blobs" aria-hidden="true">
+  <div class="blob blob-purple"></div>
+  <div class="blob blob-teal"></div>
+  <div class="blob blob-purple blob-small"></div>
+</div>
+
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR (shared across app) ============ -->
+  {% include "_sidebar.html" %}
+
+  <!-- ============ MAIN ============ -->
+  <div class="main-area">
+
+    <!-- Top navbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">Career Center</h1>
+        <p class="page-subtitle">Find jobs, prepare smarter, track applications, and land your dream career with AI.</p>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" aria-label="Search">⌕</button>
+        <button class="icon-btn has-dot" aria-label="Notifications">🔔</button>
+        <div class="avatar-chip small">{{ user_initials }}</div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ============ SECTION 1 — HERO ============ -->
+      <section class="section hero-card glass reveal">
+        <div class="hero-left">
+          <p class="hero-greeting">Welcome back, {{ user.name.split(' ')[0] if user.name else 'there' }} <span class="wave">👋</span></p>
+          <p class="hero-line">Your career is compounding. Here's where things stand today.</p>
+
+          <div class="stat-grid">
+            <div class="stat-tile">
+              <span class="stat-value" id="hero-applications-count" data-count="{{ stats.applications }}">0</span>
+              <span class="stat-label">Applications</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="hero-interviews-count" data-count="{{ stats.interviews }}">0</span>
+              <span class="stat-label">Interviews</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="hero-saved-jobs-count" data-count="{{ stats.saved_jobs }}">0</span>
+              <span class="stat-label">Saved Jobs</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="hero-ai-match-avg" data-count="{{ stats.ai_match_avg }}" data-suffix="%">0%</span>
+              <span class="stat-label">AI Match Average</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="hero-resume-ats-score" data-count="{{ user.resume_score or 0 }}" data-suffix="%">0%</span>
+              <span class="stat-label">Resume ATS Score</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-right" aria-hidden="true">
+          <div class="ai-orb" id="heroOrb">
+            <span class="orb-ring ring-1"></span>
+            <span class="orb-ring ring-2"></span>
+            <span class="orb-ring ring-3"></span>
+            <span class="orb-core"></span>
+            <span class="orb-particle p1"></span>
+            <span class="orb-particle p2"></span>
+            <span class="orb-particle p3"></span>
+            <span class="orb-particle p4"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 2 — JOB SEARCH ============ -->
+      <section class="section reveal">
+        <div class="section-head">
+          <h2>Job Search</h2>
+        </div>
+
+        <form class="search-panel glass sticky-search" id="searchForm">
+          <div class="field">
+            <label>Role</label>
+            <input type="text" id="search-role" placeholder="e.g. Backend Developer">
+          </div>
+          <div class="field">
+            <label>Location</label>
+            <input type="text" id="search-location" placeholder="e.g. Pune, Remote">
+          </div>
+          <div class="field">
+            <label>Experience</label>
+            <select id="search-experience">
+              <option value="Any" selected>Any</option>
+              <option value="0–1 yrs">0–1 yrs</option>
+              <option value="1–3 yrs">1–3 yrs</option>
+              <option value="3–5 yrs">3–5 yrs</option>
+              <option value="5+ yrs">5+ yrs</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Salary</label>
+            <select id="search-salary">
+              <option value="Any" selected>Any</option>
+              <option value="₹10L – ₹20L">₹10L – ₹20L</option>
+              <option value="₹20L – ₹35L">₹20L – ₹35L</option>
+              <option value="₹35L+">₹35L+</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Company</label>
+            <input type="text" id="search-company" placeholder="e.g. Google">
+          </div>
+          <div class="field">
+            <label>Domain</label>
+            <select id="search-domain">
+              <option value="Any" selected>Any</option>
+              <option value="Fintech">Fintech</option>
+              <option value="Cloud & Infra">Cloud &amp; Infra</option>
+              <option value="AI / ML">AI / ML</option>
+              <option value="Engineering & Technology">Engineering &amp; Technology</option>
+            </select>
+          </div>
+          <div class="field field-toggle">
+            <label>Remote</label>
+            <button type="button" class="toggle" id="remoteToggle" aria-pressed="false">
+              <span class="toggle-dot"></span>
+            </button>
+          </div>
+          <button type="submit" class="btn btn-primary btn-search">Search Jobs</button>
+        </form>
+
+        <div class="job-grid" id="job-grid">
+
+          <article class="job-card glass reveal">
+            <div class="job-card-top">
+              <div class="company-logo">G</div>
+              <div>
+                <h3 class="job-role">Backend Engineer II</h3>
+                <p class="job-company">Google · Hyderabad</p>
+              </div>
+              <span class="match-badge">92% Match</span>
+            </div>
+            <div class="job-meta">
+              <span>💰 ₹28L – ₹36L</span>
+              <span>🧭 3–5 yrs</span>
+              <span>🕐 Posted 2d ago</span>
+              <span>🗂 Full-time</span>
+            </div>
+            <div class="skill-tags">
+              <span class="tag">Java</span><span class="tag">Kafka</span><span class="tag">Kubernetes</span><span class="tag">gRPC</span>
+            </div>
+            <div class="job-actions">
+              <button class="btn btn-primary btn-sm">Apply Now</button>
+              <button class="btn btn-ghost btn-sm">Save</button>
+              <button class="btn btn-text btn-sm">View Details</button>
+            </div>
+          </article>
+
+          <article class="job-card glass reveal">
+            <div class="job-card-top">
+              <div class="company-logo teal">M</div>
+              <div>
+                <h3 class="job-role">Software Engineer, Azure Core</h3>
+                <p class="job-company">Microsoft · Bengaluru</p>
+              </div>
+              <span class="match-badge">88% Match</span>
+            </div>
+            <div class="job-meta">
+              <span>💰 ₹24L – ₹32L</span>
+              <span>🧭 2–4 yrs</span>
+              <span>🕐 Posted 5h ago</span>
+              <span>🗂 Full-time</span>
+            </div>
+            <div class="skill-tags">
+              <span class="tag">C#</span><span class="tag">.NET</span><span class="tag">Azure</span><span class="tag">SQL</span>
+            </div>
+            <div class="job-actions">
+              <button class="btn btn-primary btn-sm">Apply Now</button>
+              <button class="btn btn-ghost btn-sm">Save</button>
+              <button class="btn btn-text btn-sm">View Details</button>
+            </div>
+          </article>
+
+          <article class="job-card glass reveal">
+            <div class="job-card-top">
+              <div class="company-logo">A</div>
+              <div>
+                <h3 class="job-role">SDE-II, Payments Platform</h3>
+                <p class="job-company">Amazon · Pune</p>
+              </div>
+              <span class="match-badge">81% Match</span>
+            </div>
+            <div class="job-meta">
+              <span>💰 ₹22L – ₹30L</span>
+              <span>🧭 3–6 yrs</span>
+              <span>🕐 Posted 1d ago</span>
+              <span>🗂 Full-time</span>
+            </div>
+            <div class="skill-tags">
+              <span class="tag">Java</span><span class="tag">DynamoDB</span><span class="tag">AWS</span><span class="tag">System Design</span>
+            </div>
+            <div class="job-actions">
+              <button class="btn btn-primary btn-sm">Apply Now</button>
+              <button class="btn btn-ghost btn-sm">Save</button>
+              <button class="btn btn-text btn-sm">View Details</button>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- ============ SECTION 3 — AI RECOMMENDED JOBS ============ -->
+      <section class="section reveal">
+        <div class="section-head">
+          <h2>Recommended for You</h2>
+          <p class="section-desc">Ranked by CareerOS AI against your resume, skills, and goals.</p>
+        </div>
+
+        <div class="rec-grid" id="recommended-jobs-grid">
+
+          <article class="rec-card glass reveal">
+            <div class="rec-top">
+              <svg class="radial" viewBox="0 0 80 80">
+                <circle class="radial-track" cx="40" cy="40" r="34"></circle>
+                <circle class="radial-fill" cx="40" cy="40" r="34" data-pct="90"></circle>
+              </svg>
+              <span class="radial-label">90%</span>
+              <div>
+                <h3 class="job-role">Cloud Infrastructure Engineer</h3>
+                <p class="job-company">Atlassian · Remote</p>
+              </div>
+            </div>
+            <p class="rec-reason">Strong overlap with your Kubernetes and CI/CD project work.</p>
+            <div class="rec-skills">
+              <div><span class="dot dot-good"></span>Matching: Docker, Terraform, Linux</div>
+              <div><span class="dot dot-bad"></span>Missing: Helm, GCP</div>
+              <div class="learn-time">⏱ ~2 weeks to close the gap</div>
+            </div>
+            <button class="btn btn-ghost btn-sm full">Improve Match</button>
+          </article>
+
+          <article class="rec-card glass reveal">
+            <div class="rec-top">
+              <svg class="radial" viewBox="0 0 80 80">
+                <circle class="radial-track" cx="40" cy="40" r="34"></circle>
+                <circle class="radial-fill" cx="40" cy="40" r="34" data-pct="84"></circle>
+              </svg>
+              <span class="radial-label">84%</span>
+              <div>
+                <h3 class="job-role">Backend Developer</h3>
+                <p class="job-company">Razorpay · Bengaluru</p>
+              </div>
+            </div>
+            <p class="rec-reason">Fintech domain aligns with your payments project on GitHub.</p>
+            <div class="rec-skills">
+              <div><span class="dot dot-good"></span>Matching: Node.js, PostgreSQL</div>
+              <div><span class="dot dot-bad"></span>Missing: Redis, gRPC</div>
+              <div class="learn-time">⏱ ~1 week to close the gap</div>
+            </div>
+            <button class="btn btn-ghost btn-sm full">Improve Match</button>
+          </article>
+
+          <article class="rec-card glass reveal">
+            <div class="rec-top">
+              <svg class="radial" viewBox="0 0 80 80">
+                <circle class="radial-track" cx="40" cy="40" r="34"></circle>
+                <circle class="radial-fill" cx="40" cy="40" r="34" data-pct="77"></circle>
+              </svg>
+              <span class="radial-label">77%</span>
+              <div>
+                <h3 class="job-role">Platform Engineer</h3>
+                <p class="job-company">Freshworks · Chennai</p>
+              </div>
+            </div>
+            <p class="rec-reason">Good infra fundamentals; role expects deeper observability work.</p>
+            <div class="rec-skills">
+              <div><span class="dot dot-good"></span>Matching: AWS, CI/CD</div>
+              <div><span class="dot dot-bad"></span>Missing: Prometheus, Grafana</div>
+              <div class="learn-time">⏱ ~2 weeks to close the gap</div>
+            </div>
+            <button class="btn btn-ghost btn-sm full">Improve Match</button>
+          </article>
+
+          <article class="rec-card glass reveal">
+            <div class="rec-top">
+              <svg class="radial" viewBox="0 0 80 80">
+                <circle class="radial-track" cx="40" cy="40" r="34"></circle>
+                <circle class="radial-fill" cx="40" cy="40" r="34" data-pct="70"></circle>
+              </svg>
+              <span class="radial-label">70%</span>
+              <div>
+                <h3 class="job-role">Site Reliability Engineer</h3>
+                <p class="job-company">Zoho · Remote</p>
+              </div>
+            </div>
+            <p class="rec-reason">Adjacent to your current skills; on-call experience would help.</p>
+            <div class="rec-skills">
+              <div><span class="dot dot-good"></span>Matching: Linux, Bash</div>
+              <div><span class="dot dot-bad"></span>Missing: Incident Management, Go</div>
+              <div class="learn-time">⏱ ~3 weeks to close the gap</div>
+            </div>
+            <button class="btn btn-ghost btn-sm full">Improve Match</button>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- ============ SECTION 4 — APPLICATION TRACKER ============ -->
+      <section class="section reveal">
+        <div class="section-head">
+          <h2>Application Tracker</h2>
+        </div>
+
+        <div class="glass timeline-card">
+          <ol class="timeline">
+            <li class="timeline-step done"><span class="t-dot"></span>Applied</li>
+            <li class="timeline-step done"><span class="t-dot"></span>Resume Viewed</li>
+            <li class="timeline-step done"><span class="t-dot"></span>Shortlisted</li>
+            <li class="timeline-step active"><span class="t-dot"></span>Interview</li>
+            <li class="timeline-step"><span class="t-dot"></span>Offer</li>
+            <li class="timeline-step"><span class="t-dot"></span>Joined</li>
+          </ol>
+        </div>
+
+        <div class="glass table-card">
+          <div class="table-head-row">
+            <h3>Recent Applications</h3>
+          </div>
+          <div id="recent-applications-list">
+            <!-- Dynamic application rows loaded here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 5 — UPCOMING INTERVIEWS ============ -->
+      <section class="section reveal">
+        <div class="section-head">
+          <h2>Upcoming Interviews</h2>
+        </div>
+
+        <div class="interview-grid" id="interviews-grid">
+          <!-- Dynamic interviews loaded here -->
+        </div>
+      </section>
+
+      <!-- ============ SECTION 6 — AI INTERVIEW COACH ============ -->
+      <section class="section reveal">
+        <div class="coach-card glass">
+          <div class="coach-left">
+            <div class="ai-orb small" id="coachOrb">
+              <span class="orb-ring ring-1"></span>
+              <span class="orb-ring ring-2"></span>
+              <span class="orb-core"></span>
+              <span class="mic-bars" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i>
+              </span>
+            </div>
+            <h2>AI Interview Coach</h2>
+            <p class="section-desc">Practice out loud. Cara listens, scores, and tells you exactly what to fix.</p>
+
+            <div class="coach-modes">
+              <button class="mode-chip active">HR Interview</button>
+              <button class="mode-chip">Technical</button>
+              <button class="mode-chip">Behavioral</button>
+              <button class="mode-chip">System Design</button>
+              <button class="mode-chip">Coding</button>
+            </div>
+
+            <div class="coach-actions">
+              <button class="btn btn-primary">Generate Questions</button>
+              <button class="btn btn-ghost record-btn" id="recordBtn">
+                <span class="rec-dot"></span> Record Answer
+              </button>
+            </div>
+          </div>
+
+          <div class="coach-right">
+            <h3 class="coach-feedback-title">Last Session Feedback</h3>
+            <div class="score-circles">
+              <div class="score-circle">
+                <svg viewBox="0 0 80 80"><circle class="radial-track" cx="40" cy="40" r="34"></circle><circle class="radial-fill teal" cx="40" cy="40" r="34" data-pct="88"></circle></svg>
+                <span class="radial-label">88</span>
+                <p>Interview Score</p>
+              </div>
+              <div class="score-circle">
+                <svg viewBox="0 0 80 80"><circle class="radial-track" cx="40" cy="40" r="34"></circle><circle class="radial-fill" cx="40" cy="40" r="34" data-pct="81"></circle></svg>
+                <span class="radial-label">81</span>
+                <p>Confidence</p>
+              </div>
+              <div class="score-circle">
+                <svg viewBox="0 0 80 80"><circle class="radial-track" cx="40" cy="40" r="34"></circle><circle class="radial-fill teal" cx="40" cy="40" r="34" data-pct="90"></circle></svg>
+                <span class="radial-label">90</span>
+                <p>Communication</p>
+              </div>
+              <div class="score-circle">
+                <svg viewBox="0 0 80 80"><circle class="radial-track" cx="40" cy="40" r="34"></circle><circle class="radial-fill" cx="40" cy="40" r="34" data-pct="76"></circle></svg>
+                <span class="radial-label">76</span>
+                <p>Technical Accuracy</p>
+              </div>
+            </div>
+            <div class="suggestion-box">
+              <span class="suggestion-icon">✦</span>
+              <p>Slow down when explaining trade-offs — you rushed the caching section in round 2.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 7 — RESUME MATCH ============ -->
+      <section class="section reveal">
+        <div class="section-head">
+          <h2>Resume Match</h2>
+        </div>
+
+        <div class="resume-split glass">
+          <div class="resume-preview">
+            <div class="resume-doc">
+              <div class="resume-doc-header">
+                <div class="resume-avatar">{{ user_initials }}</div>
+                <div>
+                  <h4>{{ user.name }}</h4>
+                  <p>{{ user.target_role or 'Add your target role in Settings' }}</p>
+                </div>
+              </div>
+              <div class="resume-line-block"></div>
+              <div class="resume-line-block short"></div>
+              <div class="resume-line-block"></div>
+              <div class="resume-line-block short"></div>
+              <div class="resume-line-block"></div>
+            </div>
+          </div>
+
+          <div class="resume-analysis">
+            <div class="ats-score">
+              <svg class="radial big" viewBox="0 0 80 80">
+                <circle class="radial-track" cx="40" cy="40" r="34"></circle>
+                <circle class="radial-fill" cx="40" cy="40" r="34" data-pct="{{ analysis.ats_score if analysis else (user.resume_score or 0) }}"></circle>
+              </svg>
+              <span class="radial-label">{{ analysis.ats_score if analysis else (user.resume_score or 0) }}%</span>
+              <div>
+                <h3>ATS Score</h3>
+                <p class="section-desc">
+                  {% if analysis %}{{ analysis.summary }}{% else %}Run the Resume Analyzer to get scored against real ATS rules.{% endif %}
+                </p>
+              </div>
+            </div>
+
+            <div class="keyword-block">
+              <p class="kw-label">Keyword Match</p>
+              <div class="progress-track"><div class="progress-fill" style="width:{{ analysis.ats_score if analysis else (user.resume_score or 0) }}%"></div></div>
+            </div>
+
+            <div class="kw-lists">
+              <div>
+                <p class="kw-label">Missing Keywords</p>
+                <div class="skill-tags">
+                  {% if analysis and analysis.keyword_gaps %}
+                    {% for kw in analysis.keyword_gaps %}<span class="tag tag-missing">{{ kw }}</span>{% endfor %}
+                  {% else %}
+                    <span class="tag">Run the Resume Analyzer to see gaps</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div>
+                <p class="kw-label">Recommended Improvements</p>
+                <ul class="reco-list">
+                  {% if analysis and analysis.suggestions %}
+                    {% for tip in analysis.suggestions %}<li>{{ tip }}</li>{% endfor %}
+                  {% else %}
+                    <li>Upload a resume in Resume Analyzer to get personalized suggestions</li>
+                  {% endif %}
+                </ul>
+              </div>
+            </div>
+
+            <div class="job-actions">
+              <button class="btn btn-primary" onclick="window.location.href='{{ url_for('resume_analyzer') }}'">Generate Optimized Resume</button>
+              <button class="btn btn-ghost" onclick="window.location.href='{{ url_for('resume_analyzer') }}'">Generate Cover Letter</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 8 — SAVED JOBS ============ -->
+      <section class="section reveal">
+        <div class="section-head">
+          <h2>Saved Jobs</h2>
+        </div>
+        <div class="carousel" id="savedCarousel">
+          <div class="carousel-track" id="saved-jobs-track">
+            <!-- Dynamic saved jobs loaded here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 9 — CAREER ANALYTICS ============ -->
+      <section class="section reveal">
+        <div class="section-head">
+          <h2>Career Analytics</h2>
+        </div>
+        <div class="analytics-grid">
+          <div class="chart-card glass">
+            <h4>Application Success Rate</h4>
+            <canvas id="chartSuccess" height="180"></canvas>
+          </div>
+          <div class="chart-card glass">
+            <h4>Interview Performance</h4>
+            <canvas id="chartInterview" height="180"></canvas>
+          </div>
+          <div class="chart-card glass">
+            <h4>Skills Growth</h4>
+            <canvas id="chartSkills" height="180"></canvas>
+          </div>
+          <div class="chart-card glass">
+            <h4>Job Match Trend</h4>
+            <canvas id="chartMatch" height="180"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 10 — NOTIFICATIONS ============ -->
+      <section class="section reveal">
+        <div class="section-head">
+          <h2>Recent Notifications</h2>
+        </div>
+        <div class="notif-list glass">
+          <div class="notif-row unread">
+            <span class="notif-dot"></span>
+            <div class="company-logo sm">G</div>
+            <p>Google viewed your application for <b>Backend Engineer II</b>.</p>
+            <span class="notif-time">2h ago</span>
+          </div>
+          <div class="notif-row unread">
+            <span class="notif-dot"></span>
+            <div class="company-logo sm teal">M</div>
+            <p>Microsoft shortlisted you for <b>Software Engineer, Azure Core</b>.</p>
+            <span class="notif-time">6h ago</span>
+          </div>
+          <div class="notif-row">
+            <span class="notif-dot"></span>
+            <div class="company-logo sm">A</div>
+            <p>Amazon interview is scheduled for tomorrow at 4:30 PM.</p>
+            <span class="notif-time">1d ago</span>
+          </div>
+          <div class="notif-row">
+            <span class="notif-dot"></span>
+            <div class="company-logo sm">I</div>
+            <p>Infosys marked your application as not selected this round.</p>
+            <span class="notif-time">2d ago</span>
+          </div>
+          <div class="notif-row unread">
+            <span class="notif-dot"></span>
+            <div class="company-logo sm ai">✦</div>
+            <p>CareerOS recommends improving your <b>Docker</b> skills to raise your match score.</p>
+            <span class="notif-time">2d ago</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 11 — CAREER TIPS ============ -->
+      <section class="section reveal">
+        <div class="tip-card glass">
+          <span class="ai-icon-small">✦</span>
+          <div>
+            <p class="kw-label">Today's Tip</p>
+            <p class="tip-text">Complete the REST API module to improve your Backend Developer match by <b>12%</b>.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm">Start Module</button>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 12 — FOOTER CTA ============ -->
+      <section class="section reveal">
+        <div class="footer-cta glass">
+          <h2>Ready for your next opportunity?</h2>
+          <p class="section-desc">{{ stats.applications }} roles match your profile today. Cara can prep you before you apply.</p>
+          <div class="cta-actions">
+            <button class="btn btn-primary btn-lg" onclick="window.location.href='#job-search'">Find More Jobs</button>
+            <button class="btn btn-ghost btn-lg" id="talkToCaraBtn">Talk to Cara</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+  window.CAREEROS_USER = {
+    id: {{ user.id }},
+    name: {{ user.name|tojson }},
+    targetRole: {{ (user.target_role or '')|tojson }}
+  };
+</script>
+<script src="{{ url_for('static', filename='js/career-center.js') }}"></script>
+</body>
+</html>

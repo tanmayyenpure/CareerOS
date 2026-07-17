@@ -1,0 +1,19 @@
+# Environment variables
+.env
+
+# Ignore Oracle JDK
+oracleJdk-26/
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+env/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
