@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+<script>(function(){try{var t=localStorage.getItem("careeros-theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}}catch(e){}window.getTheme=function(){return document.documentElement.getAttribute("data-theme")||"dark"};window.setTheme=function(theme){document.documentElement.setAttribute("data-theme",theme);try{localStorage.setItem("careeros-theme",theme)}catch(e){}}})();</script>
+<style>
+.nav-logo{display:flex;align-items:center;gap:9px}
+.nav-logo img{width:34px;height:34px;object-fit:contain;flex-shrink:0}
+.footer-brand .nav-logo img{width:30px;height:30px}
+</style>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pricing — CareerOS</title>
@@ -9,21 +16,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 <script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
 
 <!-- NAVBAR -->
 <nav id="navbar">
-  <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+  <a href="{{ url_for('home') }}" class="nav-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="CareerOS logo">CareerOS</a>
   <ul class="nav-links">
-     <li><a href="{{ url_for('home') }}" class="active">Home</a></li>
+    <li><a href="{{ url_for('home') }}">Home</a></li>
     <li><a href="{{ url_for('about') }}">About</a></li>
-<li><a href="{{ url_for('features') }}">Features</a></li>
-<li><a href="{{ url_for('stories') }}">Stories</a></li>
-<li><a href="{{ url_for('pricing') }}">Pricing</a></li>
-<li><a href="{{ url_for('faq') }}">FAQ</a></li>
+    <li><a href="{{ url_for('features') }}">Features</a></li>
+    <li><a href="{{ url_for('stories') }}">Stories</a></li>
+    <li><a href="{{ url_for('pricing') }}" class="active">Pricing</a></li>
+    <li><a href="{{ url_for('faq') }}">FAQ</a></li>
   </ul>
-  <div class="nav-right">
+    <div class="nav-right">
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
       <span class="icon-light">☀️</span>
       <span class="icon-dark">🌙</span>
@@ -38,9 +46,10 @@
 <div class="mobile-menu" id="mobileMenu">
   <ul>
     <li><a href="{{ url_for('home') }}" onclick="closeMobile()">Home</a></li>
+    <li><a href="{{ url_for('about') }}" onclick="closeMobile()">About</a></li>
     <li><a href="{{ url_for('features') }}" onclick="closeMobile()">Features</a></li>
     <li><a href="{{ url_for('stories') }}" onclick="closeMobile()">Stories</a></li>
-    <li><a href="{{ url_for('pricing') }}" onclick="closeMobile()">Pricing</a></li>
+    <li><a href="{{ url_for('pricing') }}" onclick="closeMobile()" class="active">Pricing</a></li>
     <li><a href="{{ url_for('faq') }}" onclick="closeMobile()">FAQ</a></li>
     <li><a href="{{ url_for('home') }}#chat" class="btn-nav" onclick="closeMobile()">Get Started Free</a></li>
   </ul>
@@ -85,7 +94,9 @@
           <li>Priority support</li>
           <li>Interview mock sessions</li>
         </ul>
-        <button class="btn-price primary">Upgrade to Pro</button>
+        <button class="btn-price primary" data-plan-id="pro" onclick="startCheckout(this)">
+          {% if current_user and current_user.plan == 'pro' %}Current Plan{% else %}Upgrade to Pro{% endif %}
+        </button>
       </div>
       <div class="price-card">
         <div class="price-name">Team</div>
@@ -98,7 +109,9 @@
           <li>Custom career paths</li>
           <li>Dedicated account manager</li>
         </ul>
-        <button class="btn-price">Contact Us</button>
+        <button class="btn-price" data-plan-id="team" onclick="startCheckout(this)">
+          {% if current_user and current_user.plan == 'team' %}Current Plan{% else %}Upgrade to Team{% endif %}
+        </button>
       </div>
     </div>
   </div>
@@ -113,7 +126,7 @@
   <div class="footer-inner">
     <div class="footer-top">
       <div class="footer-brand">
-        <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+        <a href="{{ url_for('home') }}" class="nav-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="CareerOS logo">CareerOS</a>
         <p>AI-powered career guidance for India's next generation of professionals.</p>
         <div class="social-links">
           <a href="#" aria-label="LinkedIn">in</a>
@@ -229,7 +242,94 @@ document.addEventListener('DOMContentLoaded', function () {
     if (priceTeam)  priceTeam.innerHTML = yearly ? '₹1,399 <span>/mo</span>' : '₹1,999 <span>/mo</span>';
     if (periodTeam) periodTeam.textContent = yearly ? 'billed ₹16,788/year · up to 10 users' : 'billed monthly · up to 10 users';
   });
+
+  window.currentBillingCycle = 'monthly';
+  toggle.addEventListener('click', () => {
+    window.currentBillingCycle = yearly ? 'yearly' : 'monthly';
+  });
 });
+
+// ── PAYMENT FLOW ──
+async function startCheckout(btnEl) {
+  const planId = btnEl.dataset.planId;
+  const cycle = window.currentBillingCycle || 'monthly';
+
+  {% if not current_user %}
+    window.location.href = "{{ url_for('login') }}";
+    return;
+  {% endif %}
+
+  if (btnEl.textContent.trim() === 'Current Plan') return;
+
+  btnEl.disabled = true;
+  const originalText = btnEl.textContent;
+  btnEl.textContent = 'Processing…';
+
+  try {
+    const orderRes = await fetch('/api/payments/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan_id: planId, billing_cycle: cycle })
+    });
+    const order = await orderRes.json();
+    if (!orderRes.ok) throw new Error(order.error || 'Could not create order');
+
+    // Razorpay isn't configured on the server -> use the simulated
+    // in-house checkout instead of opening the Razorpay modal.
+    if (order.redirect_url) {
+      window.location.href = order.redirect_url;
+      return;
+    }
+
+    const rzp = new Razorpay({
+      key: order.key_id,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'CareerOS',
+      description: `${order.plan_name} — ${cycle}`,
+      order_id: order.order_id,
+      prefill: { name: order.user_name || '', email: order.user_email || '' },
+      theme: { color: '#6366F1' },
+      handler: async function (response) {
+        const verifyRes = await fetch('/api/payments/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature
+          })
+        });
+        const result = await verifyRes.json();
+        if (verifyRes.ok && result.status === 'success') {
+          window.location.href = "{{ url_for('dashboard') }}";
+        } else {
+          alert('Payment verification failed. If money was deducted, it will be auto-refunded within 5-7 days, or contact support.');
+          btnEl.disabled = false;
+          btnEl.textContent = originalText;
+        }
+      },
+      modal: {
+        ondismiss: function () {
+          btnEl.disabled = false;
+          btnEl.textContent = originalText;
+        }
+      }
+    });
+
+    rzp.on('payment.failed', function (resp) {
+      alert('Payment failed: ' + resp.error.description);
+      btnEl.disabled = false;
+      btnEl.textContent = originalText;
+    });
+
+    rzp.open();
+  } catch (err) {
+    alert(err.message || 'Something went wrong starting checkout.');
+    btnEl.disabled = false;
+    btnEl.textContent = originalText;
+  }
+}
 </script>
 </body>
 </html>

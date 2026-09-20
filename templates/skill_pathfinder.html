@@ -40,15 +40,47 @@
   a{color:inherit; text-decoration:none;}
   .main{flex:1; min-width:0; margin-left:250px;}
   @media (max-width:900px){
+    body{ flex-direction:column; }
     .app-sidebar{ position:relative; width:100%; height:auto; }
-    .main{ margin-left:0; }
+    .main{ width:100%; margin-left:0; }
   }
   .topbar{display:flex; justify-content:space-between; align-items:center; padding:22px 40px; border-bottom:1px solid var(--border-soft);}
   .page-title{font-family:'Poppins',sans-serif; font-weight:700; font-size:1.25rem;}
-  .bell{width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--card); border:1px solid var(--border); cursor:pointer;}
+  .bell{width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--card); border:1px solid var(--border); cursor:pointer; flex-shrink:0;}
   .bell svg{width:17px; height:17px; color:var(--text-mid);}
+  .avatar-chip-sm{width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg, var(--purple-2), var(--purple)); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; color:#fff; flex-shrink:0; overflow:hidden; text-decoration:none;}
+  .avatar-chip-sm img{width:100%;height:100%;object-fit:cover}
   .content{padding:40px 40px;}
   @keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ---------- In-page search (topbar) ---------- */
+  .search-wrap{position:relative; display:flex; align-items:center;}
+  .search-input{
+    width:0; opacity:0; padding:0; border:none; background:var(--card);
+    color:var(--text-hi); border-radius:10px; font-size:.85rem; font-family:inherit;
+    transition:width .28s cubic-bezier(.16,1,.3,1), opacity .2s ease, padding .28s ease, margin .28s ease, border-color .2s ease;
+    margin-left:0; outline:none;
+  }
+  .search-wrap.open .search-input{
+    width:220px; opacity:1; padding:9px 12px; margin-left:8px;
+    border:1px solid var(--border);
+  }
+  .search-wrap.open .search-input.no-match{ border-color:#f87171; }
+  .search-count{
+    font-size:.72rem; color:var(--text-low); margin-left:6px; white-space:nowrap;
+    opacity:0; transition:opacity .2s ease; flex-shrink:0;
+  }
+  .search-wrap.open .search-count{ opacity:1; }
+  @keyframes searchPulse{
+    0%{box-shadow:0 0 0 0 rgba(99,102,241,.55);}
+    70%{box-shadow:0 0 0 14px rgba(99,102,241,0);}
+    100%{box-shadow:0 0 0 0 rgba(99,102,241,0);}
+  }
+  .search-hit{
+    outline:2px solid var(--purple-2) !important; outline-offset:3px;
+    animation:searchPulse 1.4s ease-out 1; border-radius:14px;
+  }
+  @media (prefers-reduced-motion: reduce){ .search-hit{ animation:none; } }
 </style>
 </head>
 <body>
@@ -63,14 +95,22 @@
       {% if not user %}
         <a href="{{ url_for('login') }}" class="btn-nav" style="box-shadow:none;">Login</a>
         <a href="{{ url_for('signup') }}" class="btn-nav">Sign Up</a>
-      {% else %}
-        <div style="font-size:0.85rem; color:var(--text-mid);">
-          Logged in as <strong>{{ user.name or user.email }}</strong>
-        </div>
       {% endif %}
-      <div class="bell">
+      <div class="search-wrap" id="searchWrap">
+        <button class="bell" id="searchBtn" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search skill tree…" autocomplete="off">
+        <span class="search-count" id="searchCount"></span>
+      </div>
+      <div class="bell" aria-label="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
       </div>
+      {% if user %}
+      <a href="{{ url_for('profile') }}" class="avatar-chip-sm" title="{{ user.name or user.email }}">
+        {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="{{ user.name }}">{% else %}{{ (user.name[0]|upper) if user.name else 'U' }}{% endif %}
+      </a>
+      {% endif %}
     </div>
   </div>
 
@@ -88,20 +128,50 @@
     <!-- Role Selector Panel -->
     <div class="selector-panel">
       <div class="selector-group">
-        <label for="currentRoleSelect">Current Role</label>
-        <select id="currentRoleSelect" class="selector-select">
-          <option value="frontend" {% if user and user.target_role and 'frontend' in user.target_role.lower() %}selected{% endif %}>Frontend Developer</option>
-          <option value="backend" {% if user and user.target_role and 'backend' in user.target_role.lower() %}selected{% endif %}>Backend Developer</option>
-          <option value="qa" {% if user and user.target_role and 'qa' in user.target_role.lower() %}selected{% endif %}>QA Engineer</option>
-          <option value="student" {% if not user or not user.target_role %}selected{% endif %}>Student / Explorer</option>
-        </select>
+        <label for="currentRoleInput">Current Role</label>
+        <input
+          type="text"
+          id="currentRoleInput"
+          class="selector-select"
+          list="currentRoleSuggestions"
+          autocomplete="off"
+          placeholder="Type any role — e.g. Data Analyst"
+          value="{% if user and user.domain %}{{ user.domain }}{% endif %}"
+        />
+        <datalist id="currentRoleSuggestions">
+          <option value="Frontend Developer">
+          <option value="Backend Developer">
+          <option value="QA Engineer">
+          <option value="Student / Explorer">
+          <option value="Data Analyst">
+          <option value="Mobile Developer">
+          <option value="UI/UX Designer">
+          <option value="Support Engineer">
+          <option value="Business Analyst">
+        </datalist>
       </div>
 
       <div class="selector-group">
-        <label for="targetRoleSelect">Target Role</label>
-        <select id="targetRoleSelect" class="selector-select">
-          <!-- populated dynamically by JS based on current role selection -->
-        </select>
+        <label for="targetRoleInput">Target Role</label>
+        <input
+          type="text"
+          id="targetRoleInput"
+          class="selector-select"
+          list="targetRoleSuggestions"
+          autocomplete="off"
+          placeholder="Type any role — e.g. Data Scientist"
+          value="{% if user and user.target_role %}{{ user.target_role }}{% endif %}"
+        />
+        <datalist id="targetRoleSuggestions">
+          <option value="Full Stack Engineer">
+          <option value="Cloud Architect">
+          <option value="DevOps Engineer">
+          <option value="Backend Developer">
+          <option value="Data Scientist">
+          <option value="Product Manager">
+          <option value="Engineering Manager">
+          <option value="Machine Learning Engineer">
+        </datalist>
       </div>
 
       <button id="btnGenerate" class="btn-generate">
@@ -109,6 +179,12 @@
         Generate Pathfinder
       </button>
     </div>
+
+    <!-- Quick-pick suggested transitions -->
+    <div id="quick-picks" class="quick-picks">
+      <span class="quick-picks-label">Popular:</span>
+    </div>
+    <div id="selector-error" class="selector-error" style="display:none;"></div>
 
     <!-- Split Pathfinder Layout -->
     <div class="pathfinder-content" style="margin-top: 24px;">
@@ -139,6 +215,129 @@
 </main>
 
 {% include "_chatbot_widget.html" %}
+
+<script>
+// ---------- Page search: click the search icon, type, auto-scroll to the match ----------
+// The skill tree and curriculum panel are built dynamically by
+// skill_pathfinder.js, whose exact node markup this page doesn't control.
+// getSearchableItems() first tries common node/card class names, and
+// falls back to any "leaf" text-bearing element (no element children) so
+// search still works even if that JS renders with different class names.
+(function(){
+  const wrap  = document.getElementById('searchWrap');
+  const btn   = document.getElementById('searchBtn');
+  const input = document.getElementById('searchInput');
+  const count = document.getElementById('searchCount');
+  if (!wrap || !btn || !input) return;
+
+  let matches = [];
+  let matchIndex = -1;
+
+  function collectFrom(root, classGuesses){
+    if (!root) return [];
+    for (const sel of classGuesses){
+      const found = root.querySelectorAll(sel);
+      if (found.length) return Array.from(found);
+    }
+    // Fallback: leaf elements (no element children) with their own text.
+    return Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,li,p,button,span,div'))
+      .filter(el => el.children.length === 0 && el.textContent.trim().length > 0);
+  }
+
+  function getSearchableItems(){
+    const treeRoot = document.getElementById('tree-columns');
+    const detailRoot = document.getElementById('detail-panel-box');
+    const quickPicks = document.querySelectorAll('#quick-picks button, #quick-picks .quick-pick');
+    const treeItems = collectFrom(treeRoot, ['.tree-node', '.skill-node', '.stage-node', '.node', '.tree-item']);
+    const detailItems = collectFrom(detailRoot, ['.detail-block', '.detail-section', '.curriculum-item']);
+    return [...Array.from(quickPicks), ...treeItems, ...detailItems]
+      .filter(el => el.offsetParent !== null);
+  }
+
+  function clearHighlights(){
+    document.querySelectorAll('.search-hit').forEach(el => el.classList.remove('search-hit'));
+  }
+
+  function goToMatch(i){
+    clearHighlights();
+    const el = matches[i];
+    if (!el) return;
+    el.classList.add('search-hit');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function updateCount(){
+    if (!input.value.trim()){
+      count.textContent = '';
+      input.classList.remove('no-match');
+    } else if (matches.length){
+      count.textContent = `${matchIndex + 1} of ${matches.length}`;
+      input.classList.remove('no-match');
+    } else {
+      count.textContent = 'No matches';
+      input.classList.add('no-match');
+    }
+  }
+
+  function runSearch(){
+    const q = input.value.trim().toLowerCase();
+    clearHighlights();
+    if (!q){
+      matches = [];
+      matchIndex = -1;
+      updateCount();
+      return;
+    }
+    matches = getSearchableItems().filter(el => el.textContent.toLowerCase().includes(q));
+    matchIndex = matches.length ? 0 : -1;
+    updateCount();
+    if (matchIndex >= 0) goToMatch(matchIndex);
+  }
+
+  function openSearch(){
+    wrap.classList.add('open');
+    input.focus();
+  }
+
+  function closeSearch(){
+    wrap.classList.remove('open');
+    input.value = '';
+    clearHighlights();
+    matches = [];
+    matchIndex = -1;
+    updateCount();
+  }
+
+  btn.addEventListener('click', () => {
+    if (wrap.classList.contains('open') && !input.value.trim()) closeSearch();
+    else openSearch();
+  });
+
+  let debounceTimer;
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(runSearch, 150);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter'){
+      e.preventDefault();
+      if (!matches.length) return;
+      matchIndex = e.shiftKey
+        ? (matchIndex - 1 + matches.length) % matches.length
+        : (matchIndex + 1) % matches.length;
+      updateCount();
+      goToMatch(matchIndex);
+    } else if (e.key === 'Escape'){
+      closeSearch();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (wrap.classList.contains('open') && !wrap.contains(e.target)) closeSearch();
+  });
+})();
+</script>
 
 </body>
 </html>

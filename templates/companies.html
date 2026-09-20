@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Companies — CareerOS</title>
+<script src="/static/theme.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-widget.css') }}">
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0b1020; --card:rgba(255,255,255,.06); --card-border:rgba(255,255,255,.08);
+  --text:#ffffff; --muted:#94a3b8; --chip-bg:rgba(255,255,255,.05);
+  --purple:#6366F1; --purple-2:#818CF8; --blue:#06B6D4; --success:#4ade80; --danger:#f87171;
+  --shadow-soft:0 14px 40px -16px rgba(0,0,0,.55); --tap:46px;
+}
+[data-theme="light"]{
+  --bg:#f3f4f9; --card:rgba(255,255,255,.85); --card-border:rgba(15,23,42,.08);
+  --text:#0f172a; --muted:#5b6472; --chip-bg:rgba(15,23,42,.03);
+  --shadow-soft:0 14px 40px -18px rgba(15,23,42,.25); --purple:#4F46E5; --purple-2:#6366F1;
+}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s}
+.bg,.bg2{position:fixed;border-radius:50%;filter:blur(90px);opacity:.35;pointer-events:none}
+.bg{width:320px;height:320px;background:#6366F1;top:-80px;left:-60px}
+.bg2{width:260px;height:260px;background:#06B6D4;right:-60px;bottom:-40px}
+.main{margin-left:250px;padding:30px}
+
+.page-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.page-head h1{font-size:1.5rem}
+.search-wrap{position:relative;flex:1;max-width:360px;min-width:220px}
+.search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px}
+.search-wrap input{width:100%;padding:11px 14px 11px 40px;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--text);font-family:inherit;font-size:.88rem;outline:none;transition:border-color .2s}
+.search-wrap input:focus{border-color:var(--purple)}
+.hdr-actions{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.hdr-icon-btn{width:var(--tap);height:var(--tap);border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--card-border);cursor:pointer;transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;flex-shrink:0}
+.hdr-icon-btn:hover{box-shadow:0 6px 18px rgba(99,102,241,.25)}
+.hdr-icon-btn:active{transform:scale(.88)}
+.hdr-icon-btn i{font-size:18px;color:var(--muted)}
+.avatar-chip-sm{width:var(--tap);height:var(--tap);border-radius:50%;background:linear-gradient(135deg,var(--purple-2),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:#fff;flex-shrink:0;overflow:hidden;text-decoration:none}
+.avatar-chip-sm img{width:100%;height:100%;object-fit:cover}
+
+/* Domain filter chips */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.filter-chip{background:var(--chip-bg);border:1px solid var(--card-border);color:var(--muted);padding:8px 14px;border-radius:20px;font-size:.82rem;cursor:pointer;transition:background .2s,color .2s,transform .15s;white-space:nowrap}
+.filter-chip:active{transform:scale(.95)}
+.filter-chip.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+
+.company-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.c-card{background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:20px;backdrop-filter:blur(15px);transition:transform .2s,box-shadow .3s;display:flex;flex-direction:column}
+.c-card:hover{box-shadow:var(--shadow-soft);transform:translateY(-2px)}
+.c-top{display:flex;gap:12px;align-items:center}
+.c-logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,#6366F1,#06B6D4);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;overflow:hidden}
+.c-logo img{width:100%;height:100%;object-fit:cover}
+.c-name{font-weight:700;font-size:.98rem}
+.c-industry{color:var(--purple-2);font-size:.78rem;margin-top:2px}
+.c-desc{color:var(--muted);font-size:.82rem;line-height:1.5;margin-top:12px;flex:1}
+.c-meta{display:flex;gap:14px;margin-top:12px;font-size:.76rem;color:var(--muted)}
+.c-meta span{display:flex;align-items:center;gap:4px}
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--purple);padding:10px 18px;border-radius:11px;color:#fff;text-decoration:none;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,background .2s;font-size:.84rem;border:none;cursor:pointer;min-height:var(--tap);width:100%;margin-top:14px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(99,102,241,.4)}
+.btn:active{transform:translateY(0) scale(.96)}
+.btn-outline{background:transparent;border:1px solid var(--card-border);color:var(--text)}
+.btn-outline:hover{background:var(--chip-bg)}
+.btn.following{background:rgba(74,222,128,.12);color:var(--success);border:1px solid rgba(74,222,128,.25)}
+.btn.following:hover{background:rgba(248,113,113,.12);color:var(--danger);border-color:rgba(248,113,113,.25)}
+.btn.following:hover .follow-label::before{content:'Unfollow'}
+.btn.following .follow-label{visibility:hidden}
+.btn.following .follow-label::before{visibility:visible;content:'Following'}
+.c-card-link{display:block;text-decoration:none;color:inherit}
+
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);grid-column:1/-1}
+.empty-state i{font-size:38px;opacity:.4;margin-bottom:10px;display:block}
+
+.toast-stack{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:999;width:min(340px,90vw)}
+.toast{background:var(--card);border:1px solid var(--card-border);backdrop-filter:blur(18px);color:var(--text);padding:12px 16px;border-radius:12px;font-size:.85rem;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-soft);animation:toastIn .35s cubic-bezier(.16,1,.3,1) both}
+.toast.out{animation:toastOut .3s ease forwards}
+.toast i{color:var(--success);font-size:17px;flex-shrink:0}
+.toast.error i{color:var(--danger)}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(10px) scale(.95)}}
+
+@media(max-width:900px){ .main{margin:0;padding:20px} }
+@media(max-width:640px){
+  .main{padding:16px}
+  .page-head{flex-direction:column;align-items:stretch}
+  .search-wrap{max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="bg2"></div>
+{% include "_sidebar.html" %}
+<div class="main">
+
+  <div class="page-head">
+    <h1>Companies</h1>
+    <div class="search-wrap">
+      <i class="ti ti-search"></i>
+      <input type="text" id="companySearch" placeholder="Search companies...">
+    </div>
+    <div class="hdr-actions">
+      <button class="hdr-icon-btn" aria-label="Notifications"><i class="ti ti-bell"></i></button>
+      <a href="{{ url_for('profile') }}" class="avatar-chip-sm" title="{{ user.name if user else 'Profile' }}">
+        {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="{{ user.name }}">{% else %}{{ user.name[0]|upper if user and user.name else 'U' }}{% endif %}
+      </a>
+    </div>
+  </div>
+
+  <div class="filter-row" id="domainFilters">
+    <button class="filter-chip active" data-domain="all">All</button>
+    <button class="filter-chip" data-domain="engineering_tech">Engineering &amp; Technology</button>
+    <button class="filter-chip" data-domain="medical_healthcare">Medical &amp; Healthcare</button>
+    <button class="filter-chip" data-domain="commerce_finance">Commerce &amp; Finance</button>
+    <button class="filter-chip" data-domain="law">Law</button>
+    <button class="filter-chip" data-domain="design_creative">Design &amp; Creative Arts</button>
+    <button class="filter-chip" data-domain="government_public">Government &amp; Public</button>
+    <button class="filter-chip" data-domain="agriculture">Agriculture</button>
+  </div>
+
+  <div class="company-grid" id="companyGrid">
+    {% for co in companies %}
+    <div class="c-card" data-domain="{{ co.domain }}" data-following="{{ 'true' if co.is_following else 'false' }}">
+      <a class="c-card-link" href="{{ url_for('company_profile', company_id=co.id) }}">
+        <div class="c-top">
+          <div class="c-logo">
+            {% if co.logo_url %}<img src="{{ co.logo_url }}" alt="{{ co.name }}">{% else %}{{ co.name[0]|upper }}{% endif %}
+          </div>
+          <div>
+            <div class="c-name">{{ co.name }}</div>
+            <div class="c-industry">{{ co.industry }}</div>
+          </div>
+        </div>
+        <p class="c-desc">{{ co.description or "No description yet." }}</p>
+        <div class="c-meta">
+          <span><i class="ti ti-users"></i>{{ co.employee_count or 0 }} on CareerOS</span>
+          <span><i class="ti ti-heart"></i><span class="followers-num">{{ co.followers_count or 0 }}</span> followers</span>
+        </div>
+      </a>
+      <button class="btn follow-btn {{ 'following' if co.is_following else '' }}" data-id="{{ co.id }}">
+        <i class="ti ti-{{ 'check' if co.is_following else 'plus' }}"></i>
+        <span class="follow-label">{{ 'Following' if co.is_following else 'Follow' }}</span>
+      </button>
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="ti ti-building-skyscraper"></i><p>No companies to show yet.</p></div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+(function(){
+  const $ = (sel, ctx=document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+
+  const toastStack = $('#toastStack');
+  function toast(msg, {type='success', timeout=3000} = {}){
+    const el = document.createElement('div');
+    el.className = 'toast' + (type==='error' ? ' error' : '');
+    el.innerHTML = `<i class="ti ${type==='error'?'ti-alert-circle':'ti-circle-check'}"></i><span>${msg}</span>`;
+    toastStack.appendChild(el);
+    setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(),280); }, timeout);
+  }
+  async function safeFetch(url, opts){
+    try{
+      const res = await fetch(url, opts);
+      if (!res.ok) throw new Error('Request failed');
+      return await res.json().catch(()=>({}));
+    }catch(e){
+      toast("Couldn't reach the server — try again.", {type:'error'});
+      return null;
+    }
+  }
+
+  /* Domain filter chips */
+  $$('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      $$('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const domain = chip.dataset.domain;
+      $$('.c-card').forEach(card => {
+        card.style.display = (domain === 'all' || card.dataset.domain === domain) ? '' : 'none';
+      });
+    });
+  });
+
+  /* Follow / unfollow */
+  $$('.follow-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const card = btn.closest('.c-card');
+      const id = btn.dataset.id;
+      const isFollowing = card.dataset.following === 'true';
+      const method = isFollowing ? 'DELETE' : 'POST';
+      const res = await safeFetch(`/api/companies/${id}/follow`, { method });
+      if (res === null) return;
+      const nowFollowing = !isFollowing;
+      card.dataset.following = nowFollowing ? 'true' : 'false';
+      btn.classList.toggle('following', nowFollowing);
+      btn.querySelector('i').className = 'ti ti-' + (nowFollowing ? 'check' : 'plus');
+      btn.querySelector('.follow-label').textContent = nowFollowing ? 'Following' : 'Follow';
+
+      const countEl = card.querySelector('.followers-num');
+      if (countEl) {
+        const current = parseInt(countEl.textContent, 10) || 0;
+        countEl.textContent = Math.max(0, current + (nowFollowing ? 1 : -1));
+      }
+
+      toast(nowFollowing ? 'Following company.' : 'Unfollowed company.');
+    });
+  });
+
+  /* Search */
+  let searchDebounce;
+  $('#companySearch').addEventListener('input', (e) => {
+    clearTimeout(searchDebounce);
+    const q = e.target.value.trim().toLowerCase();
+    searchDebounce = setTimeout(() => {
+      $$('.c-card').forEach(card => {
+        const name = card.querySelector('.c-name').textContent.toLowerCase();
+        card.style.display = (!q || name.includes(q)) ? '' : 'none';
+      });
+    }, 200);
+  });
+})();
+</script>
+</body>
+</html>

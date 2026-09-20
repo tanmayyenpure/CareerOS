@@ -221,6 +221,49 @@
   box-shadow: 0 4px 12px rgba(129,140,248, 0.25);
 }
 
+/* Quick-pick suggested role transitions */
+.quick-picks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.quick-picks-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-low);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 2px;
+}
+
+.quick-pick-chip {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-mid);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-pick-chip:hover {
+  border-color: var(--purple-2);
+  color: var(--text-hi);
+  background: rgba(129,140,248, 0.08);
+}
+
+.selector-error {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: #f87171;
+  font-weight: 500;
+}
+
 /* Split content pane layout */
 .pathfinder-content {
   display: grid;
@@ -435,6 +478,81 @@
   .stage-column {
     max-width: 100%;
     width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    padding: 16px;
+    gap: 12px;
+  }
+  .topbar > div:first-child {
+    min-width: 0;
+  }
+  .topbar > div:last-child {
+    gap: 6px !important;
+  }
+  .page-title {
+    font-size: 1.05rem;
+  }
+  .bell,
+  .avatar-chip-sm {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+  }
+  .content {
+    padding: 24px 16px 56px;
+  }
+  .content h1 {
+    font-size: 1.45rem !important;
+    line-height: 1.2;
+  }
+  .selector-panel {
+    padding: 16px;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .selector-group {
+    min-width: 0;
+    width: 100%;
+  }
+  .selector-select,
+  .btn-generate {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    overflow-wrap: anywhere;
+  }
+  .btn-generate {
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+  .tree-container {
+    padding: 24px 12px;
+    min-height: 0;
+  }
+  #tree-columns {
+    flex-direction: column !important;
+    align-items: stretch;
+    gap: 16px !important;
+  }
+  .stage-column {
+    min-width: 0;
+    width: 100%;
+  }
+  .detail-panel {
+    padding: 18px 16px;
+  }
+  .resource-item {
+    min-width: 0;
+    gap: 8px;
+  }
+  .resource-info,
+  .resource-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 }
 

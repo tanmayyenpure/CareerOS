@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>{{ viewed_user.name }} — CareerOS</title>
+<script src="/static/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-widget.css') }}">
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#070B14; --card:rgba(255,255,255,.06); --card-border:rgba(255,255,255,.08);
+  --text:#ffffff; --muted:#94a3b8; --chip-bg:rgba(255,255,255,.05);
+  --purple:#6366F1; --purple-2:#818CF8; --accent:#8B5CF6; --blue:#06B6D4;
+  --success:#22C55E; --danger:#EF4444;
+  --shadow-soft:0 20px 50px -20px rgba(0,0,0,.6); --tap:46px; --r-lg:24px;
+}
+[data-theme="light"]{
+  --bg:#f3f4f9; --card:rgba(255,255,255,.85); --card-border:rgba(15,23,42,.08);
+  --text:#0f172a; --muted:#5b6472; --chip-bg:rgba(15,23,42,.03);
+  --shadow-soft:0 20px 50px -22px rgba(15,23,42,.28); --purple:#4F46E5; --purple-2:#6366F1;
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Inter',Arial,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s}
+h1,h3{font-family:'Sora',Arial,sans-serif}
+.bg,.bg2{position:fixed;border-radius:50%;filter:blur(100px);opacity:.28;pointer-events:none}
+.bg{width:340px;height:340px;background:#6366F1;top:-90px;left:-70px}
+.bg2{width:280px;height:280px;background:#06B6D4;right:-70px;bottom:-40px}
+.main{margin-left:250px;padding:30px;max-width:1240px}
+
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:.85rem;margin-bottom:16px;transition:color .2s}
+.back-link:hover{color:var(--purple-2)}
+
+.hero{
+  position:relative;background:var(--card);border:1px solid var(--card-border);border-radius:var(--r-lg);
+  backdrop-filter:blur(18px);box-shadow:var(--shadow-soft);margin-bottom:24px;overflow:hidden;
+  animation:fade .6s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes fade{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.hero-cover{
+  height:130px;width:100%;
+  background:
+    radial-gradient(120% 180% at 15% 0%, rgba(139,92,246,.5), transparent 60%),
+    radial-gradient(120% 180% at 85% 100%, rgba(6,182,212,.45), transparent 60%),
+    linear-gradient(120deg,#312e81,#1e1b4b 45%,#0e2a3a);
+  background-size:220% 220%; animation:coverShift 12s ease infinite;
+}
+@keyframes coverShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hero-body-wrap{padding:0 28px 28px;display:flex;gap:24px;align-items:flex-end;margin-top:-46px;flex-wrap:wrap}
+
+.avatar{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,#6366F1,#06B6D4);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:bold;color:#fff;flex-shrink:0;overflow:hidden;box-shadow:0 0 0 4px var(--bg),0 10px 30px rgba(99,102,241,.4)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.hero-body{flex:1;min-width:0;padding-bottom:2px}
+.hero h1{font-size:1.5rem;font-weight:700;letter-spacing:-.01em}
+.hero .role{color:var(--purple-2);font-weight:600;margin-top:4px}
+.mutual-line{color:var(--muted);font-size:.82rem;margin-top:8px;display:flex;align-items:center;gap:6px}
+.meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;color:var(--muted);font-size:.86rem}
+.meta-chip{display:flex;align-items:center;gap:6px;background:var(--chip-bg);border:1px solid var(--card-border);padding:7px 12px;border-radius:20px}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--purple);padding:11px 20px;border-radius:12px;color:#fff;text-decoration:none;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,background .2s;font-size:.88rem;font-weight:600;border:none;cursor:pointer;min-height:var(--tap)}
+.btn:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(99,102,241,.4)}
+.btn:active{transform:translateY(0) scale(.96)}
+.btn-outline{background:transparent;border:1px solid var(--card-border);color:var(--text)}
+.btn-outline:hover{background:var(--chip-bg)}
+.btn.pending{background:var(--chip-bg);color:var(--muted);cursor:default}
+.btn.connected{background:rgba(34,197,94,.12);color:var(--success);border:1px solid rgba(34,197,94,.25)}
+
+.layout{display:grid;grid-template-columns:1fr 1.4fr;gap:20px;align-items:start}
+.card{background:var(--card);border:1px solid var(--card-border);padding:24px;border-radius:var(--r-lg);backdrop-filter:blur(18px);transition:box-shadow .3s,border-color .3s;opacity:0;transform:translateY(16px)}
+.card.reveal{animation:fade .55s cubic-bezier(.16,1,.3,1) forwards}
+.card:hover{box-shadow:var(--shadow-soft);border-color:rgba(99,102,241,.25)}
+.card h3{font-size:1.02rem;margin-bottom:16px;font-weight:700}
+.detail-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--card-border);font-size:.88rem}
+.detail-row:last-child{border-bottom:none}
+.detail-row i{color:var(--purple-2);width:18px;text-align:center}
+.detail-row .d-label{color:var(--muted);width:90px;flex-shrink:0}
+.bio-text{color:var(--muted);font-size:.9rem;line-height:1.65;white-space:pre-wrap}
+
+.skill-row{margin-bottom:14px}
+.skill-row:last-child{margin-bottom:0}
+.s-top{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+.s-top span:last-child{color:var(--muted)}
+.skill-track{height:7px;background:#293049;border-radius:20px;overflow:hidden}
+[data-theme="light"] .skill-track{background:#dfe3ee}
+.skill-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#6366F1,#06B6D4)}
+
+.edu-item,.exp-item{padding:12px 0;border-bottom:1px solid var(--card-border)}
+.edu-item:last-child,.exp-item:last-child{border-bottom:none}
+.edu-item .school,.exp-item .t-role{font-weight:600;font-size:.92rem}
+.edu-item .deg,.exp-item .t-org{color:var(--muted);font-size:.85rem;margin-top:2px}
+.edu-item .yrs,.exp-item .t-when{color:var(--muted);font-size:.78rem;margin-top:2px}
+.empty-hint{color:var(--muted);font-size:.85rem;font-style:italic}
+
+/* Posts */
+.post-card{padding:18px 0;border-bottom:1px solid var(--card-border)}
+.post-card:last-child{border-bottom:none}
+.post-head{display:flex;align-items:center;gap:10px}
+.post-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#6366F1,#06B6D4);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden}
+.post-avatar img{width:100%;height:100%;object-fit:cover}
+.post-meta .p-name{font-size:.88rem;font-weight:600}
+.post-meta .p-when{font-size:.74rem;color:var(--muted)}
+.post-text{font-size:.88rem;line-height:1.6;margin-top:10px;white-space:pre-wrap}
+.post-images{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px}
+.post-images img{width:100%;height:150px;object-fit:cover;border-radius:10px}
+.post-actions{display:flex;gap:16px;margin-top:12px}
+.post-action-btn{display:flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--muted);font-family:inherit;font-size:.8rem;cursor:pointer;padding:6px 4px;transition:color .2s}
+.post-action-btn:hover{color:var(--purple-2)}
+.post-action-btn.liked{color:var(--danger)}
+.post-comments{margin-top:10px}
+.post-comment{font-size:.8rem;color:var(--muted);margin-top:6px}
+.post-comment b{color:var(--text);font-weight:600}
+.comment-form{display:flex;gap:8px;margin-top:10px}
+.comment-form input{flex:1;padding:9px 12px;border-radius:20px;border:1px solid var(--card-border);background:var(--chip-bg);color:var(--text);font-family:inherit;font-size:.8rem;outline:none}
+.comment-form input:focus{border-color:var(--purple)}
+.comment-form button{background:var(--purple);border:none;color:#fff;border-radius:20px;padding:0 16px;font-size:.78rem;cursor:pointer;font-weight:600}
+
+/* Toasts */
+.toast-stack{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:999;width:min(340px,90vw)}
+.toast{background:var(--card);border:1px solid var(--card-border);backdrop-filter:blur(18px);color:var(--text);padding:12px 16px;border-radius:12px;font-size:.85rem;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-soft);animation:toastIn .35s cubic-bezier(.16,1,.3,1) both}
+.toast.out{animation:toastOut .3s ease forwards}
+.toast i{color:var(--success);font-size:17px;flex-shrink:0}
+.toast.error i{color:var(--danger)}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(10px) scale(.95)}}
+
+@media(max-width:900px){
+  .main{margin:0;padding:20px}
+  .hero-body-wrap{flex-direction:column;text-align:center;align-items:center;margin-top:-40px}
+  .meta-row,.hero-actions{justify-content:center}
+  .layout{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .main{padding:16px}
+  .hero-cover{height:100px}
+  .hero-body-wrap{padding:0 18px 22px}
+  .avatar{width:90px;height:90px}
+  .btn{width:100%}
+  .hero-actions{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="bg2"></div>
+{% include "_sidebar.html" %}
+<div class="main">
+  <a class="back-link" href="{{ url_for('network') }}"><i class="ti ti-arrow-left"></i>Back to Network</a>
+
+  <section class="hero">
+    <div class="hero-cover"></div>
+    <div class="hero-body-wrap">
+      <div class="avatar">
+        {% if viewed_user.avatar_url %}<img src="{{ viewed_user.avatar_url }}" alt="{{ viewed_user.name }}">{% else %}{{ viewed_user.name[0]|upper }}{% endif %}
+      </div>
+      <div class="hero-body">
+        <h1>{{ viewed_user.name }}</h1>
+        <div class="role">{{ viewed_user.target_role or "—" }}</div>
+        {% if mutual_connections %}
+        <div class="mutual-line"><i class="ti ti-users"></i>{{ mutual_connections }} mutual connection{{ 's' if mutual_connections != 1 else '' }}</div>
+        {% endif %}
+        <div class="meta-row">
+          {% if viewed_user.location %}<span class="meta-chip"><i class="ti ti-map-pin"></i>{{ viewed_user.location }}</span>{% endif %}
+          {% if viewed_user.company %}<span class="meta-chip"><i class="ti ti-building"></i>{{ viewed_user.company }}</span>{% endif %}
+        </div>
+        <div class="hero-actions">
+          {% if connection_status == 'connected' %}
+            <button class="btn connected"><i class="ti ti-check"></i>Connected</button>
+            <button class="btn btn-outline"><i class="ti ti-message-circle"></i>Message</button>
+          {% elif connection_status == 'pending_sent' %}
+            <button class="btn pending"><i class="ti ti-clock"></i>Invitation Pending</button>
+          {% elif connection_status == 'pending_received' %}
+            <button class="btn accept-btn" data-id="{{ viewed_user.id }}"><i class="ti ti-check"></i>Accept Invitation</button>
+          {% else %}
+            <button class="btn connect-btn" data-id="{{ viewed_user.id }}" data-name="{{ viewed_user.name }}"><i class="ti ti-user-plus"></i>Connect</button>
+          {% endif %}
+          {% if viewed_user.linkedin %}<a class="btn btn-outline" href="{{ viewed_user.linkedin }}" target="_blank" rel="noopener"><i class="ti ti-brand-linkedin"></i>LinkedIn</a>{% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <div class="col">
+      <div class="card">
+        <h3>About</h3>
+        <p class="bio-text">{{ viewed_user.bio or "No bio added yet." }}</p>
+      </div>
+      <div class="card">
+        <h3>Skills</h3>
+        {% if viewed_user.skills %}
+          {% for s in viewed_user.skills %}
+          <div class="skill-row">
+            <div class="s-top"><span>{{ s.name }}</span><span>{{ s.level }}%</span></div>
+            <div class="skill-track"><div class="skill-fill" style="width:{{ s.level }}%"></div></div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="empty-hint">No skills listed yet.</p>
+        {% endif %}
+      </div>
+      <div class="card">
+        <h3>Work Experience</h3>
+        {% if viewed_user.experience %}
+          {% for job in viewed_user.experience %}
+          <div class="exp-item">
+            <div class="t-role">{{ job.title }}</div>
+            <div class="t-org">{{ job.company }}</div>
+            <div class="t-when">{{ job.dates }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="empty-hint">No experience listed yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card">
+        <h3>Education</h3>
+        {% if viewed_user.education %}
+          {% for edu in viewed_user.education %}
+          <div class="edu-item">
+            <div class="school">{{ edu.school }}</div>
+            <div class="deg">{{ edu.degree }}</div>
+            <div class="yrs">{{ edu.years }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="empty-hint">No education listed yet.</p>
+        {% endif %}
+      </div>
+      <div class="card">
+        <h3>Posts</h3>
+        {% if posts %}
+          {% for post in posts %}
+          <div class="post-card" data-post-id="{{ post.id }}">
+            <div class="post-head">
+              <div class="post-avatar">
+                {% if post.user.avatar_url %}<img src="{{ post.user.avatar_url }}" alt="{{ post.user.name }}">{% else %}{{ post.user.name[0]|upper }}{% endif %}
+              </div>
+              <div class="post-meta">
+                <div class="p-name">{{ post.user.name }}</div>
+                <div class="p-when">{{ post.created_at }}</div>
+              </div>
+            </div>
+            {% if post.text %}<p class="post-text">{{ post.text }}</p>{% endif %}
+            {% if post.images %}
+            <div class="post-images">
+              {% for img in post.images %}<img src="{{ img }}" alt="">{% endfor %}
+            </div>
+            {% endif %}
+            <div class="post-actions">
+              <button class="post-action-btn like-btn {{ 'liked' if post.liked_by_me else '' }}" data-id="{{ post.id }}">
+                <i class="ti ti-heart"></i><span class="like-count">{{ post.likes_count }}</span>
+              </button>
+              <button class="post-action-btn comment-toggle" data-id="{{ post.id }}">
+                <i class="ti ti-message-circle"></i><span>{{ post.comments|length }}</span>
+              </button>
+            </div>
+            <div class="post-comments" id="comments-{{ post.id }}" style="display:none">
+              {% for c in post.comments %}
+              <div class="post-comment"><b>{{ c.user.name }}</b> {{ c.text }}</div>
+              {% endfor %}
+              <div class="comment-form">
+                <input type="text" placeholder="Write a comment..." class="comment-input" data-id="{{ post.id }}">
+                <button class="comment-submit" data-id="{{ post.id }}">Post</button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="empty-hint">No posts yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+(function(){
+  const $ = (sel, ctx=document) => ctx.querySelector(sel);
+
+  const toastStack = $('#toastStack');
+  function toast(msg, {type='success', timeout=3000} = {}){
+    const el = document.createElement('div');
+    el.className = 'toast' + (type==='error' ? ' error' : '');
+    el.innerHTML = `<i class="ti ${type==='error'?'ti-alert-circle':'ti-circle-check'}"></i><span>${msg}</span>`;
+    toastStack.appendChild(el);
+    setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(),280); }, timeout);
+  }
+  async function safeFetch(url, opts){
+    try{
+      const res = await fetch(url, opts);
+      if (!res.ok) throw new Error('Request failed');
+      return await res.json().catch(()=>({}));
+    }catch(e){
+      toast("Couldn't reach the server — try again.", {type:'error'});
+      return null;
+    }
+  }
+
+  const connectBtn = $('.connect-btn');
+  if (connectBtn){
+    connectBtn.addEventListener('click', async () => {
+      const id = connectBtn.dataset.id, name = connectBtn.dataset.name;
+      const res = await safeFetch(`/api/network/connect/${id}`, { method:'POST' });
+      if (res === null) return;
+      connectBtn.outerHTML = '<button class="btn pending"><i class="ti ti-clock"></i>Invitation Pending</button>';
+      toast(`Invitation sent to ${name}.`);
+    });
+  }
+
+  const acceptBtn = $('.accept-btn');
+  if (acceptBtn){
+    acceptBtn.addEventListener('click', async () => {
+      const id = acceptBtn.dataset.id;
+      // NOTE: backend resolves the invitation id from the (current_user, id) pair
+      const res = await safeFetch(`/api/network/connect/${id}/accept-from-profile`, { method:'POST' });
+      if (res === null) return;
+      acceptBtn.outerHTML = '<button class="btn connected"><i class="ti ti-check"></i>Connected</button>';
+      toast('Invitation accepted.');
+    });
+  }
+
+  /* Posts: like / comment (same endpoints feed.html uses) */
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const liked = btn.classList.contains('liked');
+      const method = liked ? 'DELETE' : 'POST';
+      const res = await safeFetch(`/api/feed/posts/${id}/like`, { method });
+      if (res === null) return;
+      btn.classList.toggle('liked', !liked);
+      btn.querySelector('.like-count').textContent = res.likes_count;
+    });
+  });
+
+  document.querySelectorAll('.comment-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = document.getElementById(`comments-${btn.dataset.id}`);
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.comment-submit').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const input = document.querySelector(`.comment-input[data-id="${id}"]`);
+      const text = input.value.trim();
+      if (!text) return;
+      const res = await safeFetch(`/api/feed/posts/${id}/comments`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ text }),
+      });
+      if (res === null) return;
+      const panel = document.getElementById(`comments-${id}`);
+      const el = document.createElement('div');
+      el.className = 'post-comment';
+      el.innerHTML = `<b>You</b> `;
+      el.appendChild(document.createTextNode(text));
+      panel.insertBefore(el, panel.querySelector('.comment-form'));
+      input.value = '';
+      const countEl = document.querySelector(`.comment-toggle[data-id="${id}"] span:last-child`);
+      countEl.textContent = parseInt(countEl.textContent, 10) + 1;
+    });
+  });
+
+  /* Scroll-reveal for cards (added to match profile.html's polish) */
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting){
+        entry.target.style.animationDelay = (i * 0.06) + 's';
+        entry.target.classList.add('reveal');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.card').forEach(c => io.observe(c));
+})();
+</script>
+</body>
+</html>

@@ -123,12 +123,22 @@ ul{ margin:0; padding:0; list-style:none; }
 .content{ position:relative; z-index:1; padding:8px 40px 80px; display:flex; flex-direction:column; gap:44px; }
 
 @media (max-width:900px){
-  .main-area{ margin-left:0; }
+  .app-shell{ flex-direction:column; }
+  .main-area{ width:100%; margin-left:0; }
 }
 
 /* ---------- reveal-on-scroll ---------- */
-.reveal{ opacity:0; transform:translateY(24px); transition:opacity .7s var(--ease), transform .7s var(--ease); }
-.reveal.in-view{ opacity:1; transform:translateY(0); }
+/* Visible by default no matter what — JS is only responsible for adding
+   a nice-to-have fade/slide-in animation on top, never for making content
+   appear in the first place. If IntersectionObserver never fires (some
+   DevTools device-emulation states, blocked/slow JS, older WebViews),
+   content still shows up immediately instead of staying blank forever. */
+.reveal{ opacity:1; transform:none; }
+.reveal.in-view{ animation: revealIn .7s var(--ease); }
+@keyframes revealIn{
+  from{ opacity:0; transform:translateY(24px); }
+  to{ opacity:1; transform:translateY(0); }
+}
 
 /* ---------- glass card base ---------- */
 .glass{
@@ -385,6 +395,40 @@ ul{ margin:0; padding:0; list-style:none; }
   .stat-grid{ grid-template-columns:repeat(3,1fr); }
   .example-io{ grid-template-columns:1fr; }
   .diff-block{ grid-template-columns:1fr; }
+}
+
+@media (max-width:600px){
+  .topbar{ padding:18px 16px 14px; gap:12px; }
+  .topbar-left{ min-width:0; }
+  .page-title{ font-size:22px; }
+  .page-subtitle{ font-size:12px; line-height:1.45; }
+  .topbar-right{ gap:6px; }
+  .icon-btn, .avatar-chip{ width:34px; height:34px; }
+  .content{ padding:8px 16px 56px; gap:28px; }
+  .hero-card{ padding:24px 20px; }
+  .hero-greeting{ font-size:20px; }
+  .hero-line{ font-size:13px; line-height:1.55; }
+  .stat-grid{ grid-template-columns:1fr; gap:8px; }
+  .stat-tile{ padding:12px; }
+  .stat-value{ font-size:20px; }
+  .domain-grid, .subject-grid{ grid-template-columns:minmax(0,1fr); gap:12px; }
+  .domain-card, .subject-card{ min-width:0; padding:18px 16px; }
+  .section-head h2{ font-size:19px; }
+  .section-desc{ line-height:1.5; }
+  .problem-panel{ padding:20px 16px; }
+  .problem-panel-head{ flex-direction:column; }
+  .editor-toolbar{ align-items:stretch; padding:10px 12px; }
+  .editor-toolbar-left, .editor-toolbar-right{ width:100%; }
+  .editor-toolbar-right{ justify-content:stretch; }
+  .editor-toolbar-right .btn{ flex:1; min-width:0; }
+  .lang-select{ width:100%; min-width:0; }
+  .CodeMirror{ height:300px; font-size:12px; }
+  .example-io{ grid-template-columns:1fr; }
+  .diff-block{ grid-template-columns:1fr; }
+  .btn{
+    width:100%; min-width:0; min-height:44px; padding:10px 14px;
+    white-space:normal; overflow-wrap:anywhere; line-height:1.3;
+  }
 }
 
 /* ── CREATIVE REFRESH — shimmer buttons + glow cards + richer blobs ── */

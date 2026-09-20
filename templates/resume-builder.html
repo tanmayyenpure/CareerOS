@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="/static/theme.js"></script>
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -51,6 +52,7 @@
       var(--bg-0);
     color:var(--text-hi);
     min-height:100vh;
+    overflow-x:hidden;
     transition:background .3s, color .3s;
   }
   a{color:inherit; text-decoration:none;}
@@ -64,9 +66,10 @@
   .page-title{font-family:'Poppins',sans-serif; font-weight:700; font-size:1.25rem;}
   .bell{
     width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    background:var(--card); border:1px solid var(--border); cursor:pointer;
+    background:var(--card); border:1px solid var(--border); cursor:pointer; flex-shrink:0;
   }
   .bell svg{width:17px; height:17px; color:var(--text-mid);}
+  .avatar-chip-sm{width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg, var(--purple-2), var(--purple)); display:flex; align-items:center; justify-content:center; font-family:'Poppins',sans-serif; font-weight:700; font-size:.92rem; color:#fff; flex-shrink:0; cursor:pointer; text-decoration:none;}
 
   .content{padding:32px 40px 60px; display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start;}
 
@@ -86,7 +89,7 @@
     resize:vertical;
   }
   .field input:focus, .field textarea:focus{outline:none; border-color:var(--purple-2);}
-  .row-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .row-2{display:grid; grid-template-columns:1fr 1fr; gap:14px; min-width:0;}
 
   .exp-block{border:1px dashed var(--border); border-radius:12px; padding:16px; margin-bottom:14px; position:relative;}
   .remove-btn{
@@ -288,11 +291,12 @@
   .modal-overlay.hidden{display:none;}
   .modal-box{
     background:var(--card); border:1px solid var(--border); border-radius:20px;
-    padding:34px 38px; max-width:760px; width:100%; max-height:88vh; overflow-y:auto;
+    padding:34px 38px; max-width:760px; width:100%; min-width:0; max-height:88vh; overflow-y:auto; overflow-x:hidden; box-sizing:border-box;
   }
   .modal-box h2{font-family:'Poppins',sans-serif; font-size:1.4rem; font-weight:700;}
   .modal-box .modal-sub{color:var(--text-mid); font-size:.9rem; margin-top:6px; margin-bottom:24px;}
-  .template-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .template-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; min-width:0;}
+  .template-card{min-width:0;}
   .template-card{
     background:var(--card-2); border:1px solid var(--border); border-radius:14px;
     padding:16px; cursor:pointer; transition:border-color .2s ease, transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s ease;
@@ -344,7 +348,7 @@
   .preview-overlay.hidden{display:none;}
   .preview-modal-box{
     background:var(--bg-0); border:1px solid var(--border); border-radius:18px;
-    max-width:820px; width:100%; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;
+    max-width:820px; width:100%; min-width:0; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;
   }
   .preview-modal-head{
     display:flex; justify-content:space-between; align-items:center;
@@ -363,11 +367,48 @@
   .icon-btn:hover{background:var(--card-2); color:#fff;}
 
   @media (max-width: 980px){
-    .app-sidebar{display:none;}
-    .main{margin-left:0;}
+    body{display:flex; flex-direction:column;}
+    .app-sidebar{
+      position:sticky; top:0; left:auto; width:100%; height:auto;
+      flex-direction:row; align-items:center;
+    }
+    .main{width:100%; margin-left:0;}
     .content{grid-template-columns:1fr;}
     .preview-wrap{position:static;}
     .template-grid{grid-template-columns:1fr;}
+    .row-2{grid-template-columns:1fr;}
+  }
+  @media (max-width:600px){
+    .topbar{padding:16px; gap:10px; align-items:flex-start;}
+    .topbar > .page-title{font-size:1.05rem; line-height:1.3;}
+    .topbar-right{min-width:0; gap:6px; flex-wrap:wrap; justify-content:flex-end;}
+    .tpl-indicator{order:5; width:100%; justify-content:space-between; padding:7px 8px 7px 10px;}
+    .bell, .avatar-chip-sm{width:34px; height:34px;}
+    .content{padding:24px 16px 48px; gap:16px;}
+    .panel{padding:20px 16px;}
+    .panel h3{font-size:1rem;}
+    .row-2{grid-template-columns:minmax(0,1fr); gap:0;}
+    .field input, .field textarea{min-width:0; font-size:16px;}
+    .skills-input-row{flex-direction:column;}
+    .skills-input-row input{width:100%; min-width:0;}
+    .skill-add-btn, .btn-secondary, .btn-primary{min-height:44px; width:100%;}
+    .actions-row{flex-direction:column; gap:8px;}
+    .actions-row .btn-secondary, .actions-row .btn-primary{flex:none !important; width:100% !important;}
+    .resume-sheet{padding:28px 22px; min-height:0; border-radius:8px;}
+    .r-name{font-size:1.65rem; overflow-wrap:anywhere;}
+    .r-title{font-size:.95rem; overflow-wrap:anywhere;}
+    .r-contact{font-size:.78rem; gap:5px 8px;}
+    .r-contact .c-item{white-space:normal; overflow-wrap:anywhere;}
+    .r-exp-top{flex-direction:column; align-items:flex-start; gap:3px;}
+    .r-exp-top span:last-child{white-space:normal; overflow-wrap:anywhere;}
+    .modal-overlay, .preview-overlay{padding:10px;}
+    .modal-box{padding:22px 16px; max-height:92vh; border-radius:14px;}
+    .preview-modal-box{max-height:94vh; border-radius:14px;}
+    .preview-modal-head{padding:14px 16px;}
+    .preview-modal-body{padding:14px;}
+    .preview-modal-foot{flex-direction:column; padding:12px 16px;}
+    .preview-modal-foot .btn-secondary, .preview-modal-foot .btn-primary{width:100%;}
+    .preview-modal-body .resume-sheet{padding:24px 18px;}
   }
   @media print{
     .app-sidebar,.topbar,.builder-form,.actions-row,.modal-overlay,.preview-overlay{display:none !important;}
@@ -375,6 +416,35 @@
     .content{display:block; padding:0;}
     .resume-sheet{box-shadow:none; border-radius:0;}
   }
+
+  /* ---------- In-page search (topbar) ---------- */
+  .search-wrap{position:relative; display:flex; align-items:center;}
+  .search-input{
+    width:0; opacity:0; padding:0; border:none; background:var(--card);
+    color:var(--text-hi); border-radius:10px; font-size:.85rem; font-family:inherit;
+    transition:width .28s cubic-bezier(.16,1,.3,1), opacity .2s ease, padding .28s ease, margin .28s ease, border-color .2s ease;
+    margin-left:0; outline:none;
+  }
+  .search-wrap.open .search-input{
+    width:220px; opacity:1; padding:9px 12px; margin-left:8px;
+    border:1px solid var(--border);
+  }
+  .search-wrap.open .search-input.no-match{ border-color:#f87171; }
+  .search-count{
+    font-size:.72rem; color:var(--text-low); margin-left:6px; white-space:nowrap;
+    opacity:0; transition:opacity .2s ease; flex-shrink:0;
+  }
+  .search-wrap.open .search-count{ opacity:1; }
+  @keyframes searchPulse{
+    0%{box-shadow:0 0 0 0 rgba(99,102,241,.55);}
+    70%{box-shadow:0 0 0 14px rgba(99,102,241,0);}
+    100%{box-shadow:0 0 0 0 rgba(99,102,241,0);}
+  }
+  .search-hit{
+    outline:2px solid var(--purple-2) !important; outline-offset:3px;
+    animation:searchPulse 1.4s ease-out 1; border-radius:var(--radius);
+  }
+  @media (prefers-reduced-motion: reduce){ .search-hit{ animation:none; } }
 </style>
 </head>
 <body>
@@ -389,9 +459,17 @@
         Template: <b id="current-tpl-name">Millennial</b>
         <button id="btn-change-tpl">Change</button>
       </div>
-      <div class="bell">
+      <div class="search-wrap" id="searchWrap">
+        <button class="bell" id="searchBtn" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search resume sections…" autocomplete="off">
+        <span class="search-count" id="searchCount"></span>
+      </div>
+      <div class="bell" aria-label="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
       </div>
+      <a href="{{ url_for('profile') }}" class="avatar-chip-sm" title="{{ user.name if user else 'Profile' }}">{{ (user.name[0]|upper) if user and user.name else 'U' }}</a>
     </div>
   </div>
 
@@ -480,6 +558,10 @@
         <button class="btn-primary" id="btn-preview" style="width:auto; flex:1; margin-top:0;">Preview before downloading</button>
         <button class="btn-secondary" id="btn-reset">Reset</button>
       </div>
+      <div class="actions-row" style="margin-top:10px;">
+        <button class="btn-secondary" id="btn-save-analyze" style="width:auto; flex:1;">Save &amp; Analyze this Resume</button>
+      </div>
+      <div id="save-analyze-status" style="display:none; margin-top:8px; font-size:.82rem;"></div>
     </div>
 
     <!-- PREVIEW -->
@@ -913,6 +995,90 @@
   $('btn-close-preview').addEventListener('click', () => $('preview-modal').classList.add('hidden'));
   $('btn-back-edit').addEventListener('click', () => $('preview-modal').classList.add('hidden'));
 
+  // ---- Gather builder fields into a plain payload for the Resume Analyzer ----
+  function collectResumeData(){
+    const getBlocks = (containerId, fields) => {
+      const blocks = [];
+      $(containerId).querySelectorAll('.exp-block').forEach(b => {
+        const entry = {};
+        let hasContent = false;
+        for(const [key, cls] of Object.entries(fields)){
+          const el = b.querySelector('.' + cls);
+          const val = el ? el.value.trim() : '';
+          entry[key] = val;
+          if(val) hasContent = true;
+        }
+        if(hasContent) blocks.push(entry);
+      });
+      return blocks;
+    };
+
+    return {
+      name: $('in-name').value.trim(),
+      title: $('in-title').value.trim(),
+      email: $('in-email').value.trim(),
+      phone: $('in-phone').value.trim(),
+      location: $('in-location').value.trim(),
+      objective: $('in-objective').value.trim(),
+      education: getBlocks('edu-container', {
+        degree: 'edu-degree', institution: 'edu-institution',
+        duration: 'edu-duration', score: 'edu-score'
+      }),
+      experience: getBlocks('exp-container', {
+        role: 'exp-role', company: 'exp-company',
+        duration: 'exp-duration', description: 'exp-desc'
+      }),
+      internships: getBlocks('intern-container', {
+        role: 'intern-role', company: 'intern-company',
+        duration: 'intern-duration', description: 'intern-desc'
+      }),
+      projects: getBlocks('proj-container', {
+        title: 'proj-title', stack: 'proj-stack', description: 'proj-desc'
+      }),
+      certificates,
+      achievements,
+      skills,
+      strengths
+    };
+  }
+
+  const saveAnalyzeBtn = $('btn-save-analyze');
+  const saveAnalyzeStatus = $('save-analyze-status');
+  if(saveAnalyzeBtn){
+    saveAnalyzeBtn.addEventListener('click', async () => {
+      saveAnalyzeBtn.disabled = true;
+      const originalLabel = saveAnalyzeBtn.textContent;
+      saveAnalyzeBtn.textContent = 'Saving…';
+      saveAnalyzeStatus.style.display = 'none';
+
+      try {
+        const res = await fetch('/resume-builder/save-for-analysis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(collectResumeData())
+        });
+        const data = await res.json();
+
+        if(!res.ok || data.error){
+          saveAnalyzeStatus.textContent = data.error || 'Could not save this resume for analysis. Please try again.';
+          saveAnalyzeStatus.style.color = '#ff6b6b';
+          saveAnalyzeStatus.style.display = 'block';
+          saveAnalyzeBtn.disabled = false;
+          saveAnalyzeBtn.textContent = originalLabel;
+          return;
+        }
+
+        window.location.href = data.redirect || '/resume-analyzer';
+      } catch(err){
+        saveAnalyzeStatus.textContent = 'Could not reach the server. Please try again.';
+        saveAnalyzeStatus.style.color = '#ff6b6b';
+        saveAnalyzeStatus.style.display = 'block';
+        saveAnalyzeBtn.disabled = false;
+        saveAnalyzeBtn.textContent = originalLabel;
+      }
+    });
+  }
+
   async function downloadPdf(){
     const btn = $('btn-confirm-download');
     const target = $('preview-sheet-clone');
@@ -993,6 +1159,106 @@
   // start with one experience block + seed preview
   makeExpBlock();
   render();
+
+  // ---------- Page search: click the search icon, type, auto-scroll to the match ----------
+  (function(){
+    const wrap  = document.getElementById('searchWrap');
+    const btn   = document.getElementById('searchBtn');
+    const input = document.getElementById('searchInput');
+    const count = document.getElementById('searchCount');
+    if (!wrap || !btn || !input) return;
+
+    let matches = [];
+    let matchIndex = -1;
+
+    function getSearchableItems(){
+      return Array.from(document.querySelectorAll('.builder-form .panel'))
+        .filter(el => el.offsetParent !== null);
+    }
+
+    function clearHighlights(){
+      document.querySelectorAll('.search-hit').forEach(el => el.classList.remove('search-hit'));
+    }
+
+    function goToMatch(i){
+      clearHighlights();
+      const el = matches[i];
+      if (!el) return;
+      el.classList.add('search-hit');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function updateCount(){
+      if (!input.value.trim()){
+        count.textContent = '';
+        input.classList.remove('no-match');
+      } else if (matches.length){
+        count.textContent = `${matchIndex + 1} of ${matches.length}`;
+        input.classList.remove('no-match');
+      } else {
+        count.textContent = 'No matches';
+        input.classList.add('no-match');
+      }
+    }
+
+    function runSearch(){
+      const q = input.value.trim().toLowerCase();
+      clearHighlights();
+      if (!q){
+        matches = [];
+        matchIndex = -1;
+        updateCount();
+        return;
+      }
+      matches = getSearchableItems().filter(el => el.textContent.toLowerCase().includes(q));
+      matchIndex = matches.length ? 0 : -1;
+      updateCount();
+      if (matchIndex >= 0) goToMatch(matchIndex);
+    }
+
+    function openSearch(){
+      wrap.classList.add('open');
+      input.focus();
+    }
+
+    function closeSearch(){
+      wrap.classList.remove('open');
+      input.value = '';
+      clearHighlights();
+      matches = [];
+      matchIndex = -1;
+      updateCount();
+    }
+
+    btn.addEventListener('click', () => {
+      if (wrap.classList.contains('open') && !input.value.trim()) closeSearch();
+      else openSearch();
+    });
+
+    let debounceTimer;
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(runSearch, 150);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){
+        e.preventDefault();
+        if (!matches.length) return;
+        matchIndex = e.shiftKey
+          ? (matchIndex - 1 + matches.length) % matches.length
+          : (matchIndex + 1) % matches.length;
+        updateCount();
+        goToMatch(matchIndex);
+      } else if (e.key === 'Escape'){
+        closeSearch();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (wrap.classList.contains('open') && !wrap.contains(e.target)) closeSearch();
+    });
+  })();
 </script>
 
 </body>

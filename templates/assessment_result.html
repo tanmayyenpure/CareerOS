@@ -38,6 +38,18 @@
   .result-row{display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.9rem}
   .result-row:last-child{border-bottom:none}
   .result-row span:first-child{color:var(--muted)}
+
+  .gaps-card{
+    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;
+    padding:1.6rem;margin-top:1rem;text-align:left;
+  }
+  .gaps-card h3{font-size:0.95rem;margin-bottom:0.3rem}
+  .gaps-card .gaps-hint{font-size:0.8rem;color:var(--muted);margin-bottom:1rem}
+  .gaps-list{list-style:none;display:flex;flex-direction:column;gap:0.6rem}
+  .gaps-list li{
+    font-size:0.85rem;line-height:1.5;padding:0.6rem 0.8rem;border-radius:8px;
+    background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.15);
+  }
 </style>
 </head>
 <body>
@@ -73,6 +85,18 @@
     <div class="result-row"><span>Correct answers</span><span>{{ score }} of 20</span></div>
     <div class="result-row"><span>Target role</span><span>{{ user.target_role }}</span></div>
   </div>
+
+  {% if weak_areas %}
+  <div class="gaps-card">
+    <h3>What your roadmap will prioritize</h3>
+    <p class="gaps-hint">These are the specific questions you missed — your roadmap will cover these topics early instead of starting from a generic curriculum.</p>
+    <ul class="gaps-list">
+      {% for q in weak_areas %}
+      <li>{{ q }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
 
   <a href="{{ url_for('roadmap') }}" class="btn-primary" style="width:100%;justify-content:center;margin-top:1.8rem;display:flex">
     Generate My Roadmap →

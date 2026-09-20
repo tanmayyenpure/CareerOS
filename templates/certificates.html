@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CareerOS — Certificates</title>
+<script src="/static/theme.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-widget.css') }}">
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#0b1020;
+  --card:rgba(255,255,255,.06);
+  --card-border:rgba(255,255,255,.08);
+  --text:#ffffff;
+  --muted:#94a3b8;
+  --blob-opacity:.35;
+  --track-bg:#334155;
+  --chip-bg:rgba(255,255,255,.05);
+  --good:#22c55e;
+  --mid:#f59e0b;
+  --bad:#ef4444;
+  --primary:#6366F1;
+  --primary-rgb:99,102,241;
+  --primary-2:#818CF8;
+  --secondary:#06B6D4;
+  --overlay:rgba(4,6,15,.72);
+}
+[data-theme="light"]{
+  --bg:#f3f4f9;
+  --card:rgba(255,255,255,.85);
+  --card-border:rgba(15,23,42,.08);
+  --text:#0f172a;
+  --muted:#5b6472;
+  --blob-opacity:.18;
+  --track-bg:#dfe3ee;
+  --chip-bg:rgba(15,23,42,.03);
+  --primary:#4F46E5;
+  --primary-rgb:79,70,229;
+  --primary-2:#6366F1;
+  --overlay:rgba(15,23,42,.5);
+}
+
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s}
+.bg,.bg2{position:fixed;border-radius:50%;filter:blur(90px);opacity:var(--blob-opacity);animation:float 12s ease-in-out infinite;transition:opacity .3s}
+.bg{width:320px;height:320px;background:var(--primary);top:-80px;left:-60px}
+.bg2{width:260px;height:260px;background:var(--secondary);right:-60px;bottom:-40px;animation-delay:3s}
+@keyframes float{50%{transform:translate(40px,30px) scale(1.1)}}
+.main{margin-left:250px;padding:30px;position:relative;max-width:1180px}
+.top{display:flex;justify-content:flex-end;margin-bottom:20px}
+.top .icon-btn{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--card-border);cursor:pointer;transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;position:relative}
+.top .icon-btn:hover{box-shadow:0 6px 18px rgba(99,102,241,.25)}
+.top .icon-btn:active{transform:scale(.88)}
+.top .icon-btn i{font-size:18px;color:var(--muted)}
+.top i{font-size:20px;color:var(--muted)}
+
+@keyframes fade{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+}
+
+h1.page-title{font-size:26px;margin-bottom:6px;animation:fade .5s ease both}
+.page-sub{color:var(--muted);font-size:14px;margin-bottom:24px;animation:fade .5s ease .05s both}
+
+/* stats */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:26px}
+.stat-card{
+  background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:18px;
+  backdrop-filter:blur(15px);animation:fade .55s ease both;transition:background .3s,border-color .3s,transform .25s ease;
+}
+.stat-card:hover{transform:translateY(-3px)}
+.stat-num{font-size:26px;font-weight:800}
+.stat-label{color:var(--muted);font-size:12.5px;margin-top:4px}
+@media(max-width:700px){.stats-grid{grid-template-columns:1fr}}
+
+/* course search bar */
+.course-search{
+  display:flex;gap:10px;margin-bottom:22px;animation:fade .5s ease .08s both;
+}
+.course-search-input-wrap{
+  flex:1;position:relative;display:flex;align-items:center;
+}
+.course-search-input-wrap i{
+  position:absolute;left:16px;color:var(--muted);font-size:16px;pointer-events:none;
+}
+.course-search-input{
+  width:100%;padding:13px 16px 13px 42px;border-radius:12px;
+  background:var(--card);border:1px solid var(--card-border);color:var(--text);
+  font-size:14px;font-family:inherit;backdrop-filter:blur(15px);
+  transition:border-color .2s ease,box-shadow .2s ease;
+}
+.course-search-input::placeholder{color:var(--muted)}
+.course-search-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(var(--primary-rgb),.15)}
+.course-search-btn{
+  padding:0 22px;border-radius:12px;font-size:13.5px;font-weight:700;white-space:nowrap;
+}
+@media(max-width:560px){
+  .course-search{flex-direction:column}
+  .course-search-btn{padding:12px 22px}
+}
+
+/* domain filter chips */
+.domain-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;animation:fade .5s ease .1s both}
+.domain-chip{
+  background:var(--chip-bg);border:1px solid var(--card-border);color:var(--muted);
+  padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;
+  transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease;
+}
+.domain-chip:hover{transform:translateY(-1px)}
+.domain-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* course grid */
+.section-label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:0 0 12px}
+.course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-bottom:30px}
+.course-card{
+  background:var(--card);border:1px solid var(--card-border);border-radius:18px;padding:20px;
+  backdrop-filter:blur(15px);cursor:pointer;
+  transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;
+  display:flex;flex-direction:column;gap:10px;
+}
+.course-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.18);border-color:rgba(var(--primary-rgb),.35)}
+.course-card .c-icon{
+  width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;flex-shrink:0;
+}
+.course-card h4{font-size:15.5px;line-height:1.35}
+.course-card .c-desc{color:var(--muted);font-size:12.5px;line-height:1.5;flex:1}
+.course-meta{display:flex;flex-wrap:wrap;gap:6px}
+.meta-tag{font-size:11px;padding:4px 9px;border-radius:20px;background:var(--chip-bg);border:1px solid var(--card-border);color:var(--muted)}
+.level-Beginner{color:#22c55e}
+.level-Intermediate{color:#f59e0b}
+.level-Advanced{color:#ef4444}
+.course-progress-track{height:6px;background:var(--track-bg);border-radius:20px;overflow:hidden;margin-top:2px}
+.course-progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));width:0;transition:width .5s ease}
+.course-status-line{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.course-status-line.done{color:var(--good)}
+.course-status-line i{font-size:14px}
+
+.empty-state,.loading-state{color:var(--muted);font-size:13.5px;padding:30px 0;text-align:center}
+.loading-state .spinner{margin:0 auto 10px}
+
+.spinner{
+  width:22px;height:22px;border-radius:50%;border:2.5px solid var(--card-border);border-top-color:var(--primary);
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* certificates you own */
+.cert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.cert-card{
+  background:linear-gradient(135deg,rgba(var(--primary-rgb),.14),rgba(6,182,212,.08));
+  border:1px solid rgba(var(--primary-rgb),.25);border-radius:16px;padding:18px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.cert-card .cert-badge{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px}
+.cert-card h4{font-size:14.5px}
+.cert-card .cert-date{font-size:11.5px;color:var(--muted)}
+.cert-card .btn{margin-top:4px;align-self:flex-start}
+
+.btn{
+  padding:9px 18px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;
+  cursor:pointer;border:none;display:inline-flex;align-items:center;gap:7px;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,background .25s ease,opacity .2s ease;
+}
+.btn:active{transform:translateY(0) scale(.96)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(var(--primary-rgb),.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--card-border)}
+.btn-outline:hover{border-color:var(--primary);transform:translateY(-2px)}
+.btn-sm{padding:7px 14px;font-size:12px}
+
+/* ---------------- Course detail overlay ---------------- */
+.overlay{
+  position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(4px);z-index:200;
+  display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;
+}
+.overlay.open{display:flex}
+.overlay-panel{
+  background:var(--bg);border:1px solid var(--card-border);border-radius:20px;max-width:820px;width:100%;
+  padding:28px;position:relative;animation:fade .3s ease both;
+}
+.overlay-close{
+  position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:10px;border:1px solid var(--card-border);
+  background:var(--chip-bg);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;
+}
+.overlay-close:hover{color:var(--text)}
+
+.od-level{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.od-title{font-size:21px;font-weight:800;margin:6px 0 8px}
+.od-desc{color:var(--muted);font-size:13.5px;line-height:1.6;margin-bottom:16px}
+.od-meta-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+
+.od-progress-wrap{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.od-progress-track{flex:1;height:8px;background:var(--track-bg);border-radius:20px;overflow:hidden}
+.od-progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));width:0;transition:width .5s ease}
+.od-progress-label{font-size:12.5px;color:var(--muted);white-space:nowrap}
+
+.module-list{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.module-item{
+  background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:14px 16px;
+  transition:border-color .2s ease;
+}
+.module-item.done{border-color:rgba(34,197,94,.35)}
+.module-head{display:flex;align-items:center;gap:12px;cursor:pointer}
+.module-num{
+  width:28px;height:28px;border-radius:50%;background:var(--chip-bg);border:1px solid var(--card-border);
+  display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex-shrink:0;
+}
+.module-item.done .module-num{background:var(--good);border-color:var(--good);color:#fff}
+.module-head h5{font-size:14px;flex:1}
+.module-head i.chev{color:var(--muted);transition:transform .2s ease}
+.module-item.expanded .module-head i.chev{transform:rotate(180deg)}
+.module-body{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--card-border)}
+.module-item.expanded .module-body{display:block}
+.module-body p{color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:12px}
+.module-video{position:relative;width:100%;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000;margin-bottom:12px}
+.module-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.module-video-missing{
+  display:flex;align-items:center;justify-content:center;height:160px;color:var(--muted);
+  background:var(--chip-bg);border-radius:12px;font-size:12.5px;margin-bottom:12px;
+}
+.mark-complete-btn{font-size:12.5px}
+
+.exam-cta{
+  background:var(--chip-bg);border:1px solid var(--card-border);border-radius:14px;padding:16px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+}
+.exam-cta .e-text{font-size:13px}
+.exam-cta .e-sub{color:var(--muted);font-size:12px;margin-top:2px}
+
+.cert-earned-box{
+  background:linear-gradient(135deg,rgba(34,197,94,.14),rgba(6,182,212,.08));
+  border:1px solid rgba(34,197,94,.3);border-radius:14px;padding:18px;text-align:center;
+}
+.cert-earned-box i{font-size:30px;color:var(--good);margin-bottom:8px}
+.cert-earned-box h4{font-size:15px;margin-bottom:4px}
+.cert-earned-box p{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+
+/* ---------------- Exam overlay ---------------- */
+.exam-panel{max-width:640px}
+.exam-q{margin-bottom:20px}
+.exam-q .eq-text{font-size:14px;font-weight:600;margin-bottom:10px}
+.eq-options{display:flex;flex-direction:column;gap:8px}
+.eq-option{
+  display:flex;align-items:center;gap:10px;background:var(--chip-bg);border:1px solid var(--card-border);
+  border-radius:10px;padding:10px 14px;font-size:13px;cursor:pointer;transition:border-color .2s ease,background .2s ease;
+}
+.eq-option:hover{border-color:rgba(var(--primary-rgb),.4)}
+.eq-option.selected{border-color:var(--primary);background:rgba(var(--primary-rgb),.12)}
+.eq-option input{accent-color:var(--primary)}
+.exam-result{text-align:center;padding:10px 0}
+.exam-result .er-icon{font-size:40px;margin-bottom:10px}
+.exam-result.pass .er-icon{color:var(--good)}
+.exam-result.fail .er-icon{color:var(--bad)}
+.exam-result h3{font-size:18px;margin-bottom:6px}
+.exam-result p{color:var(--muted);font-size:13px;margin-bottom:16px}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--card);border:1px solid var(--card-border);color:var(--text);
+  padding:12px 20px;border-radius:12px;font-size:13px;backdrop-filter:blur(15px);
+  opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:300;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:900px){
+  .main{margin:0;padding:20px}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="bg2"></div>
+{% include "_sidebar.html" %}
+
+<div class="main">
+  <div class="top"><button class="icon-btn" aria-label="Notifications"><i class="ti ti-bell"></i></button></div>
+
+  <h1 class="page-title">Certificates</h1>
+  <p class="page-sub">Coursera-style certified courses — work through the lectures, clear the final exam, and download a certificate.</p>
+
+  <section class="stats-grid">
+    <div class="stat-card"><div class="stat-num">{{ stats.certificates_earned }}</div><div class="stat-label">Certificates Earned</div></div>
+    <div class="stat-card"><div class="stat-num">{{ stats.in_progress }}</div><div class="stat-label">Courses In Progress</div></div>
+    <div class="stat-card"><div class="stat-num">{{ stats.completed }}</div><div class="stat-label">Courses Completed</div></div>
+  </section>
+
+  {% if certificates %}
+  <div class="section-label">My Certificates</div>
+  <div class="cert-grid" style="margin-bottom:30px">
+    {% for cert in certificates %}
+    <div class="cert-card">
+      <div class="cert-badge"><i class="ti ti-certificate"></i></div>
+      <h4>{{ cert.course_title }}</h4>
+      <div class="cert-date">Issued {{ cert.issued_at.strftime('%d %b %Y') }} · {{ domain_labels.get(cert.domain, 'Custom Search') }}</div>
+      <a class="btn btn-outline btn-sm" href="{{ url_for('download_certificate', certificate_code=cert.certificate_code) }}">
+        <i class="ti ti-download"></i>Download PDF
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="section-label">Search Any Course</div>
+  <div class="course-search">
+    <div class="course-search-input-wrap">
+      <i class="ti ti-search"></i>
+      <input type="text" class="course-search-input" id="courseSearchInput"
+             placeholder="e.g. &quot;Digital Marketing Basics&quot;, &quot;Docker for Beginners&quot;, &quot;UI/UX Fundamentals&quot;…">
+    </div>
+    <button class="btn btn-primary course-search-btn" id="courseSearchBtn"><i class="ti ti-sparkles"></i>Generate Course</button>
+  </div>
+
+  <div class="section-label">Browse Courses</div>
+  <div class="domain-filters" id="domainFilters">
+    {% for key, label in domain_labels.items() %}
+    <button class="domain-chip {{ 'active' if loop.first else '' }}" data-domain="{{ label }}">{{ label }}</button>
+    {% endfor %}
+  </div>
+
+  <div class="course-grid" id="courseGrid">
+    <div class="loading-state" id="courseLoading"><div class="spinner"></div>Loading courses…</div>
+  </div>
+</div>
+
+<!-- ============ COURSE DETAIL OVERLAY ============ -->
+<div class="overlay" id="courseOverlay">
+  <div class="overlay-panel" id="courseOverlayPanel">
+    <button class="overlay-close" id="courseOverlayClose"><i class="ti ti-x"></i></button>
+    <div id="courseOverlayBody"><div class="loading-state"><div class="spinner"></div>Loading course…</div></div>
+  </div>
+</div>
+
+<!-- ============ FINAL EXAM OVERLAY ============ -->
+<div class="overlay" id="examOverlay">
+  <div class="overlay-panel exam-panel" id="examOverlayPanel">
+    <button class="overlay-close" id="examOverlayClose"><i class="ti ti-x"></i></button>
+    <div id="examOverlayBody"><div class="loading-state"><div class="spinner"></div>Preparing your final exam…</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+{% include "_chatbot_widget.html" %}
+
+<script>
+const DOMAIN_LABELS = {{ domain_labels | tojson }};
+const domainFilters = document.getElementById('domainFilters');
+const courseGrid = document.getElementById('courseGrid');
+
+const courseOverlay = document.getElementById('courseOverlay');
+const courseOverlayBody = document.getElementById('courseOverlayBody');
+const courseOverlayClose = document.getElementById('courseOverlayClose');
+
+const examOverlay = document.getElementById('examOverlay');
+const examOverlayBody = document.getElementById('examOverlayBody');
+const examOverlayClose = document.getElementById('examOverlayClose');
+
+const toastEl = document.getElementById('toast');
+
+let currentDomain = domainFilters.querySelector('.domain-chip.active')?.dataset.domain || ''; // active browse-grid domain chip
+let currentCourseDomain = null; // domain of whichever course is open in the modal (browsed OR searched)
+let currentCourseTitle = null;
+let currentCourseCache = null; // last fetched course-detail payload
+let examAnswers = {};
+
+// domain key used to store/generate any course found via free-text search —
+// not one of the curated browse-chip domains, generated on demand instead
+// of from a cached catalog.
+const CUSTOM_SEARCH_DOMAIN = 'custom';
+
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(() => toastEl.classList.remove('show'), 2600);
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+async function apiPost(url, body){
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {})
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+  return data;
+}
+
+// ---------------- Domain filters + course grid ----------------
+domainFilters.addEventListener('click', (e) => {
+  const chip = e.target.closest('.domain-chip');
+  if (!chip) return;
+  domainFilters.querySelectorAll('.domain-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  currentDomain = chip.dataset.domain;
+  loadCourses();
+});
+
+async function loadCourses(){
+  courseGrid.innerHTML = `<div class="loading-state"><div class="spinner"></div>Loading courses…</div>`;
+  try {
+    const data = await apiPost('/api/certificates/courses', { domain: currentDomain });
+    renderCourseGrid(data.courses || []);
+  } catch (err) {
+    courseGrid.innerHTML = `<div class="empty-state">${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderCourseGrid(courses){
+  if (!courses.length){
+    courseGrid.innerHTML = `<div class="empty-state">No courses found for this domain yet.</div>`;
+    return;
+  }
+  courseGrid.innerHTML = '';
+  courses.forEach(course => {
+    const card = document.createElement('div');
+    card.className = 'course-card';
+    const status = course.enrollment_status;
+    let statusLine = `<div class="course-status-line"><i class="ti ti-player-play"></i>Not started</div>`;
+    if (course.certificate_earned) {
+      statusLine = `<div class="course-status-line done"><i class="ti ti-circle-check"></i>Certificate earned</div>`;
+    } else if (status === 'completed') {
+      statusLine = `<div class="course-status-line done"><i class="ti ti-circle-check"></i>Completed</div>`;
+    } else if (status === 'in_progress') {
+      statusLine = `<div class="course-status-line"><i class="ti ti-clock"></i>In progress</div>`;
+    }
+    card.innerHTML = `
+      <div class="c-icon"><i class="ti ti-certificate"></i></div>
+      <h4>${escapeHtml(course.title)}</h4>
+      <div class="c-desc">${escapeHtml(course.description || '')}</div>
+      <div class="course-meta">
+        <span class="meta-tag level-${escapeHtml(course.level || 'Beginner')}">${escapeHtml(course.level || 'Beginner')}</span>
+        <span class="meta-tag"><i class="ti ti-clock" style="font-size:11px;vertical-align:-1px"></i> ${course.duration_hours || '—'} hrs</span>
+      </div>
+      ${statusLine}
+    `;
+    card.addEventListener('click', () => openCourse(course.title));
+    courseGrid.appendChild(card);
+  });
+}
+
+// ---------------- Course detail overlay ----------------
+async function openCourse(title, domain = currentDomain){
+  currentCourseDomain = domain;
+  currentCourseTitle = title;
+  courseOverlay.classList.add('open');
+  courseOverlayBody.innerHTML = `<div class="loading-state"><div class="spinner"></div>Loading course…</div>`;
+  try {
+    // enroll (idempotent) then fetch detail — course-detail generates the
+    // syllabus on demand via AI if this exact (domain, title) hasn't been
+    // seen before, so this works for searched titles too, not just the
+    // curated catalog.
+    await apiPost('/api/certificates/enroll', { domain, title });
+    const data = await apiPost('/api/certificates/course-detail', { domain, title });
+    currentCourseCache = data;
+    renderCourseDetail(data);
+  } catch (err) {
+    courseOverlayBody.innerHTML = `<div class="empty-state">${escapeHtml(err.message)}</div>`;
+  }
+}
+
+// ---------------- Search bar (any course, generated on demand) ----------------
+const courseSearchInput = document.getElementById('courseSearchInput');
+const courseSearchBtn = document.getElementById('courseSearchBtn');
+
+function searchCourse(){
+  const query = courseSearchInput.value.trim();
+  if (!query) {
+    showToast('Type a course topic to search for.');
+    return;
+  }
+  openCourse(query, CUSTOM_SEARCH_DOMAIN);
+}
+
+courseSearchBtn.addEventListener('click', searchCourse);
+courseSearchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') searchCourse();
+});
+
+function renderCourseDetail(data){
+  const progress = data.progress;
+  const pct = progress.modules_total ? Math.round((progress.modules_completed.length / progress.modules_total) * 100) : 0;
+
+  let modulesHtml = data.modules.map((m, i) => {
+    const done = progress.modules_completed.includes(i);
+    const videoHtml = m.resource_video_id
+      ? `<div class="module-video"><iframe src="https://www.youtube.com/embed/${escapeHtml(m.resource_video_id)}" allowfullscreen title="${escapeHtml(m.title)}"></iframe></div>`
+      : `<div class="module-video-missing"><i class="ti ti-video-off" style="margin-right:6px"></i>No video found for this module</div>`;
+    return `
+      <div class="module-item ${done ? 'done' : ''}" data-index="${i}">
+        <div class="module-head" onclick="toggleModule(${i})">
+          <div class="module-num">${done ? '<i class="ti ti-check"></i>' : (i + 1)}</div>
+          <h5>${escapeHtml(m.title)}</h5>
+          <i class="ti ti-chevron-down chev"></i>
+        </div>
+        <div class="module-body">
+          <p>${escapeHtml(m.description || '')}</p>
+          ${videoHtml}
+          <button class="btn btn-primary btn-sm mark-complete-btn" onclick="markModuleComplete(${i})" ${done ? 'disabled' : ''}>
+            <i class="ti ${done ? 'ti-check' : 'ti-player-play'}"></i>${done ? 'Completed' : 'Mark as Watched'}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  let ctaHtml = '';
+  if (data.certificate_code){
+    ctaHtml = `
+      <div class="cert-earned-box">
+        <i class="ti ti-certificate"></i>
+        <h4>Certificate Earned</h4>
+        <p>You've completed "${escapeHtml(data.title)}" and passed the final exam.</p>
+        <a class="btn btn-primary btn-sm" href="/certificates/download/${escapeHtml(data.certificate_code)}"><i class="ti ti-download"></i>Download Certificate</a>
+      </div>
+    `;
+  } else if (progress.all_modules_done) {
+    ctaHtml = `
+      <div class="exam-cta">
+        <div>
+          <div class="e-text">All modules complete — ready for the final exam</div>
+          <div class="e-sub">${progress.quiz_attempts ? `Last attempt: ${progress.quiz_score}/${progress.quiz_total}` : `${CERTIFICATION_PASS_LABEL}`}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="startExam()"><i class="ti ti-writing"></i>Take Final Exam</button>
+      </div>
+    `;
+  } else {
+    ctaHtml = `
+      <div class="exam-cta">
+        <div>
+          <div class="e-text">Finish every module to unlock the final exam</div>
+          <div class="e-sub">${progress.modules_completed.length}/${progress.modules_total} modules watched</div>
+        </div>
+        <button class="btn btn-outline btn-sm" disabled><i class="ti ti-lock"></i>Final Exam</button>
+      </div>
+    `;
+  }
+
+  courseOverlayBody.innerHTML = `
+    <div class="od-level level-${escapeHtml(data.level || 'Beginner')}">${escapeHtml(data.level || 'Beginner')} · Certification Course</div>
+    <div class="od-title">${escapeHtml(data.title)}</div>
+    <div class="od-desc">${escapeHtml(data.description || '')}</div>
+    <div class="od-meta-row">
+      <span class="meta-tag"><i class="ti ti-clock" style="font-size:11px;vertical-align:-1px"></i> ${data.duration_hours || '—'} hrs</span>
+      <span class="meta-tag"><i class="ti ti-book" style="font-size:11px;vertical-align:-1px"></i> ${data.modules.length} modules</span>
+    </div>
+    <div class="od-progress-wrap">
+      <div class="od-progress-track"><div class="od-progress-fill" style="width:${pct}%"></div></div>
+      <div class="od-progress-label">${pct}% complete</div>
+    </div>
+    <div class="module-list">${modulesHtml}</div>
+    ${ctaHtml}
+  `;
+}
+
+const CERTIFICATION_PASS_LABEL = "Score 70% or higher to earn your certificate";
+
+function toggleModule(i){
+  const item = courseOverlayBody.querySelector(`.module-item[data-index="${i}"]`);
+  if (item) item.classList.toggle('expanded');
+}
+
+async function markModuleComplete(i){
+  try {
+    const data = await apiPost('/api/certificates/progress', {
+      domain: currentCourseDomain, title: currentCourseTitle, module_index: i
+    });
+    const detail = await apiPost('/api/certificates/course-detail', { domain: currentCourseDomain, title: currentCourseTitle });
+    currentCourseCache = detail;
+    renderCourseDetail(detail);
+    showToast('Module marked as watched');
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+courseOverlayClose.addEventListener('click', () => {
+  courseOverlay.classList.remove('open');
+  loadCourses(); // refresh grid statuses
+});
+courseOverlay.addEventListener('click', (e) => { if (e.target === courseOverlay) courseOverlayClose.click(); });
+
+// ---------------- Final exam overlay ----------------
+async function startExam(){
+  examAnswers = {};
+  examOverlay.classList.add('open');
+  examOverlayBody.innerHTML = `<div class="loading-state"><div class="spinner"></div>Preparing your final exam…</div>`;
+  try {
+    const data = await apiPost('/api/certificates/quiz', { domain: currentCourseDomain, title: currentCourseTitle });
+    renderExam(data.questions);
+  } catch (err) {
+    examOverlayBody.innerHTML = `<div class="empty-state">${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderExam(questions){
+  const qHtml = questions.map(q => `
+    <div class="exam-q" data-qid="${escapeHtml(q.id)}">
+      <div class="eq-text">${escapeHtml(q.question)}</div>
+      <div class="eq-options">
+        ${q.options.map((opt, idx) => `
+          <label class="eq-option" data-idx="${idx}">
+            <input type="radio" name="${escapeHtml(q.id)}" value="${idx}" onchange="selectAnswer('${escapeHtml(q.id)}', ${idx}, this)">
+            <span>${escapeHtml(opt)}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  examOverlayBody.innerHTML = `
+    <h3 style="font-size:18px;margin-bottom:4px">Final Certification Exam</h3>
+    <p style="color:var(--muted);font-size:12.5px;margin-bottom:18px">${questions.length} questions · Score 70% or higher to pass</p>
+    ${qHtml}
+    <button class="btn btn-primary" id="submitExamBtn" style="width:100%;justify-content:center;margin-top:8px">
+      <i class="ti ti-send"></i>Submit Exam
+    </button>
+  `;
+  document.getElementById('submitExamBtn').addEventListener('click', submitExam);
+}
+
+function selectAnswer(qid, idx, inputEl){
+  examAnswers[qid] = idx;
+  const group = inputEl.closest('.eq-options');
+  group.querySelectorAll('.eq-option').forEach(o => o.classList.remove('selected'));
+  inputEl.closest('.eq-option').classList.add('selected');
+}
+
+async function submitExam(){
+  const btn = document.getElementById('submitExamBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px"></div> Grading…`;
+  try {
+    const data = await apiPost('/api/certificates/submit-quiz', {
+      domain: currentCourseDomain, title: currentCourseTitle, answers: examAnswers
+    });
+    renderExamResult(data);
+  } catch (err) {
+    showToast(err.message);
+    btn.disabled = false;
+    btn.innerHTML = `<i class="ti ti-send"></i>Submit Exam`;
+  }
+}
+
+function renderExamResult(data){
+  const pct = data.total ? Math.round((data.score / data.total) * 100) : 0;
+  if (data.passed){
+    examOverlayBody.innerHTML = `
+      <div class="exam-result pass">
+        <div class="er-icon"><i class="ti ti-confetti"></i></div>
+        <h3>You passed! 🎉</h3>
+        <p>Scored ${data.score}/${data.total} (${pct}%) — your certificate is ready.</p>
+        <a class="btn btn-primary" href="/certificates/download/${escapeHtml(data.certificate_code)}"><i class="ti ti-download"></i>Download Certificate</a>
+      </div>
+    `;
+  } else {
+    examOverlayBody.innerHTML = `
+      <div class="exam-result fail">
+        <div class="er-icon"><i class="ti ti-mood-sad"></i></div>
+        <h3>Not quite — ${pct}%</h3>
+        <p>Scored ${data.score}/${data.total}. Review the modules and try again anytime.</p>
+        <button class="btn btn-outline" onclick="startExam()"><i class="ti ti-refresh"></i>Retake Exam</button>
+      </div>
+    `;
+  }
+}
+
+examOverlayClose.addEventListener('click', async () => {
+  examOverlay.classList.remove('open');
+  if (currentCourseTitle) {
+    try {
+      const detail = await apiPost('/api/certificates/course-detail', { domain: currentCourseDomain, title: currentCourseTitle });
+      currentCourseCache = detail;
+      renderCourseDetail(detail);
+    } catch (e) { /* ignore */ }
+  }
+});
+examOverlay.addEventListener('click', (e) => { if (e.target === examOverlay) examOverlayClose.click(); });
+
+// ---------------- init ----------------
+loadCourses();
+</script>
+</body>
+</html>

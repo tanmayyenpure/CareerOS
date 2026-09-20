@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Secure Checkout (Dummy Gateway)</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="page-center">
+  <div class="card gateway-card">
+
+    <div class="gateway-header">
+      <span class="gateway-logo">⬢ DummyPay</span>
+      <span class="badge badge-test">TEST MODE</span>
+    </div>
+
+    <div class="order-summary">
+      <div>
+        <div class="muted">Paying</div>
+        <div class="amount">₹{{ order.amount }}</div>
+      </div>
+      <div class="muted order-id">Order #{{ order.order_id }}</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="card">Card</button>
+      <button class="tab-btn" data-tab="upi">UPI</button>
+      <button class="tab-btn" data-tab="wallet">Wallet</button>
+    </div>
+
+    <!-- CARD -->
+    <div class="tab-panel active" id="tab-card">
+      <label>Card Number</label>
+      <input type="text" id="card_number" maxlength="19" placeholder="4242 4242 4242 4242" value="4242 4242 4242 4242">
+      <div class="row">
+        <div>
+          <label>Expiry</label>
+          <input type="text" id="card_expiry" placeholder="12/29" value="12/29">
+        </div>
+        <div>
+          <label>CVV</label>
+          <input type="text" id="card_cvv" maxlength="3" placeholder="123" value="123">
+        </div>
+      </div>
+      <label>Name on Card</label>
+      <input type="text" id="card_name" value="{{ order.customer_name }}">
+      <p class="hint">Test cards: 4242 4242 4242 4242 = success · 4000 0000 0000 0002 = declined</p>
+    </div>
+
+    <!-- UPI -->
+    <div class="tab-panel" id="tab-upi">
+      <label>UPI ID</label>
+      <input type="text" id="upi_id" placeholder="yourname@bank" value="success@bank">
+      <p class="hint">Try an ID starting with "fail@" to simulate a decline.</p>
+    </div>
+
+    <!-- WALLET -->
+    <div class="tab-panel" id="tab-wallet">
+      <label>Choose Wallet</label>
+      <select id="wallet_provider">
+        <option value="paytm">Paytm</option>
+        <option value="phonepe">PhonePe</option>
+        <option value="amazonpay">Amazon Pay</option>
+      </select>
+      <label>Wallet PIN</label>
+      <input type="password" id="wallet_pin" maxlength="4" placeholder="••••" value="1234">
+    </div>
+
+    <div class="simulate-box">
+      <label>Simulate result (demo control)</label>
+      <select id="simulate_result">
+        <option value="success">Force Success</option>
+        <option value="failed">Force Failure</option>
+        <option value="random" selected>Random (80% success)</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary btn-pay" id="pay-btn">Pay ₹{{ order.amount }}</button>
+    <div id="status-msg"></div>
+
+    <p class="footer-note">This is a simulated gateway. No real payment is processed.</p>
+  </div>
+</div>
+
+<script>
+  const ORDER_ID = "{{ order.order_id }}";
+</script>
+<script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
+</body>
+</html>
