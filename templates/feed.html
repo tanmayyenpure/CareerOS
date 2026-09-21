@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>CareerOS Feed</title>
+<script src="/static/theme.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-widget.css') }}">
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --bg:#0b1020;
+  --card:rgba(255,255,255,.06);
+  --card-border:rgba(255,255,255,.08);
+  --text:#ffffff;
+  --muted:#94a3b8;
+  --blob-opacity:.35;
+  --chip-bg:rgba(255,255,255,.05);
+  --purple:#6366F1;
+  --purple-2:#818CF8;
+  --blue:#06B6D4;
+  --success:#4ade80;
+  --danger:#f87171;
+  --like:#fb7185;
+  --shadow-soft:0 14px 40px -16px rgba(0,0,0,.55);
+  --tap:46px;
+}
+[data-theme="light"]{
+  --bg:#f3f4f9;
+  --card:rgba(255,255,255,.85);
+  --card-border:rgba(15,23,42,.08);
+  --text:#0f172a;
+  --muted:#5b6472;
+  --blob-opacity:.18;
+  --chip-bg:rgba(15,23,42,.03);
+  --shadow-soft:0 14px 40px -18px rgba(15,23,42,.25);
+  --purple:#4F46E5;
+  --purple-2:#6366F1;
+}
+
+html{-webkit-text-size-adjust:100%}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased}
+.bg,.bg2{position:fixed;border-radius:50%;filter:blur(90px);opacity:var(--blob-opacity);animation:float 12s ease-in-out infinite;pointer-events:none}
+.bg{width:320px;height:320px;background:#6366F1;top:-80px;left:-60px}
+.bg2{width:260px;height:260px;background:#06B6D4;right:-60px;bottom:-40px;animation-delay:3s}
+@keyframes float{50%{transform:translate(40px,30px) scale(1.1)}}
+.main{margin-left:250px;padding:30px;position:relative;transition:margin .3s}
+@keyframes fade{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.top-title{font-size:1.35rem;font-weight:bold}
+.top-title .muted-sub{display:block;font-size:.82rem;color:var(--muted);font-weight:normal;margin-top:2px}
+.icon-btn{width:var(--tap);height:var(--tap);border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--card-border);cursor:pointer;transition:transform .18s cubic-bezier(.34,1.56,.64,1),background .2s,box-shadow .2s;position:relative}
+.icon-btn:hover{box-shadow:0 6px 18px rgba(99,102,241,.25)}
+.icon-btn:active{transform:scale(.88)}
+.icon-btn i{font-size:19px;color:var(--muted)}
+.icon-btn .dot{position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:2px solid var(--bg);opacity:0;transition:opacity .2s}
+.icon-btn .dot.show{opacity:1}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.85rem;text-decoration:none;margin-bottom:4px;transition:color .2s}
+.back-link:hover{color:var(--purple-2)}
+
+.feed-wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+.card{
+  background:var(--card);border:1px solid var(--card-border);padding:20px;border-radius:18px;backdrop-filter:blur(15px);
+  transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease,background .3s,border-color .3s;
+  opacity:0;transform:translateY(16px);
+}
+.card.reveal{animation:fade .5s cubic-bezier(.16,1,.3,1) forwards}
+.card:hover{box-shadow:var(--shadow-soft)}
+
+/* ---------- Avatar (shared small size) ---------- */
+.mini-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#6366F1,#06B6D4);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;flex-shrink:0;overflow:hidden;font-size:1.05rem}
+.mini-avatar img{width:100%;height:100%;object-fit:cover}
+
+/* ---------- Composer ---------- */
+.composer-head{display:flex;gap:12px;align-items:flex-start}
+#composerText{flex:1;min-height:56px;background:var(--chip-bg);border:1px solid var(--card-border);border-radius:14px;color:var(--text);font-family:inherit;font-size:.92rem;line-height:1.5;padding:12px 14px;resize:vertical;outline:none;transition:border-color .2s,min-height .2s}
+#composerText:focus{border-color:var(--purple);min-height:90px}
+#composerText::placeholder{color:var(--muted)}
+
+.composer-previews{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:12px}
+.composer-previews:empty{display:none}
+.preview-thumb{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1/1;background:var(--chip-bg);border:1px solid var(--card-border)}
+.preview-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.preview-remove{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(11,16,32,.75);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;line-height:1}
+.preview-remove:hover{background:var(--danger)}
+
+.composer-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--card-border)}
+.composer-tools{display:flex;gap:6px}
+.tool-btn{display:flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--muted);font-size:.82rem;padding:8px 12px;border-radius:9px;cursor:pointer;transition:background .2s,color .2s;font-family:inherit}
+.tool-btn:hover{background:var(--chip-bg);color:var(--purple-2)}
+.tool-btn i{font-size:18px}
+#composerFiles{display:none}
+.composer-card.drag-over{border-color:var(--purple);background:rgba(99,102,241,.08)}
+
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--purple);padding:10px 20px;border-radius:12px;color:#fff;text-decoration:none;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,background .2s,opacity .2s;font-size:.85rem;border:none;cursor:pointer;min-height:40px;font-family:inherit}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(99,102,241,.4);background:#6366F1}
+.btn:active{transform:translateY(0) scale(.96)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-outline{background:transparent;border:1px solid var(--card-border);color:var(--text)}
+.btn-outline:hover{background:var(--chip-bg);box-shadow:none;transform:none}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:scale(0);animation:rippleAnim .6s ease-out;pointer-events:none}
+@keyframes rippleAnim{to{transform:scale(3);opacity:0}}
+
+/* ---------- Post card ---------- */
+.post-card{padding:20px}
+.post-head{display:flex;gap:12px;align-items:flex-start}
+.post-head-info{flex:1;min-width:0}
+.post-name{font-weight:700;font-size:.92rem}
+.post-name .post-role{color:var(--purple-2);font-weight:600}
+.post-meta{color:var(--muted);font-size:.76rem;margin-top:2px}
+.post-menu{position:relative}
+.post-menu-btn{background:transparent;border:none;color:var(--muted);cursor:pointer;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.post-menu-btn:hover{background:var(--chip-bg)}
+.post-menu-list{position:absolute;right:0;top:38px;background:var(--bg);border:1px solid var(--card-border);border-radius:10px;box-shadow:var(--shadow-soft);min-width:140px;overflow:hidden;z-index:5;display:none}
+.post-menu-list.open{display:block}
+.post-menu-list button{width:100%;text-align:left;background:transparent;border:none;color:var(--danger);padding:10px 14px;font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit}
+.post-menu-list button:hover{background:var(--chip-bg)}
+
+.post-text{font-size:.9rem;line-height:1.6;white-space:pre-wrap;margin-top:12px;word-break:break-word}
+
+.post-images{margin-top:12px;display:grid;gap:4px;border-radius:14px;overflow:hidden}
+.post-images.count-1{grid-template-columns:1fr}
+.post-images.count-1 .post-img-tile{max-height:420px}
+.post-images.count-2{grid-template-columns:1fr 1fr}
+.post-images.count-3{grid-template-columns:1.4fr 1fr}
+.post-images.count-3 .post-img-tile:first-child{grid-row:span 2}
+.post-images.count-4plus{grid-template-columns:1fr 1fr}
+.post-img-tile{position:relative;cursor:pointer;overflow:hidden;background:var(--chip-bg)}
+.post-img-tile img{width:100%;height:100%;object-fit:cover;display:block;aspect-ratio:1/1;transition:transform .35s ease}
+.post-images.count-1 .post-img-tile img{aspect-ratio:auto;max-height:420px}
+.post-img-tile:hover img{transform:scale(1.04)}
+.post-img-more{position:absolute;inset:0;background:rgba(11,16,32,.62);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700}
+
+.post-stats{display:flex;justify-content:space-between;color:var(--muted);font-size:.76rem;margin-top:12px}
+.post-stats .likes-stat{display:flex;align-items:center;gap:4px}
+.post-stats .likes-stat i{color:var(--like);font-size:14px}
+
+.post-actions{display:flex;border-top:1px solid var(--card-border);border-bottom:1px solid var(--card-border);margin-top:10px}
+.post-action-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;border:none;color:var(--muted);padding:10px 4px;font-size:.82rem;cursor:pointer;transition:color .2s,background .2s;font-family:inherit;border-radius:8px}
+.post-action-btn:hover{background:var(--chip-bg);color:var(--text)}
+.post-action-btn i{font-size:18px;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.post-action-btn.liked{color:var(--like)}
+.post-action-btn.liked i{transform:scale(1.15)}
+.post-action-btn.like-pop i{animation:likePop .4s ease}
+@keyframes likePop{0%{transform:scale(1)}40%{transform:scale(1.5)}100%{transform:scale(1.15)}}
+
+/* ---------- Comments ---------- */
+.comments-wrap{margin-top:12px;display:none}
+.comments-wrap.open{display:block;animation:fade .3s ease both}
+.comment-row{display:flex;gap:10px;margin-top:12px}
+.comment-bubble{background:var(--chip-bg);border-radius:14px;padding:8px 12px;flex:1}
+.comment-name{font-size:.8rem;font-weight:700}
+.comment-text{font-size:.83rem;line-height:1.5;margin-top:2px;word-break:break-word}
+.comment-time{font-size:.7rem;color:var(--muted);margin-top:6px;margin-left:2px}
+.comment-input-row{display:flex;gap:10px;margin-top:12px;align-items:center}
+.comment-input-row input{flex:1;background:var(--chip-bg);border:1px solid var(--card-border);border-radius:20px;padding:0 16px;height:38px;color:var(--text);font-size:.83rem;outline:none;font-family:inherit}
+.comment-input-row input:focus{border-color:var(--purple)}
+.comment-send{width:38px;height:38px;border-radius:50%;border:none;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s,transform .15s}
+.comment-send:hover{background:#6366F1}
+.comment-send:active{transform:scale(.9)}
+.empty-comments{font-size:.78rem;color:var(--muted);font-style:italic;margin-top:10px}
+
+/* ---------- Lightbox ---------- */
+.lightbox{position:fixed;inset:0;background:rgba(3,6,16,.9);display:none;align-items:center;justify-content:center;z-index:1000;padding:30px;backdrop-filter:blur(4px)}
+.lightbox.open{display:flex;animation:fade .2s ease both}
+.lightbox img{max-width:min(90vw,900px);max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.lightbox-close{position:absolute;top:22px;right:26px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.lightbox-close:hover{background:rgba(255,255,255,.16)}
+
+.empty-feed{text-align:center;color:var(--muted);font-size:.88rem;padding:20px 10px}
+
+/* ---------- Toasts ---------- */
+.toast-stack{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:999;width:min(340px,90vw)}
+.toast{background:var(--card);border:1px solid var(--card-border);backdrop-filter:blur(18px);color:var(--text);padding:12px 16px;border-radius:12px;font-size:.85rem;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-soft);animation:toastIn .35s cubic-bezier(.16,1,.3,1) both}
+.toast.out{animation:toastOut .3s ease forwards}
+.toast i{color:var(--success);font-size:17px;flex-shrink:0}
+.toast.error i{color:var(--danger)}
+.toast .toast-undo{margin-left:auto;color:var(--purple-2);font-weight:600;cursor:pointer;flex-shrink:0}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(10px) scale(.95)}}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+@media(max-width:900px){
+  .main{margin:0;padding:20px}
+}
+@media(max-width:640px){
+  .main{padding:16px}
+  .card{padding:16px;border-radius:16px}
+  .post-images.count-1 .post-img-tile{max-height:280px}
+  .post-images.count-1 .post-img-tile img{max-height:280px}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="bg2"></div>
+{% include "_sidebar.html" %}
+<div class="main">
+  <div class="top">
+    <div>
+      <a class="back-link" href="{{ url_for('profile') }}"><i class="ti ti-arrow-left"></i>Your profile</a>
+      <div class="top-title">Feed
+        <span class="muted-sub">Share updates, and see what your network is posting.</span>
+      </div>
+    </div>
+    <button class="icon-btn" id="notifBtn" aria-label="Notifications"><i class="ti ti-bell"></i><span class="dot" id="notifDot"></span></button>
+  </div>
+
+  <div class="feed-wrap">
+
+    <!-- Composer -->
+    <div class="card composer-card" id="composerCard">
+      <div class="composer-head">
+        <div class="mini-avatar">
+          {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="{{ user.name }}">{% else %}{{ user.name[0]|upper if user.name else 'U' }}{% endif %}
+        </div>
+        <textarea id="composerText" placeholder="Share an update, a win, or something you learned..."></textarea>
+      </div>
+      <div class="composer-previews" id="composerPreviews"></div>
+      <div class="composer-footer">
+        <div class="composer-tools">
+          <button type="button" class="tool-btn" id="addPhotosBtn"><i class="ti ti-photo"></i>Photos</button>
+          <input type="file" id="composerFiles" accept="image/*" multiple>
+        </div>
+        <button type="button" class="btn" id="postBtn" disabled>Post</button>
+      </div>
+    </div>
+
+    <!-- Feed -->
+    <div id="feedList">
+      {% set feed_posts = posts if posts is not none else [
+        {
+          'id':'sample-1','is_mine':true,
+          'user':{'name':user.name or 'You','role':user.target_role or 'Member','avatar_url':user.avatar_url},
+          'created_at':'2h ago',
+          'text':'Wrapped up the SQL joins module on my roadmap today — feeling a lot more confident about window functions now. Onto the next milestone!',
+          'images':[], 'likes_count':4, 'liked_by_me':false,
+          'comments':[{'id':'c1','user':{'name':'Aditi Rao'},'text':'Nice work! Window functions click eventually 😄','created_at':'1h ago'}]
+        },
+        {
+          'id':'sample-2','is_mine':false,
+          'user':{'name':'Rahul Mehta','role':'Product Designer','avatar_url':None},
+          'created_at':'5h ago',
+          'text':'Shipped the new onboarding flow this week. A few before/after shots below.',
+          'images':[
+            'https://images.unsplash.com/photo-1587440871875-191322ee64b0?w=600',
+            'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600',
+            'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?w=600'
+          ],
+          'likes_count':12, 'liked_by_me':true, 'comments':[]
+        },
+        {
+          'id':'sample-3','is_mine':false,
+          'user':{'name':'Priya Nair','role':'Data Analyst @ Fintra','avatar_url':None},
+          'created_at':'1d ago',
+          'text':'Two years ago I switched from mechanical engineering into data analytics. If anyone here is considering a similar jump, happy to share what worked (and what didn\'t) — just ask below.',
+          'images':[], 'likes_count':27, 'liked_by_me':false, 'comments':[]
+        }
+      ] %}
+
+      {% if not feed_posts %}
+        <div class="card"><p class="empty-feed">No posts yet — be the first to share something with your network.</p></div>
+      {% endif %}
+
+      {% for post in feed_posts %}
+      <article class="card post-card" data-post-id="{{ post.id }}">
+        <div class="post-head">
+          <div class="mini-avatar">
+            {% if post.user.avatar_url %}<img src="{{ post.user.avatar_url }}" alt="{{ post.user.name }}">{% else %}{{ post.user.name[0]|upper if post.user.name else 'U' }}{% endif %}
+          </div>
+          <div class="post-head-info">
+            <div class="post-name">{{ post.user.name }}</div>
+            <div class="post-meta">{{ post.user.role or '' }}{% if post.user.role %} · {% endif %}{{ post.created_at }}</div>
+          </div>
+          {% if post.is_mine %}
+          <div class="post-menu">
+            <button class="post-menu-btn" aria-label="Post options"><i class="ti ti-dots"></i></button>
+            <div class="post-menu-list"><button class="delete-post-btn"><i class="ti ti-trash"></i>Delete post</button></div>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if post.text %}<p class="post-text">{{ post.text }}</p>{% endif %}
+
+        {% if post.images %}
+        <div class="post-images {% if post.images|length == 1 %}count-1{% elif post.images|length == 2 %}count-2{% elif post.images|length == 3 %}count-3{% else %}count-4plus{% endif %}">
+          {% for img in post.images[:4] %}
+          <div class="post-img-tile" data-full="{{ img }}">
+            <img src="{{ img }}" alt="Post image">
+            {% if loop.last and post.images|length > 4 %}<div class="post-img-more">+{{ post.images|length - 4 }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="post-stats">
+          <span class="likes-stat"><i class="ti ti-heart-filled"></i><span class="likes-count">{{ post.likes_count or 0 }}</span></span>
+          <span class="comments-count-label">{{ post.comments|length }} comment{{ 's' if post.comments|length != 1 else '' }}</span>
+        </div>
+
+        <div class="post-actions">
+          <button class="post-action-btn like-btn {{ 'liked' if post.liked_by_me else '' }}"><i class="ti {{ 'ti-heart-filled' if post.liked_by_me else 'ti-heart' }}"></i>Like</button>
+          <button class="post-action-btn comment-toggle-btn"><i class="ti ti-message-circle"></i>Comment</button>
+        </div>
+
+        <div class="comments-wrap">
+          <div class="comments-list">
+            {% for c in post.comments %}
+            <div class="comment-row">
+              <div class="mini-avatar" style="width:32px;height:32px;font-size:.8rem">{{ c.user.name[0]|upper if c.user.name else 'U' }}</div>
+              <div class="comment-bubble">
+                <div class="comment-name">{{ c.user.name }}</div>
+                <div class="comment-text">{{ c.text }}</div>
+              </div>
+            </div>
+            {% else %}
+            <p class="empty-comments">No comments yet — start the conversation.</p>
+            {% endfor %}
+          </div>
+          <div class="comment-input-row">
+            <div class="mini-avatar" style="width:32px;height:32px;font-size:.8rem">
+              {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="{{ user.name }}">{% else %}{{ user.name[0]|upper if user.name else 'U' }}{% endif %}
+            </div>
+            <input type="text" placeholder="Write a comment...">
+            <button class="comment-send" aria-label="Send comment"><i class="ti ti-send"></i></button>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% include "_chatbot_widget.html" %}
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Close"><i class="ti ti-x"></i></button>
+  <img id="lightboxImg" src="" alt="Full size image">
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* ============================================================
+   CareerOS Feed — interaction layer
+   Backend hooks you'll want to wire up (all calls fail safely
+   and just show a toast if the route doesn't exist yet):
+     GET    /api/feed/posts
+     POST   /api/feed/posts               (multipart: text, images[])
+     DELETE /api/feed/posts/:id
+     POST   /api/feed/posts/:id/like
+     DELETE /api/feed/posts/:id/like
+     POST   /api/feed/posts/:id/comments  { text }
+   ============================================================ */
+(function(){
+  const $ = (sel, ctx=document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+
+  /* ---------- Toasts ---------- */
+  const toastStack = $('#toastStack');
+  function toast(msg, {type='success', undo=null, timeout=3500} = {}){
+    const el = document.createElement('div');
+    el.className = 'toast' + (type==='error' ? ' error' : '');
+    el.innerHTML = `<i class="ti ${type==='error'?'ti-alert-circle':'ti-circle-check'}"></i><span>${msg}</span>`;
+    if (undo){
+      const u = document.createElement('span');
+      u.className = 'toast-undo';
+      u.textContent = 'Undo';
+      u.onclick = () => { undo(); dismiss(); };
+      el.appendChild(u);
+    }
+    toastStack.appendChild(el);
+    function dismiss(){ el.classList.add('out'); setTimeout(()=> el.remove(), 280); }
+    const t = setTimeout(dismiss, timeout);
+    el.addEventListener('click', () => { clearTimeout(t); dismiss(); });
+    return { dismiss };
+  }
+
+  async function safeFetch(url, opts){
+    try{
+      const res = await fetch(url, opts);
+      if (!res.ok) throw new Error('Request failed');
+      return await res.json().catch(()=> ({}));
+    }catch(err){
+      toast("Couldn't reach the server — this change is only saved locally for now.", {type:'error'});
+      return null;
+    }
+  }
+
+  /* ---------- Notifications dot ---------- */
+  const notifDot = $('#notifDot');
+  setTimeout(() => notifDot.classList.add('show'), 1200);
+  $('#notifBtn').addEventListener('click', () => notifDot.classList.remove('show'));
+
+  /* ---------- Ripple on buttons ---------- */
+  function wireRipple(btn){
+    btn.addEventListener('click', function(e){
+      if (this.disabled) return;
+      const rect = this.getBoundingClientRect();
+      const r = document.createElement('span');
+      r.className = 'ripple';
+      const size = Math.max(rect.width, rect.height);
+      r.style.width = r.style.height = size + 'px';
+      r.style.left = (e.clientX - rect.left - size/2) + 'px';
+      r.style.top = (e.clientY - rect.top - size/2) + 'px';
+      this.appendChild(r);
+      setTimeout(()=> r.remove(), 600);
+    });
+  }
+  $$('.btn').forEach(wireRipple);
+
+  /* ---------- Scroll-reveal for cards ---------- */
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting){
+        entry.target.style.animationDelay = (i * 0.05) + 's';
+        entry.target.classList.add('reveal');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  function observeCard(el){ io.observe(el); }
+  $$('.card').forEach(observeCard);
+
+  /* ---------- Composer: image selection + previews ---------- */
+  const composerText = $('#composerText');
+  const composerFiles = $('#composerFiles');
+  const composerPreviews = $('#composerPreviews');
+  const addPhotosBtn = $('#addPhotosBtn');
+  const postBtn = $('#postBtn');
+  const composerCard = $('#composerCard');
+  let selectedImages = []; // { file, dataUrl }
+
+  function refreshPostBtn(){
+    postBtn.disabled = !(composerText.value.trim().length || selectedImages.length);
+  }
+  composerText.addEventListener('input', refreshPostBtn);
+
+  addPhotosBtn.addEventListener('click', () => composerFiles.click());
+  composerFiles.addEventListener('change', () => {
+    addFiles(Array.from(composerFiles.files));
+    composerFiles.value = '';
+  });
+  ['dragover','dragenter'].forEach(evt => composerCard.addEventListener(evt, e => { e.preventDefault(); composerCard.classList.add('drag-over'); }));
+  ['dragleave','drop'].forEach(evt => composerCard.addEventListener(evt, e => { e.preventDefault(); composerCard.classList.remove('drag-over'); }));
+  composerCard.addEventListener('drop', e => {
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length) addFiles(files);
+  });
+
+  function addFiles(files){
+    files.filter(f => f.type.startsWith('image/')).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const entry = { file, dataUrl: reader.result };
+        selectedImages.push(entry);
+        renderPreviews();
+        refreshPostBtn();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderPreviews(){
+    composerPreviews.innerHTML = '';
+    selectedImages.forEach((entry, idx) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'preview-thumb';
+      thumb.innerHTML = `<img src="${entry.dataUrl}" alt="Selected image ${idx+1}"><button type="button" class="preview-remove" aria-label="Remove image">✕</button>`;
+      thumb.querySelector('.preview-remove').addEventListener('click', () => {
+        selectedImages.splice(idx, 1);
+        renderPreviews();
+        refreshPostBtn();
+      });
+      composerPreviews.appendChild(thumb);
+    });
+  }
+
+  /* ---------- Composer: submit post ---------- */
+  postBtn.addEventListener('click', async () => {
+    const text = composerText.value.trim();
+    if (!text && !selectedImages.length) return;
+
+    postBtn.disabled = true;
+    const fd = new FormData();
+    fd.append('text', text);
+    selectedImages.forEach(entry => fd.append('images', entry.file));
+
+    const res = await safeFetch('/api/feed/posts', { method:'POST', body: fd });
+
+    const newPost = buildPostElement({
+      id: (res && res.id) ? res.id : 'local-' + Date.now(),
+      isMine: true,
+      name: {{ (user.name or 'You')|tojson }},
+      role: {{ (user.target_role or 'Member')|tojson }},
+      avatarUrl: {{ (user.avatar_url or '')|tojson }},
+      createdAt: 'Just now',
+      text: text,
+      images: selectedImages.map(e => e.dataUrl),
+      likesCount: 0,
+      likedByMe: false,
+      comments: []
+    });
+    $('#feedList').prepend(newPost);
+    observeCard(newPost);
+    requestAnimationFrame(() => newPost.classList.add('reveal'));
+
+    composerText.value = '';
+    selectedImages = [];
+    renderPreviews();
+    refreshPostBtn();
+    toast(res ? 'Posted.' : 'Posted locally — will sync once saved.');
+  });
+
+  /* ---------- Build a post card from JS (for new posts) ---------- */
+  function buildPostElement({ id, isMine, name, role, avatarUrl, createdAt, text, images, likesCount, likedByMe, comments }){
+    const article = document.createElement('article');
+    article.className = 'card post-card';
+    article.dataset.postId = id;
+
+    const avatarInner = avatarUrl ? `<img src="${avatarUrl}" alt="${name}">` : (name ? name[0].toUpperCase() : 'U');
+    const countClass = images.length === 1 ? 'count-1' : images.length === 2 ? 'count-2' : images.length === 3 ? 'count-3' : images.length > 3 ? 'count-4plus' : '';
+    const imagesHtml = images.length ? `
+      <div class="post-images ${countClass}">
+        ${images.slice(0,4).map((img, i) => `
+          <div class="post-img-tile" data-full="${img}">
+            <img src="${img}" alt="Post image">
+            ${(i === 3 && images.length > 4) ? `<div class="post-img-more">+${images.length - 4}</div>` : ''}
+          </div>`).join('')}
+      </div>` : '';
+
+    article.innerHTML = `
+      <div class="post-head">
+        <div class="mini-avatar">${avatarInner}</div>
+        <div class="post-head-info">
+          <div class="post-name">${name}</div>
+          <div class="post-meta">${role ? role + ' · ' : ''}${createdAt}</div>
+        </div>
+        ${isMine ? `<div class="post-menu">
+          <button class="post-menu-btn" aria-label="Post options"><i class="ti ti-dots"></i></button>
+          <div class="post-menu-list"><button class="delete-post-btn"><i class="ti ti-trash"></i>Delete post</button></div>
+        </div>` : ''}
+      </div>
+      ${text ? `<p class="post-text"></p>` : ''}
+      ${imagesHtml}
+      <div class="post-stats">
+        <span class="likes-stat"><i class="ti ti-heart-filled"></i><span class="likes-count">${likesCount}</span></span>
+        <span class="comments-count-label">${comments.length} comment${comments.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div class="post-actions">
+        <button class="post-action-btn like-btn"><i class="ti ti-heart"></i>Like</button>
+        <button class="post-action-btn comment-toggle-btn"><i class="ti ti-message-circle"></i>Comment</button>
+      </div>
+      <div class="comments-wrap">
+        <div class="comments-list">
+          <p class="empty-comments">No comments yet — start the conversation.</p>
+        </div>
+        <div class="comment-input-row">
+          <div class="mini-avatar" style="width:32px;height:32px;font-size:.8rem">${avatarInner}</div>
+          <input type="text" placeholder="Write a comment...">
+          <button class="comment-send" aria-label="Send comment"><i class="ti ti-send"></i></button>
+        </div>
+      </div>
+    `;
+    if (text) article.querySelector('.post-text').textContent = text; // safe text insertion
+    wirePost(article);
+    return article;
+  }
+
+  /* ---------- Lightbox ---------- */
+  const lightbox = $('#lightbox');
+  const lightboxImg = $('#lightboxImg');
+  function openLightbox(src){ lightboxImg.src = src; lightbox.classList.add('open'); }
+  function closeLightbox(){ lightbox.classList.remove('open'); lightboxImg.src=''; }
+  $('#lightboxClose').addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+  /* ---------- Wire per-post interactions (likes, comments, delete, images) ---------- */
+  function wirePost(article){
+    const postId = article.dataset.postId;
+
+    // Image lightbox
+    $$('.post-img-tile', article).forEach(tile => {
+      tile.addEventListener('click', () => openLightbox(tile.dataset.full));
+    });
+
+    // Like toggle
+    const likeBtn = $('.like-btn', article);
+    likeBtn.addEventListener('click', async () => {
+      const wasLiked = likeBtn.classList.contains('liked');
+      const countEl = $('.likes-count', article);
+      let count = parseInt(countEl.textContent) || 0;
+      const nowLiked = !wasLiked;
+
+      likeBtn.classList.toggle('liked', nowLiked);
+      likeBtn.querySelector('i').className = 'ti ' + (nowLiked ? 'ti-heart-filled' : 'ti-heart');
+      countEl.textContent = Math.max(0, count + (nowLiked ? 1 : -1));
+      likeBtn.classList.add('like-pop');
+      setTimeout(()=> likeBtn.classList.remove('like-pop'), 400);
+
+      const res = await safeFetch(`/api/feed/posts/${encodeURIComponent(postId)}/like`, { method: nowLiked ? 'POST' : 'DELETE' });
+      if (res === null){
+        // revert on failure to reach server, but keep it feeling responsive rather than jarring
+      }
+    });
+
+    // Comment panel toggle
+    const commentsWrap = $('.comments-wrap', article);
+    const commentToggle = $('.comment-toggle-btn', article);
+    commentToggle.addEventListener('click', () => {
+      commentsWrap.classList.toggle('open');
+      if (commentsWrap.classList.contains('open')){
+        $('.comment-input-row input', article).focus();
+      }
+    });
+
+    // Add comment
+    const commentInput = $('.comment-input-row input', article);
+    const commentSend = $('.comment-send', article);
+    async function submitComment(){
+      const val = commentInput.value.trim();
+      if (!val) return;
+      const list = $('.comments-list', article);
+      const emptyHint = $('.empty-comments', list);
+      if (emptyHint) emptyHint.remove();
+
+      const row = document.createElement('div');
+      row.className = 'comment-row';
+      row.innerHTML = `
+        <div class="mini-avatar" style="width:32px;height:32px;font-size:.8rem">${ {{ (user.name[0]|upper if user.name else 'U')|tojson }} }</div>
+        <div class="comment-bubble">
+          <div class="comment-name">${ {{ (user.name or 'You')|tojson }} }</div>
+          <div class="comment-text"></div>
+        </div>`;
+      row.querySelector('.comment-text').textContent = val;
+      list.appendChild(row);
+      commentInput.value = '';
+
+      const countLabel = $('.comments-count-label', article);
+      const newCount = list.querySelectorAll('.comment-row').length;
+      countLabel.textContent = `${newCount} comment${newCount !== 1 ? 's' : ''}`;
+
+      await safeFetch(`/api/feed/posts/${encodeURIComponent(postId)}/comments`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ text: val })
+      });
+    }
+    commentSend.addEventListener('click', submitComment);
+    commentInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitComment(); });
+
+    // Post menu (delete)
+    const menu = $('.post-menu', article);
+    if (menu){
+      const menuBtn = $('.post-menu-btn', menu);
+      const menuList = $('.post-menu-list', menu);
+      menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menuList.classList.toggle('open');
+      });
+      document.addEventListener('click', () => menuList.classList.remove('open'));
+
+      const deleteBtn = $('.delete-post-btn', article);
+      deleteBtn.addEventListener('click', () => {
+        const html = article.outerHTML;
+        const parent = article.parentNode;
+        const next = article.nextSibling;
+        article.remove();
+        safeFetch(`/api/feed/posts/${encodeURIComponent(postId)}`, { method:'DELETE' });
+        toast('Post deleted.', {
+          undo: () => {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            const restored = tmp.firstElementChild;
+            parent.insertBefore(restored, next);
+            observeCard(restored);
+            restored.classList.add('reveal');
+          }
+        });
+      });
+    }
+  }
+
+  $$('.post-card').forEach(wirePost);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>My Network — CareerOS</title>
+<script src="/static/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-widget.css') }}">
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#070B14; --card:rgba(255,255,255,.06); --card-border:rgba(255,255,255,.08);
+  --text:#ffffff; --muted:#94a3b8; --chip-bg:rgba(255,255,255,.05);
+  --purple:#6366F1; --purple-2:#818CF8; --accent:#8B5CF6; --blue:#06B6D4;
+  --success:#22C55E; --danger:#EF4444;
+  --shadow-soft:0 20px 50px -20px rgba(0,0,0,.6); --tap:46px; --r-lg:24px;
+}
+[data-theme="light"]{
+  --bg:#f3f4f9; --card:rgba(255,255,255,.85); --card-border:rgba(15,23,42,.08);
+  --text:#0f172a; --muted:#5b6472; --chip-bg:rgba(15,23,42,.03);
+  --shadow-soft:0 20px 50px -22px rgba(15,23,42,.28); --purple:#4F46E5; --purple-2:#6366F1;
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Inter',Arial,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s}
+h1{font-family:'Sora',Arial,sans-serif}
+.bg,.bg2{position:fixed;border-radius:50%;filter:blur(100px);opacity:.28;pointer-events:none}
+.bg{width:340px;height:340px;background:#6366F1;top:-90px;left:-70px}
+.bg2{width:280px;height:280px;background:#06B6D4;right:-70px;bottom:-40px}
+.main{margin-left:250px;padding:30px;position:relative;transition:margin .3s;max-width:1240px}
+
+/* Page header + search */
+.page-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.page-head h1{font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
+.search-wrap{position:relative;flex:1;max-width:360px;min-width:220px}
+.search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px}
+.search-wrap input{width:100%;padding:11px 14px 11px 40px;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--text);font-family:inherit;font-size:.88rem;outline:none;transition:border-color .2s}
+.search-wrap input:focus{border-color:var(--purple)}
+.hdr-actions{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.hdr-icon-btn{width:var(--tap);height:var(--tap);border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--card-border);cursor:pointer;transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;flex-shrink:0}
+.hdr-icon-btn:hover{box-shadow:0 6px 18px rgba(99,102,241,.25)}
+.hdr-icon-btn:active{transform:scale(.88)}
+.hdr-icon-btn i{font-size:18px;color:var(--muted)}
+.avatar-chip-sm{width:var(--tap);height:var(--tap);border-radius:50%;background:linear-gradient(135deg,var(--purple-2),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:#fff;flex-shrink:0;overflow:hidden;text-decoration:none}
+.avatar-chip-sm img{width:100%;height:100%;object-fit:cover}
+
+/* Stat strip */
+.stat-strip{display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.stat-pill{background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:16px 22px;flex:1;min-width:140px;backdrop-filter:blur(18px);transition:transform .2s,box-shadow .3s,border-color .3s}
+.stat-pill:hover{transform:translateY(-3px);box-shadow:var(--shadow-soft);border-color:rgba(99,102,241,.25)}
+.stat-pill .num{font-size:1.6rem;font-weight:800;color:var(--purple-2);font-family:'Sora',Arial,sans-serif}
+.stat-pill .lbl{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--card-border);margin-bottom:22px;overflow-x:auto}
+.tab-btn{background:transparent;border:none;color:var(--muted);font-family:inherit;font-size:.88rem;font-weight:600;padding:12px 18px;cursor:pointer;position:relative;white-space:nowrap;transition:color .2s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--text)}
+.tab-btn.active::after{content:'';position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--purple),var(--blue));border-radius:2px;box-shadow:0 0 8px rgba(99,102,241,.5)}
+.tab-btn .badge{background:var(--purple);color:#fff;font-size:.68rem;font-weight:700;border-radius:20px;padding:1px 7px;margin-left:6px}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fade .4s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Person cards grid */
+.people-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.p-card{background:var(--card);border:1px solid var(--card-border);border-radius:18px;padding:22px;text-align:center;backdrop-filter:blur(18px);transition:transform .25s,box-shadow .3s,border-color .3s}
+.p-card:hover{box-shadow:var(--shadow-soft);transform:translateY(-4px);border-color:rgba(99,102,241,.25)}
+.p-avatar{width:64px;height:64px;border-radius:50%;margin:0 auto 12px;background:linear-gradient(135deg,#6366F1,#06B6D4);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;color:#fff;overflow:hidden}
+.p-avatar img{width:100%;height:100%;object-fit:cover}
+.p-name{font-weight:700;font-size:.95rem}
+.p-role{color:var(--muted);font-size:.8rem;margin-top:2px}
+.p-company{color:var(--purple-2);font-size:.78rem;margin-top:1px}
+.p-mutual{color:var(--muted);font-size:.74rem;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:5px}
+
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--purple);padding:10px 18px;border-radius:11px;color:#fff;text-decoration:none;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,background .2s;font-size:.84rem;font-weight:600;border:none;cursor:pointer;min-height:var(--tap);width:100%}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(99,102,241,.4)}
+.btn:active{transform:translateY(0) scale(.96)}
+.btn-outline{background:transparent;border:1px solid var(--card-border);color:var(--text)}
+.btn-outline:hover{background:var(--chip-bg)}
+.btn-ghost{background:transparent;color:var(--muted);border:none}
+.btn-ghost:hover{color:var(--danger)}
+.btn-row{display:flex;gap:8px;margin-top:14px}
+.btn.pending{background:var(--chip-bg);color:var(--muted);cursor:default}
+.btn.pending:hover{transform:none;box-shadow:none}
+.btn.connected{background:rgba(34,197,94,.12);color:var(--success);border:1px solid rgba(34,197,94,.25)}
+.btn.connected:hover{transform:none;box-shadow:none}
+
+/* Connection list rows (My Network) */
+.conn-row{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:16px 18px;margin-bottom:10px;backdrop-filter:blur(18px);transition:border-color .3s,box-shadow .3s}
+.conn-row:hover{border-color:rgba(99,102,241,.2);box-shadow:var(--shadow-soft)}
+.conn-row .p-avatar{width:52px;height:52px;font-size:19px;margin:0;flex-shrink:0}
+.conn-info{flex:1;min-width:0}
+.conn-info .p-name{font-size:.9rem}
+.conn-info .p-role{font-size:.78rem}
+.conn-actions{display:flex;gap:8px;flex-shrink:0}
+.icon-action{width:38px;height:38px;border-radius:10px;border:1px solid var(--card-border);background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,color .2s,transform .15s}
+.icon-action:hover{background:var(--chip-bg);color:var(--purple-2)}
+.icon-action:active{transform:scale(.9)}
+.icon-action.danger:hover{color:var(--danger)}
+
+/* Invitation cards */
+.invite-card{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:18px;margin-bottom:10px;backdrop-filter:blur(18px)}
+.invite-msg{font-size:.8rem;color:var(--muted);margin-top:4px;font-style:italic}
+.invite-actions{display:flex;gap:8px;flex-shrink:0;margin-left:auto}
+.invite-actions .btn{width:auto;padding:9px 16px}
+
+.empty-state{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty-state i{font-size:38px;opacity:.4;margin-bottom:10px;display:block}
+.empty-state p{font-size:.88rem}
+
+/* Toasts */
+.toast-stack{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:999;width:min(340px,90vw)}
+.toast{background:var(--card);border:1px solid var(--card-border);backdrop-filter:blur(18px);color:var(--text);padding:12px 16px;border-radius:12px;font-size:.85rem;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-soft);animation:toastIn .35s cubic-bezier(.16,1,.3,1) both}
+.toast.out{animation:toastOut .3s ease forwards}
+.toast i{color:var(--success);font-size:17px;flex-shrink:0}
+.toast.error i{color:var(--danger)}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(10px) scale(.95)}}
+
+@media(max-width:900px){ .main{margin:0;padding:20px} }
+@media(max-width:640px){
+  .main{padding:16px}
+  .page-head{flex-direction:column;align-items:stretch}
+  .search-wrap{max-width:none}
+  .conn-actions .icon-action:nth-child(2){display:none}
+  .invite-card{flex-wrap:wrap}
+  .invite-actions{margin-left:0;width:100%}
+  .invite-actions .btn{flex:1}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="bg2"></div>
+{% include "_sidebar.html" %}
+<div class="main">
+
+  <div class="page-head">
+    <h1>My Network</h1>
+    <div class="search-wrap">
+      <i class="ti ti-search"></i>
+      <input type="text" id="networkSearch" placeholder="Search people or companies...">
+    </div>
+    <div class="hdr-actions">
+      <button class="hdr-icon-btn" aria-label="Notifications"><i class="ti ti-bell"></i></button>
+      <a href="{{ url_for('profile') }}" class="avatar-chip-sm" title="{{ user.name if user else 'Profile' }}">
+        {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="{{ user.name }}">{% else %}{{ user.name[0]|upper if user and user.name else 'U' }}{% endif %}
+      </a>
+    </div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat-pill"><div class="num">{{ connections|length }}</div><div class="lbl">Connections</div></div>
+    <div class="stat-pill"><div class="num">{{ invitations|length }}</div><div class="lbl">Pending invitations</div></div>
+    <div class="stat-pill"><div class="num">{{ suggestions|length }}</div><div class="lbl">People you may know</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="mynetwork">My Network</button>
+    <button class="tab-btn" data-tab="discover">Discover People</button>
+    <button class="tab-btn" data-tab="invitations">Invitations{% if invitations|length %}<span class="badge">{{ invitations|length }}</span>{% endif %}</button>
+  </div>
+
+  <!-- MY NETWORK -->
+  <div class="tab-panel active" id="panel-mynetwork">
+    {% if connections %}
+      {% for c in connections %}
+      <div class="conn-row" data-user-id="{{ c.id }}">
+        <div class="p-avatar">
+          {% if c.avatar_url %}<img src="{{ c.avatar_url }}" alt="{{ c.name }}">{% else %}{{ c.name[0]|upper }}{% endif %}
+        </div>
+        <div class="conn-info">
+          <div class="p-name">{{ c.name }}</div>
+          <div class="p-role">{{ c.role or "—" }}{% if c.company %} · {{ c.company }}{% endif %}</div>
+        </div>
+        <div class="conn-actions">
+          <a class="icon-action" href="{{ url_for('person_profile', user_id=c.id) }}" aria-label="View profile"><i class="ti ti-user"></i></a>
+          <button class="icon-action" aria-label="Message"><i class="ti ti-message-circle"></i></button>
+          <button class="icon-action danger remove-connection" data-id="{{ c.id }}" data-name="{{ c.name }}" aria-label="Remove connection"><i class="ti ti-user-minus"></i></button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state"><i class="ti ti-users"></i><p>No connections yet — head to Discover People to start building your network.</p></div>
+    {% endif %}
+  </div>
+
+  <!-- DISCOVER PEOPLE -->
+  <div class="tab-panel" id="panel-discover">
+    {% if suggestions %}
+    <div class="people-grid">
+      {% for s in suggestions %}
+      <div class="p-card" data-user-id="{{ s.id }}">
+        <div class="p-avatar">
+          {% if s.avatar_url %}<img src="{{ s.avatar_url }}" alt="{{ s.name }}">{% else %}{{ s.name[0]|upper }}{% endif %}
+        </div>
+        <div class="p-name">{{ s.name }}</div>
+        <div class="p-role">{{ s.role or "—" }}</div>
+        {% if s.company %}<div class="p-company">{{ s.company }}</div>{% endif %}
+        {% if s.shared_company %}
+          <div class="p-mutual"><i class="ti ti-building" style="font-size:13px"></i>Also at {{ s.shared_company|title }}</div>
+        {% elif s.shared_school %}
+          <div class="p-mutual"><i class="ti ti-school" style="font-size:13px"></i>Also studied at {{ s.shared_school|title }}</div>
+        {% elif s.mutual_count %}
+          <div class="p-mutual"><i class="ti ti-users" style="font-size:13px"></i>{{ s.mutual_count }} mutual connection{{ 's' if s.mutual_count != 1 else '' }}</div>
+        {% endif %}
+        <div class="btn-row">
+          <button class="btn connect-btn" data-id="{{ s.id }}" data-name="{{ s.name }}"><i class="ti ti-user-plus"></i>Connect</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+      <div class="empty-state"><i class="ti ti-users-group"></i><p>No suggestions right now — check back soon.</p></div>
+    {% endif %}
+  </div>
+
+  <!-- INVITATIONS -->
+  <div class="tab-panel" id="panel-invitations">
+    {% if invitations %}
+      {% for inv in invitations %}
+      <div class="invite-card" data-invite-id="{{ inv.id }}">
+        <div class="p-avatar" style="width:52px;height:52px;font-size:19px;flex-shrink:0">
+          {% if inv.from_user.avatar_url %}<img src="{{ inv.from_user.avatar_url }}" alt="{{ inv.from_user.name }}">{% else %}{{ inv.from_user.name[0]|upper }}{% endif %}
+        </div>
+        <div style="min-width:0">
+          <div class="p-name">{{ inv.from_user.name }}</div>
+          <div class="p-role">{{ inv.from_user.role or "—" }}</div>
+          {% if inv.message %}<div class="invite-msg">"{{ inv.message }}"</div>{% endif %}
+        </div>
+        <div class="invite-actions">
+          <button class="btn btn-outline decline-invite" data-id="{{ inv.id }}">Ignore</button>
+          <button class="btn accept-invite" data-id="{{ inv.id }}">Accept</button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state"><i class="ti ti-mail-opened"></i><p>No pending invitations.</p></div>
+    {% endif %}
+  </div>
+
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+(function(){
+  const $ = (sel, ctx=document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+
+  /* Toasts */
+  const toastStack = $('#toastStack');
+  function toast(msg, {type='success', timeout=3000} = {}){
+    const el = document.createElement('div');
+    el.className = 'toast' + (type==='error' ? ' error' : '');
+    el.innerHTML = `<i class="ti ${type==='error'?'ti-alert-circle':'ti-circle-check'}"></i><span>${msg}</span>`;
+    toastStack.appendChild(el);
+    setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(),280); }, timeout);
+  }
+  async function safeFetch(url, opts){
+    try{
+      const res = await fetch(url, opts);
+      if (!res.ok) throw new Error('Request failed');
+      return await res.json().catch(()=>({}));
+    }catch(e){
+      toast("Couldn't reach the server — try again.", {type:'error'});
+      return null;
+    }
+  }
+
+  /* Tabs */
+  $$('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.tab-btn').forEach(b => b.classList.remove('active'));
+      $$('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      $('#panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  /* Connect (Discover tab) */
+  $$('.connect-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id, name = btn.dataset.name;
+      btn.disabled = true;
+      btn.classList.add('pending');
+      btn.innerHTML = '<i class="ti ti-clock"></i>Pending';
+      const res = await safeFetch(`/api/network/connect/${id}`, { method:'POST' });
+      if (res === null){ // request failed, revert
+        btn.disabled = false;
+        btn.classList.remove('pending');
+        btn.innerHTML = '<i class="ti ti-user-plus"></i>Connect';
+        return;
+      }
+      toast(`Invitation sent to ${name}.`);
+    });
+  });
+
+  /* Accept / decline invitations */
+  $$('.accept-invite').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const card = btn.closest('.invite-card');
+      const id = btn.dataset.id;
+      const res = await safeFetch(`/api/network/invitations/${id}/accept`, { method:'POST' });
+      if (res === null) return;
+      toast('Invitation accepted — added to My Network.');
+      card.remove();
+    });
+  });
+  $$('.decline-invite').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const card = btn.closest('.invite-card');
+      const id = btn.dataset.id;
+      const res = await safeFetch(`/api/network/invitations/${id}/decline`, { method:'POST' });
+      if (res === null) return;
+      card.remove();
+      toast('Invitation ignored.');
+    });
+  });
+
+  /* Remove connection */
+  $$('.remove-connection').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row = btn.closest('.conn-row');
+      const id = btn.dataset.id, name = btn.dataset.name;
+      if (!confirm(`Remove ${name} from your connections?`)) return;
+      const res = await safeFetch(`/api/network/connections/${id}`, { method:'DELETE' });
+      if (res === null) return;
+      row.remove();
+      toast(`Removed ${name} from your network.`);
+    });
+  });
+
+  /* Search (people + companies) */
+  const discoverPanel = $('#panel-discover');
+  const defaultDiscoverHTML = discoverPanel.innerHTML;
+  let searchDebounce;
+
+  function renderSearchResults(people, companies){
+    if (!people.length && !companies.length){
+      discoverPanel.innerHTML = `<div class="empty-state"><i class="ti ti-search-off"></i><p>No matches for that search.</p></div>`;
+      return;
+    }
+    let html = '';
+    if (people.length){
+      html += `<div class="people-grid">` + people.map(p => `
+        <div class="p-card" data-user-id="${p.id}">
+          <div class="p-avatar">${(p.name || '?')[0].toUpperCase()}</div>
+          <div class="p-name">${p.name}</div>
+          <div class="p-role">${p.role || '—'}</div>
+          <div class="btn-row">
+            <button class="btn connect-btn" data-id="${p.id}" data-name="${p.name}"><i class="ti ti-user-plus"></i>Connect</button>
+          </div>
+        </div>`).join('') + `</div>`;
+    }
+    if (companies.length){
+      html += `<div class="empty-state" style="padding:16px 0 6px"><p style="font-style:normal">Companies</p></div>
+        <div class="people-grid">` + companies.map(c => `
+        <a class="p-card" style="text-decoration:none;color:inherit" href="/companies/${c.id}">
+          <div class="p-avatar">${(c.name || '?')[0].toUpperCase()}</div>
+          <div class="p-name">${c.name}</div>
+          <div class="p-role">${c.industry || ''}</div>
+        </a>`).join('') + `</div>`;
+    }
+    discoverPanel.innerHTML = html;
+    // wire up Connect buttons on the freshly-rendered cards
+    $$('.connect-btn', discoverPanel).forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id, name = btn.dataset.name;
+        btn.disabled = true;
+        btn.classList.add('pending');
+        btn.innerHTML = '<i class="ti ti-clock"></i>Pending';
+        const res = await safeFetch(`/api/network/connect/${id}`, { method:'POST' });
+        if (res === null){
+          btn.disabled = false;
+          btn.classList.remove('pending');
+          btn.innerHTML = '<i class="ti ti-user-plus"></i>Connect';
+          return;
+        }
+        toast(`Invitation sent to ${name}.`);
+      });
+    });
+  }
+
+  $('#networkSearch').addEventListener('input', (e) => {
+    clearTimeout(searchDebounce);
+    const q = e.target.value.trim();
+    searchDebounce = setTimeout(async () => {
+      // switch to Discover tab so results are visible
+      $$('.tab-btn').forEach(b => b.classList.remove('active'));
+      $$('.tab-panel').forEach(p => p.classList.remove('active'));
+      $('.tab-btn[data-tab="discover"]').classList.add('active');
+      discoverPanel.classList.add('active');
+
+      if (!q){
+        discoverPanel.innerHTML = defaultDiscoverHTML;
+        return;
+      }
+      const res = await safeFetch(`/api/search?q=${encodeURIComponent(q)}`);
+      if (res === null) return;
+      renderSearchResults(res.people || [], res.companies || []);
+    }, 350);
+  });
+})();
+</script>
+</body>
+</html>

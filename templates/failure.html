@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Payment Failed</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="page-center">
+  <div class="card result-card">
+    <div class="result-icon failed">✕</div>
+    <h1>Payment Failed</h1>
+    <p class="muted">{{ order.failure_reason or "Something went wrong." }}</p>
+
+    <div class="result-details">
+      <div><span>Order ID</span><span>{{ order.order_id }}</span></div>
+      <div><span>Amount</span><span>₹{{ order.amount }}</span></div>
+    </div>
+
+    <a href="/checkout/{{ order.order_id }}" class="btn btn-primary">Try Again</a>
+    <a href="/" class="btn btn-secondary">Back to Store</a>
+  </div>
+</div>
+</body>
+</html>

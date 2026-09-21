@@ -419,13 +419,19 @@ ul{ margin:0; padding:0; list-style:none; }
 .rec-card{ padding: 20px; display:flex; flex-direction:column; gap: 14px; transition: transform .3s var(--ease); }
 .rec-card:hover{ transform: translateY(-6px); }
 .rec-top{ display:flex; align-items:center; gap: 12px; position: relative; }
+.rec-score-wrap{ position:relative; width:56px; height:56px; flex-shrink:0; }
+.rec-score-wrap .radial{ width:100%; height:100%; }
 .radial{ width: 56px; height:56px; transform: rotate(-90deg); flex-shrink:0; }
 .radial.big{ width: 80px; height: 80px; }
 .radial-track{ fill:none; stroke: var(--border); stroke-width: 7; }
 .radial-fill{ fill:none; stroke: var(--primary); stroke-width: 7; stroke-linecap: round; stroke-dasharray: 213.5; stroke-dashoffset: 213.5; transition: stroke-dashoffset 1.4s var(--ease); }
 .radial-fill.teal{ stroke: var(--secondary); }
 .radial-label{ position:absolute; left: 15px; font-family: var(--font-mono); font-weight:700; font-size: 13px; }
-.rec-top .radial-label{ position:static; margin-left:-46px; width:56px; text-align:center; font-size:13px; }
+.rec-score-wrap .radial-label{
+  position:absolute; inset:0; left:0; margin:0;
+  display:flex; align-items:center; justify-content:center;
+  width:auto; font-size:13px;
+}
 .rec-reason{ font-size: 12.5px; color: var(--text-muted); margin:0; }
 .rec-skills{ display:flex; flex-direction:column; gap:6px; font-size: 12px; }
 .dot{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }

@@ -44,7 +44,7 @@
 </style>
 
 <nav class="app-sidebar">
-  <div class="app-logo">Career<span>OS</span></div>
+  <div class="app-logo">CareerOS</div>
 
   <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">
     <i class="ti ti-home"></i>Dashboard
@@ -68,8 +68,17 @@
    class="{{ 'active' if request.endpoint == 'career_center' else '' }}">
     <i class="ti ti-briefcase"></i>Career Center
   </a>
+  <a href="{{ url_for('certificates') }}" class="{{ 'active' if request.endpoint == 'certificates' else '' }}">
+  <i class="ti ti-certificate"></i>Network
+</a>
+<a href="{{ url_for('certificates') }}" class="{{ 'active' if request.endpoint == 'certificates' else '' }}">
+  <i class="ti ti-certificate"></i>Companies
+</a>
   <a href="{{ url_for('coding_arena') }}" class="{{ 'active' if request.endpoint == 'coding_arena' else '' }}">
   <i class="ti ti-code"></i>Coding Arena
+</a>
+<a href="{{ url_for('certificates') }}" class="{{ 'active' if request.endpoint == 'certificates' else '' }}">
+  <i class="ti ti-certificate"></i>Certificates
 </a>
   <a href="{{ url_for('settings') }}" class="{{ 'active' if request.endpoint == 'settings' else '' }}">
     <i class="ti ti-settings"></i>Settings

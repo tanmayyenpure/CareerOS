@@ -3,33 +3,65 @@
   Resume Builder, Resume Analyzer, Settings, Career Center, Learning Hub,
   Coding Arena, Skill Pathfinder). Edit this file only — do not duplicate
   sidebar markup back into individual pages.
+
+  v2 — premium glass redesign. Structure, hrefs, request.endpoint checks,
+  and the 250px width contract with page .main{margin-left:250px} are
+  UNCHANGED so no other page needs to be touched.
 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
   .app-sidebar{
     --sb-primary:#6366F1;
     --sb-primary-rgb:99,102,241;
     --sb-secondary:#06B6D4;
+    --sb-accent:#8B5CF6;
+    --sb-bg:rgba(9,12,22,.72);
+    --sb-border:rgba(255,255,255,.08);
+    --sb-text:#e7e9f4;
+    --sb-text-mid:#9497b3;
+    --sb-text-low:#5f6280;
     position:fixed; top:0; left:0; width:250px; height:100vh;
-    background:rgba(15,23,42,.85); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px);
-    padding:20px; display:flex; flex-direction:column;
-    border-right:1px solid rgba(255,255,255,.06);
-    z-index:100; overflow-y:auto; box-sizing:border-box;
+    background:
+      radial-gradient(140% 60% at 0% 0%, rgba(var(--sb-primary-rgb),.16), transparent 55%),
+      var(--sb-bg);
+    backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
+    padding:22px 16px; display:flex; flex-direction:column;
+    border-right:1px solid var(--sb-border);
+    z-index:100; overflow-y:auto; overflow-x:hidden; box-sizing:border-box;
     transition:background .3s ease, border-color .3s ease;
+    font-family:'Inter',Arial,sans-serif;
   }
+  .app-sidebar::-webkit-scrollbar{width:4px}
+  .app-sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
   [data-theme="light"] .app-sidebar{
     --sb-primary:#4F46E5;
     --sb-primary-rgb:79,70,229;
-    background:rgba(255,255,255,.9); border-right-color:rgba(15,23,42,.08);
+    --sb-bg:rgba(255,255,255,.78);
+    --sb-border:rgba(15,23,42,.08);
+    --sb-text:#161a2c;
+    --sb-text-mid:#5b6178;
+    --sb-text-low:#8a8fa8;
   }
+
   .app-sidebar .app-logo{
-    font-family:'Plus Jakarta Sans',Arial,sans-serif; font-size:28px; font-weight:800;
-    margin-bottom:25px; color:#fff;
+    display:flex; align-items:center; gap:10px;
+    font-family:'Plus Jakarta Sans',Arial,sans-serif; font-size:21px; font-weight:800;
+    margin:2px 6px 22px; color:var(--sb-text); letter-spacing:-.01em;
     opacity:0; animation:sbFadeIn .5s ease .05s both;
   }
-  [data-theme="light"] .app-sidebar .app-logo{ color:#0f172a; }
+  .app-sidebar .app-logo .logo-mark{
+    width:42px; height:42px; border-radius:10px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    filter:drop-shadow(0 4px 10px rgba(var(--sb-primary-rgb),.4));
+  }
+  .app-sidebar .app-logo .logo-mark img{
+    width:100%; height:100%; object-fit:contain; display:block;
+  }
   .app-sidebar .app-logo span{
-    background-image:linear-gradient(110deg, var(--sb-primary), var(--sb-secondary), var(--sb-primary));
+    background-image:linear-gradient(110deg, var(--sb-primary), var(--sb-secondary), var(--sb-accent), var(--sb-primary));
     background-size:300% auto;
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
     animation:sbGradientShift 7s ease infinite;
@@ -37,65 +69,75 @@
   @keyframes sbGradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
   @keyframes sbFadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 
+  .sb-group-label{
+    font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--sb-text-low); margin:18px 10px 6px; opacity:0; animation:sbFadeIn .45s ease .3s both;
+  }
+  .sb-group-label:first-of-type{margin-top:4px}
+
   .app-sidebar a{
-    display:flex; align-items:center; gap:10px; color:#94a3b8; text-decoration:none;
-    padding:12px; border-radius:10px; margin:6px 0; font-family:Arial,sans-serif; font-size:14.5px;
+    display:flex; align-items:center; gap:11px; color:var(--sb-text-mid); text-decoration:none;
+    padding:10.5px 12px; border-radius:12px; margin:2px 0; font-size:14px; font-weight:500;
     position:relative; overflow:hidden;
-    transition:background .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1), color .25s ease;
+    transition:background .25s ease, transform .2s cubic-bezier(.34,1.56,.64,1), color .25s ease;
     opacity:0; animation:sbFadeIn .45s cubic-bezier(.16,1,.3,1) both;
   }
   /* staggered entrance for each nav item */
   .app-sidebar a:nth-of-type(1){ animation-delay:.08s; }
-  .app-sidebar a:nth-of-type(2){ animation-delay:.12s; }
-  .app-sidebar a:nth-of-type(3){ animation-delay:.16s; }
-  .app-sidebar a:nth-of-type(4){ animation-delay:.20s; }
-  .app-sidebar a:nth-of-type(5){ animation-delay:.24s; }
-  .app-sidebar a:nth-of-type(6){ animation-delay:.28s; }
-  .app-sidebar a:nth-of-type(7){ animation-delay:.32s; }
-  .app-sidebar a:nth-of-type(8){ animation-delay:.36s; }
-  .app-sidebar a:nth-of-type(9){ animation-delay:.40s; }
-  .app-sidebar a:nth-of-type(10){ animation-delay:.44s; }
+  .app-sidebar a:nth-of-type(2){ animation-delay:.11s; }
+  .app-sidebar a:nth-of-type(3){ animation-delay:.14s; }
+  .app-sidebar a:nth-of-type(4){ animation-delay:.17s; }
+  .app-sidebar a:nth-of-type(5){ animation-delay:.20s; }
+  .app-sidebar a:nth-of-type(6){ animation-delay:.23s; }
+  .app-sidebar a:nth-of-type(7){ animation-delay:.26s; }
+  .app-sidebar a:nth-of-type(8){ animation-delay:.29s; }
+  .app-sidebar a:nth-of-type(9){ animation-delay:.32s; }
+  .app-sidebar a:nth-of-type(10){ animation-delay:.35s; }
+  .app-sidebar a:nth-of-type(11){ animation-delay:.38s; }
+  .app-sidebar a:nth-of-type(12){ animation-delay:.41s; }
+  .app-sidebar a:nth-of-type(13){ animation-delay:.44s; }
 
-  [data-theme="light"] .app-sidebar a{ color:#5b6472; }
-  .app-sidebar a:hover, .app-sidebar a.active{
-    background:rgba(var(--sb-primary-rgb),.2); transform:translateX(6px); color:#fff;
-  }
-  [data-theme="light"] .app-sidebar a:hover, [data-theme="light"] .app-sidebar a.active{
-    color:#0f172a;
+  .app-sidebar a:hover{
+    background:rgba(var(--sb-primary-rgb),.12); transform:translateX(4px); color:var(--sb-text);
   }
   .app-sidebar a.active{
-    box-shadow:inset 0 0 0 1px rgba(var(--sb-primary-rgb),.4);
+    background:linear-gradient(90deg, rgba(var(--sb-primary-rgb),.18), rgba(var(--sb-primary-rgb),.05));
+    color:#fff; font-weight:600;
+    box-shadow:inset 0 0 0 1px rgba(var(--sb-primary-rgb),.35);
   }
+  [data-theme="light"] .app-sidebar a.active{ color:#181c30; }
   .app-sidebar a.active::before{
     content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0;
     background:linear-gradient(180deg, var(--sb-primary), var(--sb-secondary));
+    box-shadow:0 0 10px rgba(var(--sb-primary-rgb),.6);
   }
-  .app-sidebar a i{ transition:transform .25s ease; width:18px; text-align:center; flex-shrink:0; }
-  .app-sidebar a:hover i{ transform:scale(1.15); }
+  .app-sidebar a i{ transition:transform .25s ease; width:18px; text-align:center; flex-shrink:0; font-size:16.5px; }
+  .app-sidebar a:hover i, .app-sidebar a.active i{ transform:scale(1.12); color:var(--sb-secondary); }
   .app-sidebar a.disabled{
     opacity:.4 !important; cursor:not-allowed; pointer-events:none; animation:none;
   }
-  .app-sidebar a.disabled:hover{ background:none; transform:none; color:#94a3b8; }
-  [data-theme="light"] .app-sidebar a.disabled:hover{ color:#5b6472; }
+  .app-sidebar a.disabled:hover{ background:none; transform:none; color:var(--sb-text-mid); }
   .app-sidebar a .soon-tag{
     margin-left:auto; font-size:9.5px; text-transform:uppercase; letter-spacing:.4px;
     background:rgba(148,163,184,.15); padding:2px 6px; border-radius:20px; flex-shrink:0;
   }
   .app-sidebar-footer{
-    margin-top:auto; padding-top:20px; font-size:11px; color:#6b7280;
+    margin-top:auto; padding-top:18px; font-size:11px; color:var(--sb-text-low);
+    display:flex; align-items:center; gap:6px;
     opacity:0; animation:sbFadeIn .5s ease .5s both;
+  }
+  .app-sidebar-footer::before{
+    content:''; width:6px; height:6px; border-radius:50%; background:#4ade80; flex-shrink:0;
+    box-shadow:0 0 6px rgba(74,222,128,.7);
   }
 
   @media (prefers-reduced-motion: reduce){
-    .app-sidebar .app-logo span{ animation:none; }
-    .app-sidebar .app-logo, .app-sidebar a, .app-sidebar-footer{ animation:none; opacity:1; }
+    .app-sidebar .app-logo span, .app-sidebar .logo-mark{ animation:none; }
+    .app-sidebar .app-logo, .app-sidebar a, .app-sidebar-footer, .sb-group-label{ animation:none; opacity:1; }
   }
 
   /* ---------------------------------------------------------------
-     MOBILE — the sidebar becomes a compact, horizontally-scrollable
-     pill nav instead of a tall stacked list eating the whole screen.
-     (Scrolls within itself only — the page itself never scrolls
-     horizontally.)
+     MOBILE — compact horizontally-scrollable pill nav
      --------------------------------------------------------------- */
   @media (max-width:900px){
     .app-sidebar{
@@ -103,11 +145,12 @@
       flex-direction:row; align-items:center; gap:4px;
       padding:10px 12px; overflow-x:auto; overflow-y:visible;
       -webkit-overflow-scrolling:touch; scrollbar-width:none;
-      border-right:none; border-bottom:1px solid rgba(255,255,255,.06);
+      border-right:none; border-bottom:1px solid var(--sb-border);
     }
-    [data-theme="light"] .app-sidebar{ border-bottom-color:rgba(15,23,42,.08); }
     .app-sidebar::-webkit-scrollbar{ display:none; }
-    .app-sidebar .app-logo{ margin:0 8px 0 2px; font-size:19px; flex-shrink:0; }
+    .app-sidebar .app-logo{ margin:0 8px 0 2px; font-size:17px; flex-shrink:0; }
+    .app-sidebar .logo-mark{ width:32px; height:32px; filter:none; }
+    .sb-group-label{ display:none; }
     .app-sidebar a{
       flex-direction:column; gap:3px; margin:0; padding:8px 12px; flex-shrink:0;
       font-size:10.5px; white-space:nowrap; text-align:center; border-radius:12px;
@@ -118,14 +161,15 @@
       border-radius:3px 3px 0 0; background:linear-gradient(90deg, var(--sb-primary), var(--sb-secondary));
     }
     .app-sidebar a i{ font-size:17px; }
-    .app-sidebar a .soon-tag{ display:none; } /* no room on the compact mobile pill */
-    .app-sidebar-footer{ display:none; } /* copyright line has no place in a topbar strip */
+    .app-sidebar a .soon-tag{ display:none; }
+    .app-sidebar-footer{ display:none; }
   }
 </style>
 
 <nav class="app-sidebar">
-  <div class="app-logo">Career<span>OS</span></div>
+  <div class="app-logo"><span class="logo-mark"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="CareerOS logo"></span>Career<span>OS</span></div>
 
+  <div class="sb-group-label">Overview</div>
   <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">
     <i class="ti ti-home"></i>Dashboard
   </a>
@@ -135,30 +179,39 @@
   <a href="{{ url_for('roadmap') }}" class="{{ 'active' if request.endpoint == 'roadmap' else '' }}">
     <i class="ti ti-map"></i>Roadmap
   </a>
+  <a href="{{ url_for('network') }}" class="{{ 'active' if request.endpoint in ('network', 'person_profile') else '' }}">
+    <i class="ti ti-users-group"></i>Network
+  </a>
+  <a href="{{ url_for('companies') }}" class="{{ 'active' if request.endpoint in ('companies', 'company_profile') else '' }}">
+    <i class="ti ti-building-skyscraper"></i>Companies
+  </a>
+
+  <div class="sb-group-label">Career Tools</div>
   <a href="{{ url_for('resume_builder') }}" class="{{ 'active' if request.endpoint == 'resume_builder' else '' }}">
     <i class="ti ti-file-text"></i>Resume Builder
   </a>
   <a href="{{ url_for('resume_analyzer') }}" class="{{ 'active' if request.endpoint == 'resume_analyzer' else '' }}">
     <i class="ti ti-search"></i>Resume Analyzer
   </a>
-  <a href="{{ url_for('career_center') }}"
-   class="{{ 'active' if request.endpoint == 'career_center' else '' }}">
+  <a href="{{ url_for('career_center') }}" class="{{ 'active' if request.endpoint == 'career_center' else '' }}">
     <i class="ti ti-briefcase"></i>Career Center
   </a>
   <a href="{{ url_for('skill_pathfinder') }}" class="{{ 'active' if request.endpoint == 'skill_pathfinder' else '' }}">
     <i class="ti ti-radar-2"></i>Skill Gap Analysis
   </a>
 
+  <div class="sb-group-label">Growth</div>
   <a href="{{ url_for('learning_hub') }}" class="{{ 'active' if request.endpoint == 'learning_hub' else '' }}">
     <i class="ti ti-book"></i>Learning Hub
   </a>
   <a href="{{ url_for('coding_arena') }}" class="{{ 'active' if request.endpoint == 'coding_arena' else '' }}">
     <i class="ti ti-code"></i>Coding Arena
   </a>
-  <a href="javascript:void(0)" class="disabled" aria-disabled="true">
-    <i class="ti ti-certificate"></i>Certificates<span class="soon-tag">Soon</span>
+  <a href="{{ url_for('certificates') }}" class="{{ 'active' if request.endpoint == 'certificates' else '' }}">
+    <i class="ti ti-certificate"></i>Certificates
   </a>
 
+  <div class="sb-group-label">System</div>
   <a href="{{ url_for('settings') }}" class="{{ 'active' if request.endpoint == 'settings' else '' }}">
     <i class="ti ti-settings"></i>Settings
   </a>

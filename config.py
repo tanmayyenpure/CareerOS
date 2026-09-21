@@ -31,7 +31,8 @@ class Config:
     # ── AI (renamed to match what app.py actually reads) ──
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
+    ADZUNA_APP_ID = os.environ.get("ADZUNA_APP_ID", "")
+    ADZUNA_APP_KEY = os.environ.get("ADZUNA_APP_KEY", "")
     # ── YOUTUBE (real video links for roadmap/pathfinder resources) ──
     # Optional: if unset, youtube_helper.py falls back to a YouTube search
     # results link instead of a specific video — app still works fine.

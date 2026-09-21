@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Payment Successful</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="page-center">
+  <div class="card result-card">
+    <div class="result-icon success">✓</div>
+    <h1>Payment Successful</h1>
+    <p class="muted">Your order has been confirmed.</p>
+
+    <div class="result-details">
+      <div><span>Order ID</span><span>{{ order.order_id }}</span></div>
+      <div><span>Transaction ID</span><span>{{ order.transaction_id }}</span></div>
+      <div><span>Amount</span><span>₹{{ order.amount }}</span></div>
+      <div><span>Method</span><span>{{ order.method|upper }}</span></div>
+    </div>
+
+    <a href="/" class="btn btn-primary">Back to Store</a>
+  </div>
+</div>
+</body>
+</html>

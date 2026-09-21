@@ -8,7 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/coding-arena.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/coding-arena.css') }}?v=fix4">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-widget.css') }}">
 
 <!-- CodeMirror (self-contained code editor: no build step, matches this app's CDN-only convention) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -17,6 +18,36 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+<style>
+  /* ---------- In-page search (topbar) ---------- */
+  .search-wrap{position:relative; display:flex; align-items:center;}
+  .search-input{
+    width:0; opacity:0; padding:0; border:none; background:var(--card,#141a2e);
+    color:var(--text-hi,#f4f5f9); border-radius:10px; font-size:.85rem; font-family:inherit;
+    transition:width .28s cubic-bezier(.16,1,.3,1), opacity .2s ease, padding .28s ease, margin .28s ease, border-color .2s ease;
+    margin-left:0; outline:none;
+  }
+  .search-wrap.open .search-input{
+    width:220px; opacity:1; padding:9px 12px; margin-left:8px;
+    border:1px solid var(--border,rgba(255,255,255,.12));
+  }
+  .search-wrap.open .search-input.no-match{ border-color:#f87171; }
+  .search-count{
+    font-size:.72rem; color:var(--text-low,#7d8299); margin-left:6px; white-space:nowrap;
+    opacity:0; transition:opacity .2s ease; flex-shrink:0;
+  }
+  .search-wrap.open .search-count{ opacity:1; }
+  @keyframes searchPulse{
+    0%{box-shadow:0 0 0 0 rgba(99,102,241,.55);}
+    70%{box-shadow:0 0 0 14px rgba(99,102,241,0);}
+    100%{box-shadow:0 0 0 0 rgba(99,102,241,0);}
+  }
+  .search-hit{
+    outline:2px solid #818CF8 !important; outline-offset:3px;
+    animation:searchPulse 1.4s ease-out 1; border-radius:14px;
+  }
+  @media (prefers-reduced-motion: reduce){ .search-hit{ animation:none; } }
+</style>
 </head>
 <body>
 
@@ -41,7 +72,11 @@
         <p class="page-subtitle">Pick a category, get an AI-generated problem, and run + submit real code — instantly graded.</p>
       </div>
       <div class="topbar-right">
-        <button class="icon-btn" aria-label="Search">⌕</button>
+        <div class="search-wrap" id="searchWrap">
+          <button class="icon-btn" id="searchBtn" aria-label="Search">⌕</button>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search categories, problems…" autocomplete="off">
+          <span class="search-count" id="searchCount"></span>
+        </div>
         <button class="icon-btn" aria-label="Notifications">🔔</button>
         <div class="avatar-chip">{{ user_initials or 'U' }}</div>
       </div>
@@ -572,7 +607,125 @@ const revealObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 
 document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// Safety net: some environments (Chrome DevTools device-emulation mode,
+// throttled/background tabs, some older WebViews) never fire the observer
+// on elements that are technically in view at load time. Force-reveal
+// anything still hidden shortly after load so the page can never get
+// stuck permanently blank.
+setTimeout(() => {
+  document.querySelectorAll('.reveal:not(.in-view)').forEach(el => {
+    el.classList.add('in-view');
+    revealObserver.unobserve(el);
+  });
+}, 1000);
+
+// ---------- Page search: click the search icon, type, auto-scroll to the match ----------
+(function(){
+  const wrap  = document.getElementById('searchWrap');
+  const btn   = document.getElementById('searchBtn');
+  const input = document.getElementById('searchInput');
+  const count = document.getElementById('searchCount');
+  if (!wrap || !btn || !input) return;
+
+  let matches = [];
+  let matchIndex = -1;
+
+  // Only cards visible in the DOM right now (category cards, or the
+  // problem cards once a category has been picked) are searchable —
+  // whichever step the user is currently on.
+  function getSearchableItems(){
+    return Array.from(document.querySelectorAll('#categoryGrid .domain-card, #problemGridWrap .subject-card'))
+      .filter(el => el.offsetParent !== null);
+  }
+
+  function clearHighlights(){
+    document.querySelectorAll('.search-hit').forEach(el => el.classList.remove('search-hit'));
+  }
+
+  function goToMatch(i){
+    clearHighlights();
+    const el = matches[i];
+    if (!el) return;
+    el.classList.add('search-hit');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function updateCount(){
+    if (!input.value.trim()){
+      count.textContent = '';
+      input.classList.remove('no-match');
+    } else if (matches.length){
+      count.textContent = `${matchIndex + 1} of ${matches.length}`;
+      input.classList.remove('no-match');
+    } else {
+      count.textContent = 'No matches';
+      input.classList.add('no-match');
+    }
+  }
+
+  function runSearch(){
+    const q = input.value.trim().toLowerCase();
+    clearHighlights();
+    if (!q){
+      matches = [];
+      matchIndex = -1;
+      updateCount();
+      return;
+    }
+    matches = getSearchableItems().filter(el => el.textContent.toLowerCase().includes(q));
+    matchIndex = matches.length ? 0 : -1;
+    updateCount();
+    if (matchIndex >= 0) goToMatch(matchIndex);
+  }
+
+  function openSearch(){
+    wrap.classList.add('open');
+    input.focus();
+  }
+
+  function closeSearch(){
+    wrap.classList.remove('open');
+    input.value = '';
+    clearHighlights();
+    matches = [];
+    matchIndex = -1;
+    updateCount();
+  }
+
+  btn.addEventListener('click', () => {
+    if (wrap.classList.contains('open') && !input.value.trim()) closeSearch();
+    else openSearch();
+  });
+
+  let debounceTimer;
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(runSearch, 150);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter'){
+      e.preventDefault();
+      if (!matches.length) return;
+      matchIndex = e.shiftKey
+        ? (matchIndex - 1 + matches.length) % matches.length
+        : (matchIndex + 1) % matches.length;
+      updateCount();
+      goToMatch(matchIndex);
+    } else if (e.key === 'Escape'){
+      closeSearch();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (wrap.classList.contains('open') && !wrap.contains(e.target)) closeSearch();
+  });
+})();
 </script>
+
+{% include "_chatbot_widget.html" %}
+<script src="{{ url_for('static', filename='js/chatbot-widget.js') }}" defer></script>
 
 </body>
 </html>

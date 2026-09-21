@@ -121,8 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (jobs.length === 0) {
       jobGrid.innerHTML = `
-        <div class="glass reveal in-view" style="grid-column: 1 / -1; padding: 40px; text-align: center; color: #9A9AB8;">
-          <p style="font-size: 1.2rem; margin-bottom: 8px; color: #fff;">No jobs found</p>
+        <div class="glass reveal in-view" style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-muted);">
+          <p style="font-size: 1.2rem; margin-bottom: 8px; color: var(--text);">No jobs found</p>
           <p>Try refining your search terms or filters.</p>
         </div>
       `;
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="skill-tags">
             ${skillsHtml}
           </div>
-          <p class="job-desc" style="font-size:0.875rem; color:#9A9AB8; margin: 12px 0 16px 0; line-height: 1.5;">${job.description}</p>
+          <p class="job-desc" style="font-size:0.875rem; color: var(--text-muted); margin: 12px 0 16px 0; line-height: 1.5;">${job.description}</p>
           <div class="job-actions">
             ${actionButtonHtml}
             ${saveButtonHtml}
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (recommended.length === 0) {
       recGrid.innerHTML = `
-        <div class="glass reveal in-view" style="grid-column: 1 / -1; padding: 20px; text-align: center; color: #9A9AB8;">
+        <div class="glass reveal in-view" style="grid-column: 1 / -1; padding: 20px; text-align: center; color: var(--text-muted);">
           No recommended jobs found. Add skills in Settings to see matches.
         </div>
       `;
@@ -203,11 +203,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
         <article class="rec-card glass reveal in-view">
           <div class="rec-top">
-            <svg class="radial" viewBox="0 0 80 80">
-              <circle class="radial-track" cx="40" cy="40" r="34"></circle>
-              <circle class="radial-fill" cx="40" cy="40" r="34" style="stroke-dasharray: ${CIRCUMFERENCE}; stroke-dashoffset: ${offset}; stroke: var(--gradient-end);" data-pct="${matchPct}"></circle>
-            </svg>
-            <span class="radial-label">${matchPct}%</span>
+            <div class="rec-score-wrap">
+              <svg class="radial" viewBox="0 0 80 80">
+                <circle class="radial-track" cx="40" cy="40" r="34"></circle>
+                <circle class="radial-fill" cx="40" cy="40" r="34" style="stroke-dasharray: ${CIRCUMFERENCE}; stroke-dashoffset: ${offset}; stroke: var(--gradient-end);" data-pct="${matchPct}"></circle>
+              </svg>
+              <span class="radial-label">${matchPct}%</span>
+            </div>
             <div>
               <h3 class="job-role">${job.job_title}</h3>
               <p class="job-company">${job.company_name} · ${job.job_type}</p>
@@ -216,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <p class="rec-reason">Strong match with your profile and target role skills.</p>
           <div class="rec-skills">
             <div><span class="dot dot-good"></span>${matchingHtml}</div>
-            <div><span class="dot dot-bad"></span>Missing: ${missingHtml}</div>
+            <div><span class="dot dot-bad"></span>${missingHtml}</div>
             ${job.missing_skills.length > 0 ? `<div class="learn-time">⏱ ~${gapWeeks} week${gapWeeks > 1 ? 's' : ''} to close the gap</div>` : `<div class="learn-time">⏱ Fully prepared!</div>`}
           </div>
           <button class="btn btn-ghost btn-sm full btn-improve-match" data-job-id="${job.id}">Improve Match</button>
@@ -249,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (saved.length === 0) {
         savedTrack.innerHTML = `
-          <div style="padding: 20px; text-align: center; color: #9A9AB8; width: 100%;">
+          <div style="padding: 20px; text-align: center; color: var(--text-muted); width: 100%;">
             No saved jobs yet. Click 'Save' on any job card above to bookmark it.
           </div>
         `;
@@ -345,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (apps.length === 0) {
         appList.innerHTML = `
-          <div style="padding: 20px; text-align: center; color: #9A9AB8;">
+          <div style="padding: 20px; text-align: center; color: var(--text-muted);">
             No applications submitted yet. Find jobs and click 'Apply Now'.
           </div>
         `;
@@ -385,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (interviews.length === 0) {
         intGrid.innerHTML = `
-          <div class="glass reveal in-view" style="grid-column: 1 / -1; padding: 30px; text-align: center; color: #9A9AB8; width: 100%;">
+          <div class="glass reveal in-view" style="grid-column: 1 / -1; padding: 30px; text-align: center; color: var(--text-muted); width: 100%;">
             No upcoming interviews scheduled yet.
           </div>
         `;
@@ -462,6 +464,84 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
     updateCountdowns();
+  }
+
+  /* ---------- Render Notifications ---------- */
+  function timeAgo(isoString) {
+    const diffMs = Date.now() - new Date(isoString).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  }
+
+  const NOTIF_LOGO_CLASS = { applied: '', screening: 'teal', shortlisted: '', interview: 'teal', rejected: '', offer: 'teal', tip: 'ai' };
+
+  async function loadNotifications() {
+    const list = document.getElementById('notifications-list');
+    if (!list) return;
+
+    try {
+      const response = await fetch('/career/notifications');
+      const notes = await response.json();
+
+      if (!Array.isArray(notes) || notes.length === 0) {
+        list.innerHTML = `
+          <div style="padding: 20px; text-align: center; color: var(--text-muted);">
+            No notifications yet. Apply to jobs and check back — recruiter activity shows up here.
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = notes.map(n => {
+        const logoClass = NOTIF_LOGO_CLASS[n.type] || '';
+        const logoChar = n.type === 'tip' ? '✦' : (n.company_logo || '?');
+        return `
+          <div class="notif-row ${n.is_read ? '' : 'unread'}" data-id="${n.id}">
+            <span class="notif-dot"></span>
+            <div class="company-logo sm ${logoClass}">${logoChar}</div>
+            <p>${n.message}</p>
+            <span class="notif-time">${timeAgo(n.created_at)}</span>
+          </div>
+        `;
+      }).join('');
+
+      list.querySelectorAll('.notif-row.unread').forEach(row => {
+        row.addEventListener('click', async () => {
+          row.classList.remove('unread');
+          try {
+            await fetch('/career/notifications/read', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ notification_id: row.dataset.id })
+            });
+          } catch (err) { console.error(err); }
+        }, { once: true });
+      });
+    } catch (err) {
+      console.error('Error loading notifications:', err);
+    }
+  }
+
+  const markAllReadBtn = document.getElementById('markAllReadBtn');
+  if (markAllReadBtn) {
+    markAllReadBtn.addEventListener('click', async () => {
+      try {
+        await fetch('/career/notifications/read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        loadNotifications();
+        showToast('All notifications marked as read.');
+      } catch (err) {
+        console.error(err);
+      }
+    });
   }
 
   /* ---------- Event Binders for Job Cards ---------- */
@@ -633,30 +713,245 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSavedJobs();
     loadApplications();
     loadInterviews();
+    loadNotifications();
+    loadLatestCoachFeedback();
   }
   
   initPage();
+
+  /* ============================================================
+     AI INTERVIEW COACH — real question generation + speech-to-text
+     recording + AI scoring (replaces the old static mode-chip /
+     record-button stubs).
+  ============================================================ */
+  const coachState = {
+    mode: 'HR Interview',
+    questions: [],
+    currentIndex: 0,
+  };
+
+  const generateQuestionsBtn = document.getElementById('generateQuestionsBtn');
+  const recordBtn = document.getElementById('recordBtn');
+  const coachQuestionBox = document.getElementById('coachQuestionBox');
+  const coachCurrentQuestion = document.getElementById('coachCurrentQuestion');
+  const coachStatusMsg = document.getElementById('coachStatusMsg');
+  const coachFeedbackTitle = document.getElementById('coachFeedbackTitle');
+  const coachFeedbackText = document.getElementById('coachFeedbackText');
+
+  const COACH_CIRCUMFERENCE = 2 * Math.PI * 34; // r=34, matches the radial rings elsewhere
+
+  function animateRadialFill(el, pct) {
+    if (!el) return;
+    const safePct = Math.max(0, Math.min(100, pct || 0));
+    const offset = COACH_CIRCUMFERENCE - (safePct / 100) * COACH_CIRCUMFERENCE;
+    el.style.strokeDasharray = COACH_CIRCUMFERENCE;
+    el.style.transition = 'stroke-dashoffset 1s cubic-bezier(.16,1,.3,1)';
+    requestAnimationFrame(() => { el.style.strokeDashoffset = offset; });
+    el.dataset.pct = safePct;
+  }
+
+  function renderCoachScores(session) {
+    animateRadialFill(document.getElementById('coachScoreOverall'), session.interview_score);
+    animateRadialFill(document.getElementById('coachScoreConfidence'), session.confidence);
+    animateRadialFill(document.getElementById('coachScoreCommunication'), session.communication);
+    animateRadialFill(document.getElementById('coachScoreTechnical'), session.technical_accuracy);
+
+    const overallLabel = document.getElementById('coachScoreOverallLabel');
+    const confidenceLabel = document.getElementById('coachScoreConfidenceLabel');
+    const communicationLabel = document.getElementById('coachScoreCommunicationLabel');
+    const technicalLabel = document.getElementById('coachScoreTechnicalLabel');
+    if (overallLabel) overallLabel.textContent = session.interview_score ?? '–';
+    if (confidenceLabel) confidenceLabel.textContent = session.confidence ?? '–';
+    if (communicationLabel) communicationLabel.textContent = session.communication ?? '–';
+    if (technicalLabel) technicalLabel.textContent = session.technical_accuracy ?? '–';
+
+    if (coachFeedbackTitle) {
+      coachFeedbackTitle.textContent = session.created_at ? `Feedback — ${session.created_at}` : 'Last Session Feedback';
+    }
+    if (coachFeedbackText) {
+      coachFeedbackText.textContent = session.feedback || 'No feedback text returned.';
+    }
+  }
+
+  async function loadLatestCoachFeedback() {
+    try {
+      const res = await fetch('/career/interview-coach/latest');
+      const session = await res.json();
+      if (session) renderCoachScores(session);
+    } catch (err) {
+      console.error('Error loading latest interview coach feedback:', err);
+    }
+  }
 
   /* ---------- Interview coach mode chips ---------- */
   document.querySelectorAll('.mode-chip').forEach(chip => {
     chip.addEventListener('click', () => {
       document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
+      coachState.mode = chip.dataset.mode || chip.textContent.trim();
+      coachState.questions = [];
+      coachState.currentIndex = 0;
+      if (coachQuestionBox) coachQuestionBox.style.display = 'none';
+      if (recordBtn) recordBtn.disabled = true;
+      if (coachStatusMsg) coachStatusMsg.textContent = 'Mode changed — generate new questions for this round.';
     });
   });
 
-  /* ---------- Record button ---------- */
-  const recordBtn = document.getElementById('recordBtn');
+  /* ---------- Generate Questions ---------- */
+  if (generateQuestionsBtn) {
+    generateQuestionsBtn.addEventListener('click', async () => {
+      generateQuestionsBtn.disabled = true;
+      generateQuestionsBtn.textContent = 'Generating…';
+      if (coachStatusMsg) coachStatusMsg.textContent = '';
+
+      try {
+        const res = await fetch('/career/interview-coach/questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: coachState.mode })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          showToast(data.error, true);
+          return;
+        }
+
+        coachState.questions = data.questions || [];
+        coachState.currentIndex = 0;
+
+        if (coachState.questions.length && coachQuestionBox && coachCurrentQuestion) {
+          coachQuestionBox.style.display = 'block';
+          coachCurrentQuestion.textContent = coachState.questions[0];
+          if (recordBtn) recordBtn.disabled = false;
+          if (coachStatusMsg) coachStatusMsg.textContent = `Question 1 of ${coachState.questions.length}. Hit Record Answer when ready.`;
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to generate questions.', true);
+      } finally {
+        generateQuestionsBtn.disabled = false;
+        generateQuestionsBtn.textContent = 'Generate Questions';
+      }
+    });
+  }
+
+  /* ---------- Record Answer (Web Speech API speech-to-text) ---------- */
+  const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognizer = null;
+  let isRecording = false;
+
+  async function submitAnswerForScoring(answerText) {
+    const question = coachState.questions[coachState.currentIndex];
+    if (coachStatusMsg) coachStatusMsg.textContent = 'Scoring your answer with AI…';
+
+    try {
+      const res = await fetch('/career/interview-coach/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: coachState.mode, question, answer_text: answerText })
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        showToast(data.error, true);
+        if (coachStatusMsg) coachStatusMsg.textContent = '';
+        return;
+      }
+
+      renderCoachScores(data);
+      showToast('Feedback ready — check your scores.');
+
+      // Advance to the next question in this round, if any.
+      coachState.currentIndex += 1;
+      if (coachState.currentIndex < coachState.questions.length) {
+        coachCurrentQuestion.textContent = coachState.questions[coachState.currentIndex];
+        coachStatusMsg.textContent = `Question ${coachState.currentIndex + 1} of ${coachState.questions.length}. Hit Record Answer when ready.`;
+      } else {
+        coachStatusMsg.textContent = 'Round complete! Generate new questions to keep practicing.';
+        if (recordBtn) recordBtn.disabled = true;
+      }
+
+      // Analytics' Interview Performance chart now has a fresh data point.
+      loadAnalytics();
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to score that answer.', true);
+      if (coachStatusMsg) coachStatusMsg.textContent = '';
+    }
+  }
+
+  function startRecordingUI() {
+    isRecording = true;
+    recordBtn.classList.add('recording');
+    const dot = recordBtn.querySelector('.rec-dot');
+    recordBtn.lastChild.textContent = ' Stop Recording';
+    if (dot) dot.style.animationDuration = '.7s';
+  }
+
+  function stopRecordingUI() {
+    isRecording = false;
+    recordBtn.classList.remove('recording');
+    const dot = recordBtn.querySelector('.rec-dot');
+    recordBtn.lastChild.textContent = ' Record Answer';
+    if (dot) dot.style.animationDuration = '1.4s';
+  }
+
   if (recordBtn) {
     recordBtn.addEventListener('click', () => {
-      recordBtn.classList.toggle('recording');
-      const dot = recordBtn.querySelector('.rec-dot');
-      if (recordBtn.classList.contains('recording')) {
-        recordBtn.lastChild.textContent = ' Recording…';
-        dot.style.animationDuration = '.7s';
-      } else {
-        recordBtn.lastChild.textContent = ' Record Answer';
-        dot.style.animationDuration = '1.4s';
+      if (!coachState.questions.length) {
+        showToast('Generate questions first.', true);
+        return;
+      }
+
+      // ---- Browsers without Web Speech API (e.g. Firefox, Safari) fall
+      // back to a typed answer so the feature still works everywhere. ----
+      if (!SpeechRecognitionImpl) {
+        const typed = prompt('Speech-to-text isn\'t supported in this browser. Type your answer instead:');
+        if (typed && typed.trim()) submitAnswerForScoring(typed.trim());
+        return;
+      }
+
+      if (isRecording) {
+        recognizer.stop();
+        return;
+      }
+
+      recognizer = new SpeechRecognitionImpl();
+      recognizer.lang = 'en-IN';
+      recognizer.continuous = true;
+      recognizer.interimResults = false;
+
+      let transcript = '';
+      recognizer.onresult = (event) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            transcript += event.results[i][0].transcript + ' ';
+          }
+        }
+      };
+      recognizer.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        showToast('Microphone/speech recognition error: ' + event.error, true);
+        stopRecordingUI();
+      };
+      recognizer.onend = () => {
+        stopRecordingUI();
+        const finalAnswer = transcript.trim();
+        if (finalAnswer) {
+          submitAnswerForScoring(finalAnswer);
+        } else if (coachStatusMsg) {
+          coachStatusMsg.textContent = 'No speech detected — try again.';
+        }
+      };
+
+      try {
+        recognizer.start();
+        startRecordingUI();
+        if (coachStatusMsg) coachStatusMsg.textContent = 'Listening… click Stop Recording when done.';
+      } catch (err) {
+        console.error(err);
+        showToast('Could not start microphone.', true);
       }
     });
   }
@@ -718,8 +1013,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ---------- Chart.js — Career Analytics ---------- */
-  if (window.Chart) {
+  /* ---------- Chart.js — Career Analytics (real data) ---------- */
+  const _careerCharts = {};
+  function _makeChart(canvasId, config) {
+    if (_careerCharts[canvasId]) {
+      _careerCharts[canvasId].destroy();
+    }
+    _careerCharts[canvasId] = new Chart(document.getElementById(canvasId), config);
+    return _careerCharts[canvasId];
+  }
+
+  async function loadAnalytics() {
+    if (!window.Chart) return;
+
     Chart.defaults.color = '#9A9AB8';
     Chart.defaults.font.family = 'Inter, sans-serif';
 
@@ -732,13 +1038,23 @@ document.addEventListener('DOMContentLoaded', () => {
       y: { grid: { color: gridColor }, ticks: { font: { size: 11 } } }
     };
 
-    new Chart(document.getElementById('chartSuccess'), {
+    let analytics;
+    try {
+      const res = await fetch('/career/analytics');
+      analytics = await res.json();
+    } catch (err) {
+      console.error('Error loading analytics:', err);
+      return;
+    }
+    if (analytics.error) return;
+
+    _makeChart('chartSuccess', {
       type: 'bar',
       data: {
-        labels: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        labels: analytics.success_rate.labels,
         datasets: [{
           label: 'Success Rate %',
-          data: [22, 28, 31, 40, 46, 55],
+          data: analytics.success_rate.data,
           backgroundColor: purple,
           borderRadius: 8,
           maxBarThickness: 28
@@ -752,13 +1068,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    new Chart(document.getElementById('chartInterview'), {
+    _makeChart('chartInterview', {
       type: 'line',
       data: {
-        labels: ['R1', 'R2', 'R3', 'R4', 'R5'],
+        labels: analytics.interview_performance.labels.length ? analytics.interview_performance.labels : ['No sessions yet'],
         datasets: [{
           label: 'Score',
-          data: [62, 70, 75, 81, 88],
+          data: analytics.interview_performance.data.length ? analytics.interview_performance.data : [0],
           borderColor: teal,
           backgroundColor: 'rgba(0,212,170,0.12)',
           fill: true,
@@ -775,40 +1091,36 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    new Chart(document.getElementById('chartSkills'), {
-      type: 'radar',
+    _makeChart('chartSkills', {
+      type: 'line',
       data: {
-        labels: ['Backend', 'Cloud', 'System Design', 'DSA', 'DevOps', 'Communication'],
+        labels: analytics.skills_growth.labels.length ? analytics.skills_growth.labels : ['No history yet'],
         datasets: [{
-          label: 'Skill Level',
-          data: [82, 74, 65, 78, 60, 84],
+          label: 'Skills Tracked',
+          data: analytics.skills_growth.data.length ? analytics.skills_growth.data : [0],
           borderColor: purple,
           backgroundColor: 'rgba(123,97,255,0.18)',
-          pointBackgroundColor: purple
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: purple,
+          pointRadius: 4
         }]
       },
       options: {
         responsive: true,
         plugins: { legend: { display: false } },
-        scales: {
-          r: {
-            grid: { color: gridColor },
-            angleLines: { color: gridColor },
-            pointLabels: { font: { size: 10.5 } },
-            ticks: { display: false, backdropColor: 'transparent' }
-          }
-        },
+        scales: commonGrid,
         animation: { duration: 1200, easing: 'easeOutCubic' }
       }
     });
 
-    new Chart(document.getElementById('chartMatch'), {
+    _makeChart('chartMatch', {
       type: 'line',
       data: {
-        labels: ['Wk1', 'Wk2', 'Wk3', 'Wk4', 'Wk5', 'Wk6'],
+        labels: analytics.job_match_trend.labels.length ? analytics.job_match_trend.labels : ['No applications yet'],
         datasets: [{
-          label: 'Avg Match %',
-          data: [68, 71, 75, 79, 82, 86],
+          label: 'Match % at Apply',
+          data: analytics.job_match_trend.data.length ? analytics.job_match_trend.data : [0],
           borderColor: teal,
           backgroundColor: 'rgba(0,212,170,0.1)',
           fill: true,
@@ -817,8 +1129,8 @@ document.addEventListener('DOMContentLoaded', () => {
           pointRadius: 3
         },
         {
-          label: 'Top Match %',
-          data: [80, 84, 85, 88, 90, 92],
+          label: 'Current Profile Match %',
+          data: new Array((analytics.job_match_trend.labels.length || 1)).fill(analytics.job_match_trend.current_avg_match),
           borderColor: purple,
           backgroundColor: 'transparent',
           borderDash: [5, 4],
@@ -834,6 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+  loadAnalytics();
 
   /* ---------- Talk to Cara — real /api/chat integration ---------- */
   const caraBtn = document.getElementById('talkToCaraBtn');

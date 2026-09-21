@@ -1,254 +1,2244 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CareerOS — AI-Powered Career Guidance</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<head>
+  <!-- Apply saved theme before page renders -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("careeros-theme");
+        if (t === "dark" || t === "light") {
+          document.documentElement.setAttribute("data-theme", t);
+        }
+      } catch (e) {}
+
+      window.getTheme = function () {
+        return document.documentElement.getAttribute("data-theme") || "dark";
+      };
+
+      window.setTheme = function (theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        try {
+          localStorage.setItem("careeros-theme", theme);
+        } catch (e) {}
+      };
+    })();
+  </script>
+
+  <style>
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .nav-logo img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .footer-brand .nav-logo img {
+      width: 30px;
+      height: 30px;
+    }
+
+    /* Home-only styles */
+    .home-hero-extra {
+      position: absolute;
+      inset: auto 0 0;
+      pointer-events: none;
+      opacity: .5;
+    }
+
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(2px);
+      pointer-events: none;
+    }
+
+    .orb-one {
+      width: 280px;
+      height: 280px;
+      left: 5%;
+      top: 25%;
+      background: rgba(99, 102, 241, .08);
+      box-shadow: 0 0 100px rgba(99, 102, 241, .15);
+    }
+
+    .orb-two {
+      width: 220px;
+      height: 220px;
+      right: 8%;
+      bottom: 20%;
+      background: rgba(6, 182, 212, .07);
+      box-shadow: 0 0 100px rgba(6, 182, 212, .15);
+    }
+
+    .hero-trust {
+      margin-top: 1.5rem;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .hero-trust span {
+      color: var(--teal);
+      font-weight: 600;
+    }
+
+    .home-feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.3rem;
+      margin-top: 3rem;
+    }
+
+    .home-feature-card {
+      padding: 1.7rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--glass-bg);
+      transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+    }
+
+    .home-feature-card:hover {
+      transform: translateY(-7px);
+      border-color: rgba(var(--color-primary-rgb), .45);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .home-feature-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--purple), var(--teal));
+    }
+
+    .home-feature-card h3 {
+      font-size: 1rem;
+      margin-bottom: .45rem;
+    }
+
+    .home-feature-card p {
+      color: var(--muted);
+      font-size: .86rem;
+      line-height: 1.65;
+    }
+
+    .cta-box {
+      max-width: 1050px;
+      margin: auto;
+      padding: 4rem 2rem;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(var(--color-primary-rgb), .12), transparent 35%),
+        radial-gradient(circle at 80% 50%, rgba(var(--color-secondary-rgb), .10), transparent 35%),
+        var(--glass-bg);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .cta-box h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      margin-bottom: 1rem;
+      letter-spacing: -1px;
+    }
+
+    .cta-box p {
+      max-width: 620px;
+      margin: 0 auto 1.8rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .review-grid-home {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.2rem;
+      margin-top: 2.5rem;
+    }
+
+    .review-home {
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--glass-bg);
+    }
+
+    .review-stars {
+      color: var(--gold);
+      letter-spacing: 2px;
+      margin-bottom: .8rem;
+    }
+
+    .review-home p {
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.7;
+    }
+
+    .review-person {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      margin-top: 1.1rem;
+    }
+
+    .review-avatar-home {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--teal));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: .75rem;
+      font-weight: 700;
+    }
+
+    .review-person strong {
+      display: block;
+      font-size: .82rem;
+    }
+
+    .review-person span {
+      display: block;
+      color: var(--muted);
+      font-size: .7rem;
+    }
+
+    .roadmap-preview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: center;
+      margin-top: 2.5rem;
+    }
+
+    .roadmap-card-home {
+      padding: 2rem;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--glass-bg);
+    }
+
+    .roadmap-line {
+      position: relative;
+      padding-left: 2.5rem;
+    }
+
+    .roadmap-line::before {
+      content: "";
+      position: absolute;
+      left: 10px;
+      top: 5px;
+      bottom: 5px;
+      width: 2px;
+      background: linear-gradient(var(--purple), var(--teal));
+      opacity: .45;
+    }
+
+    .roadmap-step {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .roadmap-step:last-child {
+      margin-bottom: 0;
+    }
+
+    .roadmap-step::before {
+      content: "";
+      position: absolute;
+      left: -2.5rem;
+      top: 5px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--purple);
+      box-shadow: 0 0 12px rgba(var(--color-primary-rgb), .35);
+    }
+
+    .roadmap-step h4 {
+      font-size: .95rem;
+      margin-bottom: .25rem;
+    }
+
+    .roadmap-step p {
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.55;
+    }
+
+    .chat-quick-note {
+      color: var(--muted);
+      font-size: .78rem;
+      margin-top: .7rem;
+    }
+
+    @media (max-width: 850px) {
+      .home-feature-grid,
+      .review-grid-home {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .roadmap-preview {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .home-feature-grid,
+      .review-grid-home {
+        grid-template-columns: 1fr;
+      }
+
+      .cta-box {
+        padding: 3rem 1.4rem;
+      }
+    }
+  </style>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>CareerOS — AI-Powered Career Operating System</title>
+
+  <meta name="description"
+        content="CareerOS is an AI-powered career operating system for students, freshers and professionals. Get personalized career guidance, roadmaps, skill analysis, resume tools and job recommendations.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+  <!-- Main CareerOS stylesheet -->
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/styles.css') }}">
+
+  <!-- Shared CareerOS JavaScript -->
+  <script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
 </head>
-<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
-<script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 <body>
+
+<!-- ============================================================
+     HERO BACKGROUND
+============================================================ -->
+
 <canvas id="hero-canvas"></canvas>
 
-<!-- NAVBAR -->
+<div class="hero-orb orb-one"></div>
+<div class="hero-orb orb-two"></div>
+
+
+<!-- ============================================================
+     NAVBAR
+============================================================ -->
+
 <nav id="navbar">
-<a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+
+  <a href="{{ url_for('home') }}" class="nav-logo">
+    <img src="{{ url_for('static', filename='img/logo.png') }}"
+         alt="CareerOS logo">
+    CareerOS
+  </a>
+
   <ul class="nav-links">
-    <li><a href="{{ url_for('home') }}" class="active">Home</a></li>
-    <li><a href="{{ url_for('about') }}">About</a></li>
-<li><a href="{{ url_for('features') }}">Features</a></li>
-<li><a href="{{ url_for('stories') }}">Stories</a></li>
-<li><a href="{{ url_for('pricing') }}">Pricing</a></li>
-<li><a href="{{ url_for('faq') }}">FAQ</a></li>
+
+    <li>
+      <a href="{{ url_for('home') }}" class="active">
+        Home
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('about') }}">
+        About
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('features') }}">
+        Features
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('stories') }}">
+        Stories
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('pricing') }}">
+        Pricing
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('faq') }}">
+        FAQ
+      </a>
+    </li>
+
   </ul>
+
   <div class="nav-right">
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+
+    <button
+      class="theme-toggle"
+      id="themeToggle"
+      aria-label="Toggle theme">
+
       <span class="icon-light">☀️</span>
       <span class="icon-dark">🌙</span>
+
     </button>
-    <a href="{{ url_for('login') }}" class="btn-nav">Login</a>
-    <a href="{{ url_for('signup') }}" class="btn-nav">Sign Up</a>
-    <button class="hamburger" id="hamburger" aria-label="Menu">
-      <span></span><span></span><span></span>
+
+    <a href="{{ url_for('login') }}" class="btn-nav">
+      Login
+    </a>
+
+    <a href="{{ url_for('signup') }}" class="btn-nav">
+      Sign Up
+    </a>
+
+    <button
+      class="hamburger"
+      id="hamburger"
+      aria-label="Menu">
+
+      <span></span>
+      <span></span>
+      <span></span>
+
     </button>
+
   </div>
+
 </nav>
+
+
+<!-- ============================================================
+     MOBILE MENU
+============================================================ -->
+
 <div class="mobile-menu" id="mobileMenu">
+
   <ul>
-    <li><a href="{{ url_for('home') }}" onclick="closeMobile()">Home</a></li>
-<li><a href="{{ url_for('features') }}" onclick="closeMobile()">Features</a></li>
-<li><a href="{{ url_for('stories') }}" onclick="closeMobile()">Stories</a></li>
-<li><a href="{{ url_for('pricing') }}" onclick="closeMobile()">Pricing</a></li>
-<li><a href="{{ url_for('faq') }}" onclick="closeMobile()">FAQ</a></li>
-    <li><a href="#chat" class="btn-nav" onclick="closeMobile()">Get Started Free</a></li>
+
+    <li>
+      <a href="{{ url_for('home') }}"
+         onclick="closeMobile()">
+        Home
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('about') }}"
+         onclick="closeMobile()">
+        About
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('features') }}"
+         onclick="closeMobile()">
+        Features
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('stories') }}"
+         onclick="closeMobile()">
+        Stories
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('pricing') }}"
+         onclick="closeMobile()">
+        Pricing
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('faq') }}"
+         onclick="closeMobile()">
+        FAQ
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('home') }}#chat"
+         class="btn-nav"
+         onclick="closeMobile()">
+        Get Started Free
+      </a>
+    </li>
+
   </ul>
+
 </div>
 
-<!-- HERO -->
+
+<!-- ============================================================
+     HERO
+============================================================ -->
+
 <section id="hero">
+
   <div class="hero-content">
-    <div class="hero-badge"><span></span>Now with Voice AI</div>
-    <h1 class="hero-h1">Your Career.<br><span class="grad">Upgraded.</span></h1>
-    <p class="hero-sub">AI-powered career guidance for students, freshers and professionals. Ask anything. Grow fast.</p>
-    <div class="hero-btns">
-      <a href="{{ url_for('signup') }}" class="btn-primary">Start Free →</a>
-      <a href="#how" class="btn-ghost">▶ Watch Demo</a>
+
+    <div class="hero-badge fade-in">
+
+      <span></span>
+
+      AI-POWERED CAREER OPERATING SYSTEM
+
     </div>
+
+    <h1 class="hero-h1 fade-in">
+
+      Your Career.
+      <br>
+
+      <span class="grad">
+        One Intelligent System.
+      </span>
+
+    </h1>
+
+    <p class="hero-sub fade-in">
+
+      CareerOS brings AI career guidance, personalized roadmaps,
+      skill development, resumes, jobs and interview preparation
+      together in one place.
+
+    </p>
+
+    <div class="hero-btns fade-in">
+
+      <a
+        href="{{ url_for('signup') }}"
+        class="btn-primary">
+
+        Get Started Free →
+
+      </a>
+
+      <a
+        href="#chat"
+        class="btn-ghost">
+
+        Talk to Cara 🤖
+
+      </a>
+
+    </div>
+
+    <p class="hero-trust fade-in">
+      No credit card required ·
+      <span>Start free today</span>
+    </p>
+
   </div>
-  <div class="scroll-arrow" onclick="document.getElementById('stats').scrollIntoView({behavior:'smooth'})">↓</div>
+
 </section>
 
-<!-- STATS -->
+
+<!-- ============================================================
+     STATS
+============================================================ -->
+
 <section id="stats">
-  <div class="stats-grid fade-in">
-    <div class="stat-item" style="--stat-c1:#7B61FF;--stat-c2:#00D4AA">
-      <div class="stat-num" data-target="10000">0</div>
-      <div class="stat-label">Users Guided</div>
+
+  <div class="stats-grid">
+
+    <div class="stat-item fade-in">
+
+      <div class="stat-num">
+        50+
+      </div>
+
+      <div class="stat-label">
+        Career Paths
+      </div>
+
     </div>
-    <div class="stat-item" style="--stat-c1:#00D4AA;--stat-c2:#7B61FF">
-      <div class="stat-num" data-target="85" data-suffix="%">0</div>
-      <div class="stat-label">Got Hired Within 3 Months</div>
+
+    <div class="stat-item fade-in">
+
+      <div class="stat-num">
+        24/7
+      </div>
+
+      <div class="stat-label">
+        AI Career Guidance
+      </div>
+
     </div>
-    <div class="stat-item" style="--stat-c1:#FFB347;--stat-c2:#FF6B6B">
-      <div class="stat-num" data-target="49" data-decimal="4.9★">0</div>
-      <div class="stat-label">Average Rating</div>
+
+    <div class="stat-item fade-in">
+
+      <div class="stat-num">
+        10+
+      </div>
+
+      <div class="stat-label">
+        Career Tools
+      </div>
+
     </div>
-    <div class="stat-item" style="--stat-c1:#FF6B6B;--stat-c2:#FFB347">
-      <div class="stat-num" data-target="50" data-suffix="+">0</div>
-      <div class="stat-label">Career Paths Covered</div>
+
+    <div class="stat-item fade-in">
+
+      <div class="stat-num">
+        1
+      </div>
+
+      <div class="stat-label">
+        Complete Career Ecosystem
+      </div>
+
     </div>
+
   </div>
+
 </section>
 
-<!-- HOW IT WORKS -->
+
+<!-- ============================================================
+     WHAT CAREEROS DOES
+============================================================ -->
+
+<section id="what-we-do">
+
+  <div class="section-inner">
+
+    <div
+      class="fade-in"
+      style="text-align:center">
+
+      <p class="section-label">
+        One Platform
+      </p>
+
+      <h2 class="section-title">
+        Everything You Need to Build Your Career
+      </h2>
+
+      <p
+        class="section-sub"
+        style="margin:0 auto">
+
+        Stop switching between disconnected platforms.
+        CareerOS connects your career journey from
+        discovery to employment and continuous growth.
+
+      </p>
+
+    </div>
+
+
+    <div class="home-feature-grid">
+
+      <!-- CARD 1 -->
+
+      <div class="home-feature-card fade-in">
+
+        <div class="home-feature-icon">
+          🧠
+        </div>
+
+        <h3>
+          AI Career Coach
+        </h3>
+
+        <p>
+          Get personalized career guidance, answer questions,
+          explore career options and make better decisions
+          with your AI mentor.
+        </p>
+
+      </div>
+
+
+      <!-- CARD 2 -->
+
+      <div class="home-feature-card fade-in">
+
+        <div class="home-feature-icon">
+          🛣️
+        </div>
+
+        <h3>
+          AI Career Roadmaps
+        </h3>
+
+        <p>
+          Get a structured, personalized roadmap showing
+          exactly what skills and knowledge you should
+          develop next.
+        </p>
+
+      </div>
+
+
+      <!-- CARD 3 -->
+
+      <div class="home-feature-card fade-in">
+
+        <div class="home-feature-icon">
+          📊
+        </div>
+
+        <h3>
+          Skill Gap Analysis
+        </h3>
+
+        <p>
+          Identify the difference between your current
+          abilities and the skills required for your
+          target career.
+        </p>
+
+      </div>
+
+
+      <!-- CARD 4 -->
+
+      <div class="home-feature-card fade-in">
+
+        <div class="home-feature-icon">
+          📄
+        </div>
+
+        <h3>
+          Resume Builder
+        </h3>
+
+        <p>
+          Build professional resumes using structured
+          templates designed to help you present your
+          skills effectively.
+        </p>
+
+      </div>
+
+
+      <!-- CARD 5 -->
+
+      <div class="home-feature-card fade-in">
+
+        <div class="home-feature-icon">
+          💼
+        </div>
+
+        <h3>
+          Job Recommendations
+        </h3>
+
+        <p>
+          Discover opportunities that match your skills,
+          career interests and professional progress.
+        </p>
+
+      </div>
+
+
+      <!-- CARD 6 -->
+
+      <div class="home-feature-card fade-in">
+
+        <div class="home-feature-icon">
+          🎤
+        </div>
+
+        <h3>
+          Interview Preparation
+        </h3>
+
+        <p>
+          Practice interviews, improve your answers and
+          prepare yourself to approach interviews with
+          confidence.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div
+      style="text-align:center;margin-top:2.5rem"
+      class="fade-in">
+
+      <a
+        href="{{ url_for('features') }}"
+        class="btn-ghost">
+
+        Explore All Features →
+
+      </a>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ============================================================
+     HOW IT WORKS
+============================================================ -->
+
 <section id="how">
+
   <div class="section-inner">
-    <div class="fade-in" style="text-align:center">
-      <p class="section-label">The Process</p>
-      <h2 class="section-title">Three steps to your next role</h2>
+
+    <div
+      style="text-align:center"
+      class="fade-in">
+
+      <p class="section-label">
+        Simple Process
+      </p>
+
+      <h2 class="section-title">
+        Your Career Journey Starts Here
+      </h2>
+
+      <p
+        class="section-sub"
+        style="margin:0 auto">
+
+        CareerOS turns an uncertain career journey into
+        a clear, actionable plan.
+
+      </p>
+
     </div>
-    <div class="steps fade-in">
-      <div class="step">
-        <div class="step-num">1</div>
-        <h3>Tell us your goal</h3>
-        <p>Share where you are and where you want to be. Our AI understands your context — not just your job title.</p>
+
+
+    <div class="steps">
+
+      <div class="step fade-in">
+
+        <div class="step-num">
+          01
+        </div>
+
+        <h3>
+          Discover
+        </h3>
+
+        <p>
+          Tell CareerOS about your interests, skills,
+          education and career goals.
+        </p>
+
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <h3>Get your AI roadmap</h3>
-        <p>Receive a personalized, week-by-week action plan with resources, milestones and checkpoints.</p>
+
+
+      <div class="step fade-in">
+
+        <div class="step-num">
+          02
+        </div>
+
+        <h3>
+          Analyze
+        </h3>
+
+        <p>
+          AI analyzes your profile and identifies
+          suitable career directions and skill gaps.
+        </p>
+
       </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <h3>Track progress &amp; land the role</h3>
-        <p>Check off milestones, earn XP, and get interview-ready — all in one place.</p>
+
+
+      <div class="step fade-in">
+
+        <div class="step-num">
+          03
+        </div>
+
+        <h3>
+          Plan
+        </h3>
+
+        <p>
+          Receive a personalized roadmap with
+          practical learning and career milestones.
+        </p>
+
       </div>
+
+
+      <div class="step fade-in">
+
+        <div class="step-num">
+          04
+        </div>
+
+        <h3>
+          Grow
+        </h3>
+
+        <p>
+          Learn, build projects, improve your resume,
+          apply for jobs and keep progressing.
+        </p>
+
+      </div>
+
     </div>
+
   </div>
+
 </section>
 
-<!-- SKILL ROADMAP -->
+
+<!-- ============================================================
+     ROADMAP PREVIEW
+============================================================ -->
+
 <section id="roadmap">
+
   <div class="section-inner">
-    <div class="fade-in">
-      <p class="section-label">Skill Roadmap Preview</p>
-      <h2 class="section-title">Your personalized path,<br>visualized</h2>
-      <p class="section-sub">See exactly where you are and what's next. Every milestone unlocked brings you closer to your target role.</p>
-    </div>
-    <div class="roadmap-card fade-in">
-      <div class="roadmap-title">Software Engineer Path — 6 months</div>
-      <div class="roadmap-nodes">
-        <div class="roadmap-node"><div class="node-circle done">✅</div><div class="node-label">Python<br>Basics</div></div>
-        <div class="node-connector done"></div>
-        <div class="roadmap-node"><div class="node-circle done">✅</div><div class="node-label">Data<br>Structures</div></div>
-        <div class="node-connector done"></div>
-        <div class="roadmap-node"><div class="node-circle active">⚡</div><div class="node-label">Algorithms<br><span style="color:var(--purple);font-size:0.65rem">In Progress</span></div></div>
-        <div class="node-connector"></div>
-        <div class="roadmap-node"><div class="node-circle locked">🔒</div><div class="node-label">System<br>Design</div></div>
-        <div class="node-connector"></div>
-        <div class="roadmap-node"><div class="node-circle locked">🔒</div><div class="node-label">Projects &amp;<br>Portfolio</div></div>
-        <div class="node-connector"></div>
-        <div class="roadmap-node"><div class="node-circle locked">🔒</div><div class="node-label">Interview<br>Prep</div></div>
+
+    <div class="roadmap-preview">
+
+      <div class="fade-in">
+
+        <p class="section-label">
+          Personalized Growth
+        </p>
+
+        <h2 class="section-title">
+          Know Exactly What To Do Next
+        </h2>
+
+        <p class="section-sub">
+
+          Instead of wondering what to learn next,
+          CareerOS turns your career goal into a
+          step-by-step development journey.
+
+        </p>
+
+        <div style="margin-top:1.7rem">
+
+          <a
+            href="{{ url_for('signup') }}"
+            class="btn-primary">
+
+            Build My Roadmap →
+
+          </a>
+
+        </div>
+
       </div>
-      <div class="roadmap-cta">
-        <a href="#signin" class="btn-primary">See Your Full Roadmap →</a>
+
+
+      <div class="roadmap-card-home fade-in">
+
+        <div class="roadmap-line">
+
+          <div class="roadmap-step">
+
+            <h4>
+              🎯 Define Your Target
+            </h4>
+
+            <p>
+              Select the career or role you want to pursue.
+            </p>
+
+          </div>
+
+
+          <div class="roadmap-step">
+
+            <h4>
+              📊 Identify Skill Gaps
+            </h4>
+
+            <p>
+              Understand what you already know and
+              what you still need to learn.
+            </p>
+
+          </div>
+
+
+          <div class="roadmap-step">
+
+            <h4>
+              📚 Follow Your Learning Path
+            </h4>
+
+            <p>
+              Work through personalized topics,
+              resources and practical activities.
+            </p>
+
+          </div>
+
+
+          <div class="roadmap-step">
+
+            <h4>
+              💼 Become Career Ready
+            </h4>
+
+            <p>
+              Strengthen your resume, prepare for interviews
+              and discover relevant opportunities.
+            </p>
+
+          </div>
+
+        </div>
+
       </div>
+
     </div>
+
   </div>
+
 </section>
 
-<!-- ROADMAP -->
-<section id="future-roadmap" style="background:var(--surface)">
-  <div class="section-inner" style="max-width:900px">
-    <div class="fade-in" style="text-align:center;margin-bottom:2.5rem">
-      <p class="section-label">What's Next</p>
-      <h2 class="section-title">Future Roadmap</h2>
-      <p class="section-sub" style="margin:0 auto">CareerOS is growing step by step — here's what's coming.</p>
-    </div>
-    <div class="about-timeline">
-      <div class="tl-item fade-in"><div class="tl-dot"></div><h4>Learning Hub</h4><p>A curated, adaptive library of learning resources.</p></div>
-      <div class="tl-item fade-in"><div class="tl-dot"></div><h4>Resume Builder</h4><p>Live, template-driven resume creation and export.</p></div>
-      <div class="tl-item fade-in"><div class="tl-dot"></div><h4>AI Interview Coach</h4><p>Mock interviews with real-time AI feedback.</p></div>
-      <div class="tl-item fade-in"><div class="tl-dot"></div><h4>Portfolio Builder</h4><p>Showcase projects and skills in one shareable profile.</p></div>
-      <div class="tl-item fade-in"><div class="tl-dot"></div><h4>Job Matching</h4><p>Smart matching between your profile and open roles.</p></div>
-      <div class="tl-item fade-in"><div class="tl-dot"></div><h4>AI Career Analytics</h4><p>Data-driven insight into your career trajectory.</p></div>
-      <div class="tl-item fade-in"><div class="tl-dot"></div><h4>Global Opportunities</h4><p>Access to career paths and openings worldwide.</p></div>
-    </div>
-  </div>
-</section>
-<!-- CHAT -->
+
+<!-- ============================================================
+     AI CHAT
+============================================================ -->
+
 <section id="chat">
+
   <div class="chat-outer">
+
+    <!-- LEFT SIDE -->
+
     <div class="chat-info fade-in">
-      <p class="section-label">Talk To Your AI Coach</p>
-      <h2 class="section-title">Ask anything. Get answers that fit you.</h2>
-      <p class="section-sub">No generic advice. Our AI considers your background, goals, and the Indian job market to give you guidance that actually applies.</p>
+
+      <p class="section-label">
+        Meet Cara
+      </p>
+
+      <h2 class="section-title">
+        Your AI Career Guide,
+        Available Anytime.
+      </h2>
+
+      <p class="section-sub">
+
+        Ask questions about careers, skills, resumes,
+        interviews, learning paths and job opportunities.
+        Cara helps you turn uncertainty into your next step.
+
+      </p>
+
+
       <div class="chat-perks">
-        <div class="perk"><div class="perk-dot"></div><p><strong>Ask anything, anytime</strong> — Cara answers career questions and everyday questions alike.</p></div>
-        <div class="perk"><div class="perk-dot"></div><p><strong>Voice enabled</strong> — speak naturally and hear responses read back.</p></div>
-        <div class="perk"><div class="perk-dot"></div><p><strong>Context-aware</strong> — remembers your goals across the conversation.</p></div>
+
+        <div class="perk">
+
+          <div class="perk-dot"></div>
+
+          <p>
+            <strong>Personalized Guidance</strong><br>
+            Advice based on your career situation and goals.
+          </p>
+
+        </div>
+
+
+        <div class="perk">
+
+          <div class="perk-dot"></div>
+
+          <p>
+            <strong>Career Questions</strong><br>
+            Ask about roles, skills, salaries and career switches.
+          </p>
+
+        </div>
+
+
+        <div class="perk">
+
+          <div class="perk-dot"></div>
+
+          <p>
+            <strong>Learning Direction</strong><br>
+            Find out what you should learn next.
+          </p>
+
+        </div>
+
+
+        <div class="perk">
+
+          <div class="perk-dot"></div>
+
+          <p>
+            <strong>Available 24/7</strong><br>
+            No appointment. No waiting.
+          </p>
+
+        </div>
+
       </div>
+
     </div>
+
+
+    <!-- RIGHT SIDE CHAT -->
+
+    <div class="chat-widget fade-in">
+
+      <div class="chat-header">
+
+        <div class="chat-avatar">
+          C
+        </div>
+
+        <div class="chat-header-info">
+
+          <h4>
+            Cara — CareerOS AI
+          </h4>
+
+          <div class="online-dot">
+            Online & ready to help
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="voice-banner hidden" id="voiceBanner">
+        🎤 Voice mode is active
+      </div>
+
+
+      <div
+        class="chat-messages"
+        id="homeChatMessages">
+
+        <div class="msg ai">
+
+          <div class="msg-ai-avatar">
+            C
+          </div>
+
+          <div class="msg-bubble">
+
+            👋 Hi! I'm <strong>Cara</strong>, your CareerOS
+            AI career guide.
+
+            <br><br>
+
+            Tell me what you're trying to achieve —
+            choosing a career, learning a skill,
+            improving your resume or preparing for an interview.
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="chat-chips">
+
+        <button
+          class="chip"
+          onclick="homeQuickChat('What career should I choose?')">
+
+          Career choice
+
+        </button>
+
+        <button
+          class="chip"
+          onclick="homeQuickChat('How can I improve my resume?')">
+
+          Resume
+
+        </button>
+
+        <button
+          class="chip"
+          onclick="homeQuickChat('What skills should I learn?')">
+
+          Skills
+
+        </button>
+
+        <button
+          class="chip"
+          onclick="homeQuickChat('How do I prepare for interviews?')">
+
+          Interviews
+
+        </button>
+
+      </div>
+
+
+      <div class="chat-input-area">
+
+        <div
+          class="mic-status"
+          id="homeMicStatus">
+        </div>
+
+
+        <div class="chat-input-row">
+
+          <input
+            type="text"
+            id="homeChatInput"
+            class="chat-input"
+            placeholder="Ask Cara anything about your career..."
+            autocomplete="off">
+
+
+          <button
+            class="mic-btn"
+            id="homeMicBtn"
+            type="button"
+            aria-label="Voice input">
+
+            🎤
+
+          </button>
+
+
+          <button
+            class="send-btn"
+            id="homeSendBtn"
+            type="button"
+            aria-label="Send">
+
+            ➤
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
+
 </section>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
-        <p>AI-powered career guidance for India's next generation of professionals.</p>
-        <div class="social-links">
-          <a href="#" aria-label="LinkedIn">in</a>
-          <a href="#" aria-label="Twitter">𝕏</a>
-          <a href="#" aria-label="Instagram">◎</a>
-          <a href="#" aria-label="YouTube">▶</a>
-        </div>
-      </div>
-      <div class="footer-col">
-        <h4>Product</h4>
-        <ul>
-<li><a href="{{ url_for('features') }}">Features</a></li>
-<li><a href="{{ url_for('pricing') }}">Pricing</a></li>
-<li><a href="{{ url_for('home') }}#roadmap">Roadmaps</a></li>
-<li><a href="{{ url_for('home') }}#chat">AI Chat</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Company</h4>
-        <ul>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">Careers</a></li>
-          <li><a href="#">Contact</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Weekly career tips</h4>
-        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:0.5rem">Get actionable advice every Monday, free.</p>
-        <div class="newsletter-form">
-          <input type="email" class="newsletter-input" placeholder="your@email.com">
-          <button class="btn-subscribe">→</button>
-        </div>
-      </div>
+
+<!-- ============================================================
+     TESTIMONIALS
+============================================================ -->
+
+<section id="reviews">
+
+  <div class="section-inner">
+
+    <div
+      style="text-align:center"
+      class="fade-in">
+
+      <p class="section-label">
+        CareerOS Community
+      </p>
+
+      <h2 class="section-title">
+        Built Around Real Career Problems
+      </h2>
+
+      <p
+        class="section-sub"
+        style="margin:0 auto">
+
+        CareerOS is designed to help learners move from
+        confusion to clarity and action.
+
+      </p>
+
     </div>
-    <div class="footer-bottom">
-      <p>© 2025 CareerOS. Made with ❤️ in India 🇮🇳</p>
-      <p style="color:var(--muted);font-size:0.75rem">Privacy Policy · Terms of Service</p>
+
+
+    <div class="review-grid-home">
+
+      <div class="review-home fade-in">
+
+        <div class="review-stars">
+          ★★★★★
+        </div>
+
+        <p>
+          "I finally understood which skills I should
+          focus on instead of randomly completing courses."
+        </p>
+
+        <div class="review-person">
+
+          <div class="review-avatar-home">
+            AS
+          </div>
+
+          <div>
+            <strong>
+              A Student
+            </strong>
+
+            <span>
+              Career Discovery
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="review-home fade-in">
+
+        <div class="review-stars">
+          ★★★★★
+        </div>
+
+        <p>
+          "The roadmap concept makes career preparation
+          feel much more manageable and structured."
+        </p>
+
+        <div class="review-person">
+
+          <div class="review-avatar-home">
+            RP
+          </div>
+
+          <div>
+            <strong>
+              Recent Graduate
+            </strong>
+
+            <span>
+              Career Planning
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="review-home fade-in">
+
+        <div class="review-stars">
+          ★★★★★
+        </div>
+
+        <p>
+          "Having career guidance, resume tools and
+          job preparation in one place saves so much time."
+        </p>
+
+        <div class="review-person">
+
+          <div class="review-avatar-home">
+            SK
+          </div>
+
+          <div>
+            <strong>
+              Young Professional
+            </strong>
+
+            <span>
+              Career Growth
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
+
   </div>
+
+</section>
+
+
+<!-- ============================================================
+     CALL TO ACTION
+============================================================ -->
+
+<section id="cta">
+
+  <div class="cta-box fade-in">
+
+    <p class="section-label">
+      Start Your Journey
+    </p>
+
+    <h2>
+      Your Next Career Move Starts Here.
+    </h2>
+
+    <p>
+
+      Whether you're choosing your first career,
+      changing industries, preparing for a job,
+      or planning your next promotion —
+      CareerOS gives you the tools and guidance
+      to move forward.
+
+    </p>
+
+    <div class="hero-btns">
+
+      <a
+        href="{{ url_for('signup') }}"
+        class="btn-primary">
+
+        Get Started Free →
+
+      </a>
+
+      <a
+        href="{{ url_for('pricing') }}"
+        class="btn-ghost">
+
+        View Plans
+
+      </a>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+
+<footer>
+
+  <div class="footer-inner">
+
+    <div class="footer-top">
+
+
+      <!-- BRAND -->
+
+      <div class="footer-brand">
+
+        <a
+          href="{{ url_for('home') }}"
+          class="nav-logo">
+
+          <img
+            src="{{ url_for('static', filename='img/logo.png') }}"
+            alt="CareerOS logo">
+
+          CareerOS
+
+        </a>
+
+        <p>
+
+          AI-powered career guidance for India's
+          next generation of professionals.
+
+        </p>
+
+        <div class="social-links">
+
+          <a href="#" aria-label="LinkedIn">
+            in
+          </a>
+
+          <a href="#" aria-label="Twitter">
+            𝕏
+          </a>
+
+          <a href="#" aria-label="Instagram">
+            ◎
+          </a>
+
+          <a href="#" aria-label="YouTube">
+            ▶
+          </a>
+
+        </div>
+
+      </div>
+
+
+      <!-- PRODUCT -->
+
+      <div class="footer-col">
+
+        <h4>
+          Product
+        </h4>
+
+        <ul>
+
+          <li>
+            <a href="{{ url_for('features') }}">
+              Features
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('pricing') }}">
+              Pricing
+            </a>
+          </li>
+
+          <li>
+            <a href="#roadmap">
+              Roadmaps
+            </a>
+          </li>
+
+          <li>
+            <a href="#chat">
+              AI Chat
+            </a>
+          </li>
+
+        </ul>
+
+      </div>
+
+
+      <!-- COMPANY -->
+
+      <div class="footer-col">
+
+        <h4>
+          Company
+        </h4>
+
+        <ul>
+
+          <li>
+            <a href="{{ url_for('about') }}">
+              About
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('stories') }}">
+              Stories
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('faq') }}">
+              FAQ
+            </a>
+          </li>
+
+          <li>
+            <a href="#">
+              Contact
+            </a>
+          </li>
+
+        </ul>
+
+      </div>
+
+
+      <!-- NEWSLETTER -->
+
+      <div class="footer-col">
+
+        <h4>
+          Weekly career tips
+        </h4>
+
+        <p
+          style="color:var(--muted);
+                 font-size:.82rem;
+                 margin-bottom:.5rem">
+
+          Get actionable career advice every Monday.
+
+        </p>
+
+        <div class="newsletter-form">
+
+          <input
+            type="email"
+            class="newsletter-input"
+            placeholder="your@email.com">
+
+          <button
+            class="btn-subscribe"
+            type="button">
+
+            →
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="footer-bottom">
+
+      <p>
+        © 2025 CareerOS. Made with ❤️ in India 🇮🇳
+      </p>
+
+      <p
+        style="color:var(--muted);
+               font-size:.75rem">
+
+        Privacy Policy · Terms of Service
+
+      </p>
+
+    </div>
+
+  </div>
+
 </footer>
 
-{% include "_chatbot_widget.html" %}
+
+<!-- ============================================================
+     FLOATING CARA ASSISTANT
+============================================================ -->
+
+<div id="bot-launcher">
+
+  <div
+    id="bot-intro-bubble"
+    class="hidden">
+
+    👋 Hi! I'm <strong>Cara</strong>,
+    your CareerOS guide.
+    <br>
+    Ask me anything about the site!
+
+  </div>
+
+
+  <button
+    id="bot-btn"
+    aria-label="Open CareerOS assistant">
+
+    <div id="bot-notif">
+      1
+    </div>
+
+    <svg
+      class="bot-face"
+      viewBox="0 0 36 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg">
+
+      <rect
+        x="5"
+        y="9"
+        width="26"
+        height="20"
+        rx="5"
+        fill="white"
+        fill-opacity="0.95"/>
+
+      <rect
+        x="17"
+        y="3"
+        width="2"
+        height="6"
+        rx="1"
+        fill="white"
+        fill-opacity="0.9"/>
+
+      <circle
+        cx="18"
+        cy="3"
+        r="2.5"
+        fill="white"/>
+
+      <rect
+        x="9"
+        y="14"
+        width="6"
+        height="5"
+        rx="2"
+        fill="#7B61FF"/>
+
+      <rect
+        x="21"
+        y="14"
+        width="6"
+        height="5"
+        rx="2"
+        fill="#7B61FF"/>
+
+      <path
+        d="M11 23 Q18 28 25 23"
+        stroke="#00D4AA"
+        stroke-width="2"
+        stroke-linecap="round"
+        fill="none"/>
+
+      <rect
+        x="2"
+        y="15"
+        width="3"
+        height="6"
+        rx="1.5"
+        fill="white"
+        fill-opacity="0.7"/>
+
+      <rect
+        x="31"
+        y="15"
+        width="3"
+        height="6"
+        rx="1.5"
+        fill="white"
+        fill-opacity="0.7"/>
+
+    </svg>
+
+  </button>
+
+</div>
+
+
+<div id="bot-panel">
+
+  <div class="bot-panel-header">
+
+    <div class="bot-header-avatar">
+
+      <svg
+        viewBox="0 0 36 36"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg">
+
+        <rect
+          x="5"
+          y="9"
+          width="26"
+          height="20"
+          rx="5"
+          fill="white"
+          fill-opacity="0.95"/>
+
+        <rect
+          x="9"
+          y="14"
+          width="6"
+          height="5"
+          rx="2"
+          fill="#7B61FF"/>
+
+        <rect
+          x="21"
+          y="14"
+          width="6"
+          height="5"
+          rx="2"
+          fill="#7B61FF"/>
+
+        <path
+          d="M11 23 Q18 28 25 23"
+          stroke="#00D4AA"
+          stroke-width="2"
+          stroke-linecap="round"
+          fill="none"/>
+
+      </svg>
+
+    </div>
+
+
+    <div class="bot-header-info">
+
+      <h4>
+        Cara — CareerOS Guide
+      </h4>
+
+      <span>
+        Online & ready to help
+      </span>
+
+    </div>
+
+
+    <button
+      class="bot-close-btn"
+      id="bot-close"
+      aria-label="Close">
+
+      ✕
+
+    </button>
+
+  </div>
+
+
+  <div id="bot-messages"></div>
+
+
+  <div id="bot-quick-replies">
+
+    <button
+      class="bot-qr"
+      onclick="botQuickReply('What can CareerOS do?')">
+
+      What can CareerOS do?
+
+    </button>
+
+    <button
+      class="bot-qr"
+      onclick="botQuickReply('How does pricing work?')">
+
+      Pricing?
+
+    </button>
+
+    <button
+      class="bot-qr"
+      onclick="botQuickReply('How do I get started?')">
+
+      Get started
+
+    </button>
+
+    <button
+      class="bot-qr"
+      onclick="botQuickReply('Tell me about the AI coach')">
+
+      AI Coach
+
+    </button>
+
+  </div>
+
+
+  <div class="bot-input-row">
+
+    <input
+      type="text"
+      id="bot-input"
+      placeholder="Ask me anything..."
+      autocomplete="off"/>
+
+    <button
+      id="bot-send">
+
+      ➤
+
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- ============================================================
+     HOME CHAT JAVASCRIPT
+============================================================ -->
 
 <script>
-// ── COUNTER ──
-function animateCount(el){
-  const target=parseInt(el.dataset.target);
-  const suffix=el.dataset.suffix||'';
-  const decimal=el.dataset.decimal||null;
-  const duration=2000;const step=target/duration*16;let current=0;
-  const timer=setInterval(()=>{
-    current=Math.min(current+step,target);
-    if(decimal){el.textContent=decimal}
-    else el.textContent=(target>=1000?Math.floor(current).toLocaleString('en-IN'):Math.floor(current))+suffix;
-    if(current>=target)clearInterval(timer);
-  },16);
-}
-const statsEl=document.querySelector('#stats .stats-grid');
-if(statsEl){
-  const statsObs=new IntersectionObserver(entries=>{if(entries[0].isIntersecting){document.querySelectorAll('.stat-num').forEach(animateCount);statsObs.disconnect()}},{threshold:0.3});
-  statsObs.observe(statsEl);
-}
+
+(function () {
+
+  "use strict";
+
+
+  const input =
+    document.getElementById("homeChatInput");
+
+  const sendBtn =
+    document.getElementById("homeSendBtn");
+
+  const messages =
+    document.getElementById("homeChatMessages");
+
+  const micBtn =
+    document.getElementById("homeMicBtn");
+
+  const micStatus =
+    document.getElementById("homeMicStatus");
+
+
+  if (!input || !sendBtn || !messages) {
+    return;
+  }
+
+
+  let sending = false;
+
+
+  function addMessage(text, role) {
+
+    const wrapper =
+      document.createElement("div");
+
+    wrapper.className =
+      "msg " + role;
+
+
+    if (role === "ai") {
+
+      const avatar =
+        document.createElement("div");
+
+      avatar.className =
+        "msg-ai-avatar";
+
+      avatar.textContent = "C";
+
+      wrapper.appendChild(avatar);
+
+    }
+
+
+    const bubble =
+      document.createElement("div");
+
+    bubble.className =
+      "msg-bubble";
+
+
+    /*
+      API responses may contain HTML formatting
+      such as <strong>, <br>, etc.
+    */
+
+    if (role === "ai") {
+      bubble.innerHTML = text;
+    } else {
+      bubble.textContent = text;
+    }
+
+
+    wrapper.appendChild(bubble);
+
+    messages.appendChild(wrapper);
+
+    messages.scrollTop =
+      messages.scrollHeight;
+
+  }
+
+
+  function showTyping() {
+
+    const wrapper =
+      document.createElement("div");
+
+    wrapper.className =
+      "typing-indicator show";
+
+    wrapper.id =
+      "homeTyping";
+
+
+    wrapper.innerHTML = `
+      <div class="msg-ai-avatar">C</div>
+      <div class="typing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    `;
+
+
+    messages.appendChild(wrapper);
+
+    messages.scrollTop =
+      messages.scrollHeight;
+
+  }
+
+
+  function hideTyping() {
+
+    const typing =
+      document.getElementById("homeTyping");
+
+    if (typing) {
+      typing.remove();
+    }
+
+  }
+
+
+  async function sendMessage(prefilled) {
+
+    const question =
+      (prefilled !== undefined
+        ? prefilled
+        : input.value).trim();
+
+
+    if (!question || sending) {
+      return;
+    }
+
+
+    sending = true;
+
+    sendBtn.disabled = true;
+
+
+    addMessage(
+      question,
+      "user"
+    );
+
+
+    input.value = "";
+
+
+    showTyping();
+
+
+    try {
+
+      const response =
+        await fetch("/api/chat", {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body: JSON.stringify({
+            question: question
+          })
+
+        });
+
+
+      const data =
+        await response.json();
+
+
+      hideTyping();
+
+
+      if (data.output) {
+
+        addMessage(
+          data.output,
+          "ai"
+        );
+
+      } else {
+
+        addMessage(
+          data.error ||
+          "Sorry, I couldn't generate a response right now.",
+          "ai"
+        );
+
+      }
+
+
+    } catch (error) {
+
+      hideTyping();
+
+      addMessage(
+        "I couldn't connect to the CareerOS AI service. Please try again.",
+        "ai"
+      );
+
+    } finally {
+
+      sending = false;
+
+      sendBtn.disabled = false;
+
+      input.focus();
+
+    }
+
+  }
+
+
+  sendBtn.addEventListener(
+    "click",
+    function () {
+      sendMessage();
+    }
+  );
+
+
+  input.addEventListener(
+    "keydown",
+    function (event) {
+
+      if (event.key === "Enter") {
+
+        event.preventDefault();
+
+        sendMessage();
+
+      }
+
+    }
+  );
+
+
+  window.homeQuickChat =
+    function (text) {
+
+      sendMessage(text);
+
+    };
+
+
+  /*
+    Optional browser voice input.
+  */
+
+  if (micBtn) {
+
+    const SpeechRecognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+
+    if (!SpeechRecognition) {
+
+      micBtn.style.opacity = ".55";
+
+      micBtn.title =
+        "Voice input is not supported by this browser";
+
+    } else {
+
+      const recognition =
+        new SpeechRecognition();
+
+      recognition.lang =
+        "en-IN";
+
+      recognition.interimResults =
+        false;
+
+      recognition.continuous =
+        false;
+
+
+      micBtn.addEventListener(
+        "click",
+        function () {
+
+          try {
+
+            recognition.start();
+
+            micBtn.classList.add(
+              "listening"
+            );
+
+            micStatus.textContent =
+              "Listening... speak now";
+
+            micStatus.classList.add(
+              "listening"
+            );
+
+          } catch (e) {}
+
+        }
+      );
+
+
+      recognition.onresult =
+        function (event) {
+
+          const transcript =
+            event.results[0][0].transcript;
+
+          input.value =
+            transcript;
+
+          micStatus.textContent =
+            "Voice captured";
+
+        };
+
+
+      recognition.onerror =
+        function () {
+
+          micStatus.textContent =
+            "Voice input could not be used.";
+
+        };
+
+
+      recognition.onend =
+        function () {
+
+          micBtn.classList.remove(
+            "listening"
+          );
+
+          setTimeout(
+            function () {
+              micStatus.textContent = "";
+            },
+            2000
+          );
+
+        };
+
+    }
+
+  }
+
+})();
 
 </script>
+
+
 </body>
 </html>

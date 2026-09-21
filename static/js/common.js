@@ -13,6 +13,20 @@
 
 window.CareerOS = window.CareerOS || {};
 
+/* ── THEME PERSISTENCE (fallback) ───────────────────────────────────
+   Each page now has a small inline snippet in <head> that applies the
+   saved theme before paint and defines window.getTheme/setTheme. These
+   fallbacks just guarantee the API exists even if that snippet is ever
+   missing from a page, so the toggle below never silently no-ops. */
+window.getTheme = window.getTheme || function () {
+  return document.documentElement.getAttribute('data-theme') || 'dark';
+};
+
+window.setTheme = window.setTheme || function (theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem('careeros-theme', theme); } catch (e) { /* storage unavailable */ }
+};
+
 /**
  * Basic debounce utility, exposed for any page's search/filter inputs.
  * Usage: input.addEventListener('input', CareerOS.debounce(fn, 300))
@@ -328,5 +342,210 @@ window.showToast = function (message, type, duration) {
     inputEl.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); botSend(); }
     });
+  })();
+
+  // ── NOTIFICATION BELL (global, present on every page) ──────────────
+  // Page markup for the bell varies (button vs div, icon-btn / hdr-icon-btn
+  // / bell classes) so instead of relying on each page's own CSS, this
+  // finds every element via the one thing they all share consistently —
+  // aria-label="Notifications" — and injects its own self-contained badge
+  // + dropdown. Not page-CSS-variable-dependent on purpose: those variable
+  // names differ per page (--purple vs --primary, --text vs --text-hi...).
+  (function () {
+    var bells = Array.prototype.slice.call(document.querySelectorAll('[aria-label="Notifications"]'));
+    if (!bells.length) return;
+
+    var POLL_MS = 30000;
+    var panelOpen = false;
+    var activeBell = null;
+    var cache = null; // last-fetched notification list
+
+    injectStyles();
+
+    var panel = buildPanel();
+    document.body.appendChild(panel);
+
+    bells.forEach(function (bell) {
+      var dot = document.createElement('span');
+      dot.className = 'cos-notif-dot';
+      bell.style.position = bell.style.position || 'relative';
+      bell.appendChild(dot);
+      bell.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (panelOpen && activeBell === bell) {
+          closePanel();
+        } else {
+          openPanel(bell);
+        }
+      });
+    });
+
+    document.addEventListener('click', function (e) {
+      if (panelOpen && !panel.contains(e.target)) closePanel();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && panelOpen) closePanel();
+    });
+
+    refreshUnreadCount();
+    setInterval(refreshUnreadCount, POLL_MS);
+
+    function injectStyles() {
+      if (document.getElementById('cos-notif-styles')) return;
+      var style = document.createElement('style');
+      style.id = 'cos-notif-styles';
+      style.textContent =
+        '.cos-notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;' +
+        'background:#f87171;border:2px solid #0b1020;opacity:0;transform:scale(.5);' +
+        'transition:opacity .2s ease,transform .2s ease;pointer-events:none;}' +
+        'html[data-theme="light"] .cos-notif-dot{border-color:#f3f4f9;}' +
+        '.cos-notif-dot.show{opacity:1;transform:scale(1);}' +
+        '.cos-notif-panel{position:fixed;width:340px;max-width:92vw;max-height:420px;overflow-y:auto;' +
+        'background:rgba(15,18,32,.97);border:1px solid rgba(255,255,255,.1);border-radius:16px;' +
+        'box-shadow:0 20px 50px -12px rgba(0,0,0,.6);backdrop-filter:blur(20px);z-index:9999;' +
+        'font-family:Arial,sans-serif;opacity:0;transform:translateY(-8px);pointer-events:none;' +
+        'transition:opacity .18s ease,transform .18s ease;}' +
+        'html[data-theme="light"] .cos-notif-panel{background:rgba(255,255,255,.98);border-color:rgba(15,23,42,.1);}' +
+        '.cos-notif-panel.open{opacity:1;transform:translateY(0);pointer-events:auto;}' +
+        '.cos-notif-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;' +
+        'border-bottom:1px solid rgba(255,255,255,.08);font-weight:700;font-size:14px;color:#fff;}' +
+        'html[data-theme="light"] .cos-notif-head{color:#0f172a;border-color:rgba(15,23,42,.08);}' +
+        '.cos-notif-list{padding:6px;}' +
+        '.cos-notif-item{display:flex;gap:10px;padding:11px 10px;border-radius:10px;font-size:13px;' +
+        'line-height:1.45;color:#cbd5e1;}' +
+        'html[data-theme="light"] .cos-notif-item{color:#334155;}' +
+        '.cos-notif-item.unread{background:rgba(99,102,241,.1);}' +
+        '.cos-notif-item.clickable{cursor:pointer;transition:background .15s ease;}' +
+        '.cos-notif-item.clickable:hover{background:rgba(99,102,241,.18);}' +
+        '.cos-notif-item .cos-notif-ico{width:8px;height:8px;border-radius:50%;background:#6366F1;' +
+        'flex-shrink:0;margin-top:6px;opacity:0;}' +
+        '.cos-notif-item.unread .cos-notif-ico{opacity:1;}' +
+        '.cos-notif-msg{flex:1;}' +
+        '.cos-notif-time{display:block;font-size:11px;color:#7d8299;margin-top:3px;}' +
+        '.cos-notif-empty{padding:36px 20px;text-align:center;color:#7d8299;font-size:13px;}';
+      document.head.appendChild(style);
+    }
+
+    function buildPanel() {
+      var el = document.createElement('div');
+      el.className = 'cos-notif-panel';
+      el.innerHTML =
+        '<div class="cos-notif-head"><span>Notifications</span></div>' +
+        '<div class="cos-notif-list"><div class="cos-notif-empty">Loading…</div></div>';
+      el.querySelector('.cos-notif-list').addEventListener('click', function (e) {
+        var item = e.target.closest('.cos-notif-item');
+        if (!item || !item.classList.contains('clickable')) return;
+        var idx = parseInt(item.getAttribute('data-idx'), 10);
+        var note = cache && cache[idx];
+        if (!note) return;
+        var url = resolveNotificationUrl(note);
+        if (!url) return;
+        closePanel();
+        window.location.href = url;
+      });
+      return el;
+    }
+
+    // Where clicking a given notification should take the user — there's
+    // no per-job or per-invitation detail page, so this routes to the
+    // section that surfaces that item (Career Center for job/application
+    // activity, Network for connection activity) rather than a dead end.
+    var NETWORK_NOTIF_TYPES = { connection_request: true, connection_accepted: true };
+    function resolveNotificationUrl(n) {
+      if (NETWORK_NOTIF_TYPES[n.type]) return '/network';
+      if (n.related_job_id || n.type) return '/career-center';
+      return null;
+    }
+
+    function positionPanel(bell) {
+      var r = bell.getBoundingClientRect();
+      var top = r.bottom + 10;
+      var left = Math.min(r.left, window.innerWidth - 340 - 16);
+      panel.style.top = Math.max(8, top) + 'px';
+      panel.style.left = Math.max(8, left) + 'px';
+    }
+
+    function openPanel(bell) {
+      activeBell = bell;
+      panelOpen = true;
+      positionPanel(bell);
+      panel.classList.add('open');
+      loadNotifications();
+    }
+
+    function closePanel() {
+      panelOpen = false;
+      activeBell = null;
+      panel.classList.remove('open');
+    }
+
+    function timeAgo(iso) {
+      if (!iso) return '';
+      var diff = (Date.now() - new Date(iso).getTime()) / 1000;
+      if (diff < 60) return 'just now';
+      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+      return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    function renderList(notes) {
+      var listEl = panel.querySelector('.cos-notif-list');
+      if (!notes || !notes.length) {
+        listEl.innerHTML = '<div class="cos-notif-empty">No notifications yet.</div>';
+        return;
+      }
+      listEl.innerHTML = notes.map(function (n, idx) {
+        var clickable = !!resolveNotificationUrl(n);
+        return '<div class="cos-notif-item' + (n.is_read ? '' : ' unread') + (clickable ? ' clickable' : '') + '" data-idx="' + idx + '">' +
+          '<span class="cos-notif-ico"></span>' +
+          '<span class="cos-notif-msg">' + escapeHtml(n.message) +
+          '<span class="cos-notif-time">' + timeAgo(n.created_at) + '</span></span>' +
+          '</div>';
+      }).join('');
+    }
+
+    function escapeHtml(s) {
+      var div = document.createElement('div');
+      div.textContent = s == null ? '' : String(s);
+      return div.innerHTML;
+    }
+
+    function setDots(show) {
+      bells.forEach(function (bell) {
+        var dot = bell.querySelector('.cos-notif-dot');
+        if (dot) dot.classList.toggle('show', !!show);
+      });
+    }
+
+    function refreshUnreadCount() {
+      fetch('/api/notifications/unread-count')
+        .then(function (res) { return res.ok ? res.json() : { count: 0 }; })
+        .then(function (data) { setDots((data.count || 0) > 0); })
+        .catch(function () {});
+    }
+
+    function loadNotifications() {
+      fetch('/career/notifications')
+        .then(function (res) { return res.ok ? res.json() : []; })
+        .then(function (notes) {
+          cache = notes;
+          renderList(notes);
+          var hadUnread = notes.some(function (n) { return !n.is_read; });
+          if (hadUnread) markAllRead();
+        })
+        .catch(function () {
+          panel.querySelector('.cos-notif-list').innerHTML =
+            '<div class="cos-notif-empty">Couldn\'t load notifications.</div>';
+        });
+    }
+
+    function markAllRead() {
+      fetch('/career/notifications/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      }).then(function () { setDots(false); }).catch(function () {});
+    }
   })();
 })();

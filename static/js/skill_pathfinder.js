@@ -494,37 +494,71 @@ let currentPathId = "frontend_fullstack";
 let selectedNodeId = null;
 let skillStates = {};
 
-// Human-readable labels sent to the AI prompt (mockPaths keys stay short,
-// e.g. "frontend"/"fullstack", but Gemini needs real role names).
-const ROLE_LABELS = {
-  frontend: "Frontend Developer",
-  backend: "Backend Developer",
-  qa: "QA Engineer",
-  student: "Student / Explorer",
-  fullstack: "Full Stack Engineer",
-  cloud: "Cloud Architect",
-  devops: "DevOps Engineer",
-};
+// Any current/target role text is allowed now — these presets just give
+// instant (no-API-call) results for the same four combos that used to be
+// the only options, and seed the "Popular" quick-pick chips below the
+// inputs. Anything else typed goes straight to Gemini via
+// fetchGeneratedPath, since the backend already accepts arbitrary role text.
+const QUICK_PICKS = [
+  { current: "Frontend Developer", target: "Full Stack Engineer", pathId: "frontend_fullstack" },
+  { current: "Backend Developer", target: "Cloud Architect", pathId: "backend_cloud" },
+  { current: "QA Engineer", target: "DevOps Engineer", pathId: "qa_devops" },
+  { current: "Student / Explorer", target: "Backend Developer", pathId: "student_backend" },
+  { current: "Data Analyst", target: "Data Scientist" },
+  { current: "UI/UX Designer", target: "Product Manager" },
+];
+
+// Lookup so typing an exact preset pair still resolves to the pre-cached
+// mockPaths entry instead of round-tripping to the AI.
+const PRESET_ALIASES = {};
+QUICK_PICKS.forEach(p => {
+  if (p.pathId) {
+    PRESET_ALIASES[`${p.current.toLowerCase()}|${p.target.toLowerCase()}`] = p.pathId;
+  }
+});
 
 // Initialize application
 document.addEventListener("DOMContentLoaded", () => {
-  const currentSelect = document.getElementById("currentRoleSelect");
-  const targetSelect = document.getElementById("targetRoleSelect");
+  const currentInput = document.getElementById("currentRoleInput");
+  const targetInput = document.getElementById("targetRoleInput");
   const btnGenerate = document.getElementById("btnGenerate");
 
-  // Sync initial select states on load
-  updateSelectionOptions();
+  renderQuickPicks();
 
-  currentSelect.addEventListener("change", updateSelectionOptions);
+  const runGenerate = () => {
+    const currentVal = currentInput.value.trim();
+    const targetVal = targetInput.value.trim();
 
-  btnGenerate.addEventListener("click", () => {
-    const selectedPath = getPathKey(currentSelect.value, targetSelect.value);
-    loadPath(selectedPath, currentSelect.value, targetSelect.value);
+    if (!currentVal || !targetVal) {
+      showSelectorError("Enter both a current role and a target role to generate a path.");
+      return;
+    }
+    if (currentVal.toLowerCase() === targetVal.toLowerCase()) {
+      showSelectorError("Current role and target role should be different.");
+      return;
+    }
+    clearSelectorError();
+    loadPath(getPathKey(currentVal, targetVal), currentVal, targetVal);
+  };
+
+  btnGenerate.addEventListener("click", runGenerate);
+  [currentInput, targetInput].forEach(inp => {
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        runGenerate();
+      }
+    });
   });
 
-  // Load default path on startup (already in mockPaths, so this is instant
-  // and doesn't spend an API call just for the first paint).
-  loadPath("frontend_fullstack", "frontend", "fullstack");
+  // Prefill from the user's saved profile role if present, otherwise fall
+  // back to the first preset. Either way, load instantly from mockPaths
+  // (no API call) for the first paint.
+  if (!currentInput.value.trim()) currentInput.value = "Frontend Developer";
+  if (!targetInput.value.trim()) targetInput.value = "Full Stack Engineer";
+
+  const initialKey = getPathKey(currentInput.value.trim(), targetInput.value.trim());
+  loadPath(initialKey, currentInput.value.trim(), targetInput.value.trim());
 
   // Redraw connections on window resize
   window.addEventListener("resize", () => {
@@ -532,35 +566,51 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Update the target role options based on current role select
-function updateSelectionOptions() {
-  const currentVal = document.getElementById("currentRoleSelect").value;
-  const targetSelect = document.getElementById("targetRoleSelect");
-  const currentOptions = Array.from(targetSelect.options);
-
-  // Clear previous target selections
-  targetSelect.innerHTML = "";
-
-  if (currentVal === "frontend") {
-    addTargetOption(targetSelect, "fullstack", "Full Stack Engineer (Recommended)");
-  } else if (currentVal === "backend") {
-    addTargetOption(targetSelect, "cloud", "Cloud Architect (Recommended)");
-  } else if (currentVal === "qa") {
-    addTargetOption(targetSelect, "devops", "DevOps Engineer (Recommended)");
-  } else if (currentVal === "student") {
-    addTargetOption(targetSelect, "backend", "Backend Developer (Recommended)");
-  }
+function renderQuickPicks() {
+  const container = document.getElementById("quick-picks");
+  if (!container) return;
+  QUICK_PICKS.forEach(pick => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "quick-pick-chip";
+    chip.textContent = `${pick.current} → ${pick.target}`;
+    chip.addEventListener("click", () => {
+      document.getElementById("currentRoleInput").value = pick.current;
+      document.getElementById("targetRoleInput").value = pick.target;
+      clearSelectorError();
+      loadPath(getPathKey(pick.current, pick.target), pick.current, pick.target);
+    });
+    container.appendChild(chip);
+  });
 }
 
-function addTargetOption(selectEl, value, label) {
-  const opt = document.createElement("option");
-  opt.value = value;
-  opt.textContent = label;
-  selectEl.appendChild(opt);
+function showSelectorError(message) {
+  const el = document.getElementById("selector-error");
+  if (!el) return;
+  el.textContent = message;
+  el.style.display = "block";
+}
+
+function clearSelectorError() {
+  const el = document.getElementById("selector-error");
+  if (!el) return;
+  el.style.display = "none";
+}
+
+function slugify(text) {
+  return (
+    text
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "") || "role"
+  );
 }
 
 function getPathKey(curr, target) {
-  return `${curr}_${target}`;
+  const aliasKey = `${curr.trim().toLowerCase()}|${target.trim().toLowerCase()}`;
+  if (PRESET_ALIASES[aliasKey]) return PRESET_ALIASES[aliasKey];
+  return `${slugify(curr)}__${slugify(target)}`;
 }
 
 // Load a specific path and merge states with localStorage. If we don't
@@ -619,8 +669,8 @@ async function fetchGeneratedPath(currentVal, targetVal) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      current_role: ROLE_LABELS[currentVal] || currentVal,
-      target_role: ROLE_LABELS[targetVal] || targetVal,
+      current_role: currentVal,
+      target_role: targetVal,
     }),
   });
 

@@ -17,3 +17,11 @@ env/
 
 # Logs
 *.log
+
+# User-uploaded files - never commit
+static/uploads/
+
+# Keep the upload directories in the repository
+!static/uploads/
+!static/uploads/resumes/
+!static/uploads/resumes/.gitkeep

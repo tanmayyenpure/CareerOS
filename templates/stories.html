@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+<script>(function(){try{var t=localStorage.getItem("careeros-theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}}catch(e){}window.getTheme=function(){return document.documentElement.getAttribute("data-theme")||"dark"};window.setTheme=function(theme){document.documentElement.setAttribute("data-theme",theme);try{localStorage.setItem("careeros-theme",theme)}catch(e){}}})();</script>
+<style>
+.nav-logo{display:flex;align-items:center;gap:9px}
+.nav-logo img{width:34px;height:34px;object-fit:contain;flex-shrink:0}
+.footer-brand .nav-logo img{width:30px;height:30px}
+</style>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Success Stories — CareerOS</title>
@@ -14,16 +21,16 @@
 
 <!-- NAVBAR -->
 <nav id="navbar">
-  <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+  <a href="{{ url_for('home') }}" class="nav-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="CareerOS logo">CareerOS</a>
   <ul class="nav-links">
-    <li><a href="{{ url_for('home') }}" class="active">Home</a></li>
+    <li><a href="{{ url_for('home') }}">Home</a></li>
     <li><a href="{{ url_for('about') }}">About</a></li>
-<li><a href="{{ url_for('features') }}">Features</a></li>
-<li><a href="{{ url_for('stories') }}">Stories</a></li>
-<li><a href="{{ url_for('pricing') }}">Pricing</a></li>
-<li><a href="{{ url_for('faq') }}">FAQ</a></li>
+    <li><a href="{{ url_for('features') }}">Features</a></li>
+    <li><a href="{{ url_for('stories') }}" class="active">Stories</a></li>
+    <li><a href="{{ url_for('pricing') }}">Pricing</a></li>
+    <li><a href="{{ url_for('faq') }}">FAQ</a></li>
   </ul>
-  <div class="nav-right">
+    <div class="nav-right">
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
       <span class="icon-light">☀️</span>
       <span class="icon-dark">🌙</span>
@@ -38,8 +45,9 @@
 <div class="mobile-menu" id="mobileMenu">
   <ul>
     <li><a href="{{ url_for('home') }}" onclick="closeMobile()">Home</a></li>
+    <li><a href="{{ url_for('about') }}" onclick="closeMobile()">About</a></li>
     <li><a href="{{ url_for('features') }}" onclick="closeMobile()">Features</a></li>
-    <li><a href="{{ url_for('stories') }}" onclick="closeMobile()">Stories</a></li>
+    <li><a href="{{ url_for('stories') }}" onclick="closeMobile()" class="active">Stories</a></li>
     <li><a href="{{ url_for('pricing') }}" onclick="closeMobile()">Pricing</a></li>
     <li><a href="{{ url_for('faq') }}" onclick="closeMobile()">FAQ</a></li>
     <li><a href="{{ url_for('home') }}#chat" class="btn-nav" onclick="closeMobile()">Get Started Free</a></li>
@@ -72,7 +80,7 @@
   <div class="footer-inner">
     <div class="footer-top">
       <div class="footer-brand">
-        <a href="{{ url_for('home') }}" class="nav-logo">CareerOS</a>
+        <a href="{{ url_for('home') }}" class="nav-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="CareerOS logo">CareerOS</a>
         <p>AI-powered career guidance for India's next generation of professionals.</p>
         <div class="social-links">
           <a href="#" aria-label="LinkedIn">in</a>
