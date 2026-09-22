@@ -1,6 +1,7 @@
    
 import os
 from dotenv import load_dotenv
+from sqlalchemy.engine import URL
 
 # Load variables from .env
 load_dotenv()
@@ -12,9 +13,15 @@ class Config:
     MYSQL_USER = os.getenv("MYSQL_USER", "root")
     MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")  # no default — must come from .env
     MYSQL_DB = os.getenv("MYSQL_DB", "application")
+    MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 
-    SQLALCHEMY_DATABASE_URI = (
-        f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
+    SQLALCHEMY_DATABASE_URI = URL.create(
+        drivername="mysql+pymysql",
+        username=MYSQL_USER,
+        password=MYSQL_PASSWORD,
+        host=MYSQL_HOST,
+        port=MYSQL_PORT,
+        database=MYSQL_DB,
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -31,6 +38,9 @@ class Config:
     # ── AI (renamed to match what app.py actually reads) ──
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+    RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+    RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET")
     ADZUNA_APP_ID = os.environ.get("ADZUNA_APP_ID", "")
     ADZUNA_APP_KEY = os.environ.get("ADZUNA_APP_KEY", "")
     # ── YOUTUBE (real video links for roadmap/pathfinder resources) ──
