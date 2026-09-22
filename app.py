@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -27,8 +27,16 @@ import requests
 # set correctly. Adjust this path if you installed it somewhere else.
 try:
     import pytesseract
-    _TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-    if os.path.isfile(_TESSERACT_PATH):
+    _TESSERACT_PATH = os.getenv("TESSERACT_CMD")
+    if not _TESSERACT_PATH:
+        if os.name == "nt":
+            _default_win = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+            if os.path.isfile(_default_win):
+                _TESSERACT_PATH = _default_win
+        else:
+            if os.path.isfile("/usr/bin/tesseract"):
+                _TESSERACT_PATH = "/usr/bin/tesseract"
+    if _TESSERACT_PATH:
         pytesseract.pytesseract.tesseract_cmd = _TESSERACT_PATH
 except ImportError:
     pass
@@ -165,9 +173,14 @@ def extract_resume_text(filepath):
     return "", "unsupported"
 
 
-UPLOAD_FOLDER = os.path.join('static', 'uploads', 'resumes')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-from config import Config
+UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER") or (
+    "/tmp/uploads/resumes" if os.getenv("VERCEL") == "1" else os.path.join("static", "uploads", "resumes")
+)
+try:
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+except OSError:
+    pass
+from config import Config, is_production
 from youtube_helper import enrich_milestones_with_videos, enrich_with_video
 from piston_helper import run_code, list_supported_languages, PistonError
 from resume_ml.analyzer import MLResumeAnalyzer
@@ -197,7 +210,7 @@ gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 # ── ML RESUME ANALYZER (trained scikit-learn model, no LLM) ──
 try:
     ml_resume_analyzer = MLResumeAnalyzer()
-except FileNotFoundError as e:
+except Exception as e:
     ml_resume_analyzer = None
     print(f"ML resume analyzer not loaded: {e}")
 
@@ -3457,8 +3470,13 @@ def api_search():
 
 
 # ── FEED ──
-POST_IMAGES_FOLDER = os.path.join('static', 'uploads', 'posts')
-os.makedirs(POST_IMAGES_FOLDER, exist_ok=True)
+POST_IMAGES_FOLDER = os.getenv("POST_IMAGES_FOLDER") or (
+    "/tmp/uploads/posts" if os.getenv("VERCEL") == "1" else os.path.join("static", "uploads", "posts")
+)
+try:
+    os.makedirs(POST_IMAGES_FOLDER, exist_ok=True)
+except OSError:
+    pass
 POST_IMAGE_ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 
@@ -5594,16 +5612,71 @@ def _ensure_otp_purpose_column():
             conn.execute(text("ALTER TABLE otp_verification ADD COLUMN purpose VARCHAR(20) DEFAULT 'signup'"))
 
 
-with app.app_context():
-    db.create_all()
-    _ensure_notification_pref_columns()
-    _ensure_plan_columns()
-    _ensure_dummy_payment_columns()
-    _ensure_otp_purpose_column()
-    seed_companies_from_jobs()
+@app.route('/static/uploads/resumes/<path:filename>')
+def serve_uploaded_resume(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
+
+@app.route('/static/uploads/posts/<path:filename>')
+def serve_uploaded_post_image(filename):
+    return send_from_directory(POST_IMAGES_FOLDER, filename)
+
+
+_db_initialized = False
+
+
+def init_database():
+    global _db_initialized
+    if _db_initialized:
+        return
+    if is_production():
+        if not app.config.get("SECRET_KEY"):
+            raise RuntimeError(
+                "SECRET_KEY environment variable is required in production. Set a long, random SECRET_KEY in your environment/Vercel settings."
+            )
+        if os.getenv("VERCEL") == "1" and not (
+            os.getenv("DATABASE_URL")
+            or os.getenv("MYSQL_URL")
+            or os.getenv("POSTGRES_URL")
+        ):
+            raise RuntimeError(
+                "DATABASE_URL is required on Vercel. Configure a hosted database (MySQL or PostgreSQL) in Vercel environment variables."
+            )
+    with app.app_context():
+        try:
+            with db.engine.connect() as conn:
+                pass
+        except Exception as exc:
+            print(f"Database not reachable: {exc}")
+            return
+
+        db.create_all()
+        _ensure_notification_pref_columns()
+        _ensure_plan_columns()
+        _ensure_dummy_payment_columns()
+        _ensure_otp_purpose_column()
+        seed_companies_from_jobs()
+    _db_initialized = True
+
+
+@app.before_request
+def _ensure_db_ready():
+    global _db_initialized
+    if not _db_initialized:
+        init_database()
+
+
+if os.getenv("VERCEL") != "1":
+    try:
+        init_database()
+    except Exception as exc:
+        print(f"Database init notice: {exc}")
+
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True)
+    debug = not is_production()
+    app.run(host="0.0.0.0", debug=debug)
+
 
 
 

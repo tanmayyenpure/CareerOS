@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index" }
+  ],
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{oracleJdk-26/**,resume_ml/resume_dataset.csv,**/__pycache__/**,static/uploads/**,instance/**,venv/**}"
+    }
+  }
+}

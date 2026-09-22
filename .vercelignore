@@ -1,0 +1,47 @@
+# Heavy JDK distribution (370MB+)
+oracleJdk-26/
+
+# Training datasets and raw data
+resume_ml/resume_dataset.csv
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Python cache & compiled bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local environment & secret files
+.env
+.env.local
+.env.*.local
+
+# Git directory
+.git/
+.gitignore
+
+# Uploaded user media during local development
+static/uploads/resumes/
+static/uploads/posts/
+
+# Local database instances
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs & temp files
+*.log
+tmp/
+temp/
+
+# Documentation & patch files not needed at runtime
+*_patch.txt
+READ_ME_FIRST.txt
+SETUP_NOTES.md
+requirements_additions.txt
+config_additions.py
+render_certificate_pdf_snippet.py
