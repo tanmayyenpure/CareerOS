@@ -43,7 +43,7 @@ joblib==1.5.2
 lxml==6.1.1
 MarkupSafe==3.0.3
 mysql-connector-python==9.6.0
-mysqlclient==2.2.8
+PyMySQL==1.2.0
 numpy==2.3.5
 openai==2.41.1
 openpyxl==3.1.5
@@ -59,7 +59,6 @@ pycparser==3.0
 pydantic==2.13.4
 pydantic_core==2.46.4
 PyJWT==2.13.0
-PyMySQL==1.2.0
 pyparsing==3.3.2
 python-dateutil==2.9.0.post0
 python-docx==1.2.0
