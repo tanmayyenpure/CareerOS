@@ -5647,7 +5647,10 @@ def init_database():
             with db.engine.connect() as conn:
                 pass
         except Exception as exc:
+            _db_initialized = False
             print(f"Database not reachable: {exc}")
+            if is_production():
+                raise RuntimeError(f"Database connection failed: {exc}") from exc
             return
 
         db.create_all()
