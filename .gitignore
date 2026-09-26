@@ -1,19 +1,39 @@
 # Environment variables
 .env
+.env.local
+.env.*.local
+!.env.example
 
 # Ignore Oracle JDK
 oracleJdk-26/
 
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 
 # Virtual environments
 venv/
 env/
+.venv/
 
-# VS Code
+# VS Code & IDEs
 .vscode/
+.idea/
 
-# Logs
+# Local databases
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs & temp
 *.log
+tmp/
+temp/
+
+# User-uploaded files - never commit
+static/uploads/resumes/*
+!static/uploads/resumes/.gitkeep
+static/uploads/posts/*
+!static/uploads/posts/.gitkeep
