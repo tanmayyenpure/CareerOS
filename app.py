@@ -2977,96 +2977,22 @@ def profile_setup():
         user.profile_complete = True
         db.session.commit()
 
-        return redirect(url_for("assessment", domain=user.domain))
+        return redirect(url_for("dashboard"))
 
     return render_template("profile_setup.html", user=user)
 
 @app.route("/assessment/<domain>")
 def assessment(domain):
-    user = User.query.get(session.get("user_id"))
-
-    if not user:
+    # Keep old links working while retiring the post-profile questionnaire.
+    if not session.get("user_id"):
         return redirect(url_for("login"))
+    return redirect(url_for("dashboard"))
 
-    questions = AssessmentQuestion.query.filter_by(domain=domain).all()
-    random.shuffle(questions)          # different order every time
-    questions = questions[:20]         # cap at 20 even if more exist later
-
-    question_list = []
-    for q in questions:
-        question_list.append({
-            "id": q.id,
-            "text": q.question,
-            "options": [q.option_a, q.option_b, q.option_c, q.option_d]
-        })
-
-    return render_template(
-        "assessment.html",
-        user=user,
-        domain=domain,
-        domain_label=DOMAIN_LABELS.get(domain),
-        questions=question_list
-    )
 @app.route("/assessment-submit", methods=["POST"])
 def assessment_submit():
-    user = User.query.get(session.get("user_id"))
-
-    if not user:
+    if not session.get("user_id"):
         return redirect(url_for("login"))
-
-    domain = request.form["domain"]
-
-    # Only grade the questions actually shown for this attempt (their ids
-    # arrive as answer_<id> form fields) instead of re-querying every
-    # question in the domain bank.
-    answered_ids = []
-    for key in request.form:
-        if key.startswith("answer_"):
-            try:
-                answered_ids.append(int(key.split("answer_", 1)[1]))
-            except ValueError:
-                continue
-
-    questions = AssessmentQuestion.query.filter(
-        AssessmentQuestion.id.in_(answered_ids)
-    ).all() if answered_ids else []
-
-    score = 0
-    wrong_questions = []
-    result = AssessmentResult(user_id=user.id, domain=domain, score=0)
-    db.session.add(result)
-    db.session.flush()  # get result.id before inserting answers
-
-    for q in questions:
-        selected = request.form.get(f"answer_{q.id}")
-        if selected is None:
-            continue
-        is_correct = int(selected) == q.correct_answer
-        if is_correct:
-            score += 1
-        else:
-            wrong_questions.append(q.question)
-
-        db.session.add(AssessmentAnswer(
-            result_id=result.id,
-            user_id=user.id,
-            domain=domain,
-            question_id=q.id,
-            question_text=q.question,
-            is_correct=is_correct,
-        ))
-
-    result.score = score
-    db.session.commit()
-
-    return render_template(
-        "assessment_result.html",
-        user=user,
-        score=score,
-        domain_label=DOMAIN_LABELS.get(domain),
-        weak_areas=wrong_questions
-    )
-
+    return redirect(url_for("dashboard"))
 
 # ── PROFILE PAGE ──
 def calculate_profile_percent(user):
