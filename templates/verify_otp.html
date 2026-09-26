@@ -34,7 +34,11 @@
   <div class="fade-in" style="margin-bottom:2rem">
     <p class="section-label">One Last Step</p>
     <h2 class="section-title">Verify your email</h2>
+    {% if email_sent %}
     <p class="section-sub">We sent a 6-digit code to <strong>{{ email }}</strong></p>
+  {% else %}
+    <p class="section-sub">We could not send a code to <strong>{{ email }}</strong> right now. Please try again later.</p>
+  {% endif %}
   </div>
 
   {% with messages = get_flashed_messages() %}

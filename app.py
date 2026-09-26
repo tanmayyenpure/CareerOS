@@ -2062,26 +2062,49 @@ def _get_coding_test_cases(category, title):
 
 # ── HELPER FUNCTION: OTP ──
 def generate_and_send_otp(email):
+    """Send a signup OTP and persist it only after the mail server accepts it."""
+    mail_username = app.config.get('MAIL_USERNAME')
+    mail_password = app.config.get('MAIL_PASSWORD')
+    sender = app.config.get('MAIL_DEFAULT_SENDER') or mail_username
+    missing = [
+        name for name, value in (
+            ('MAIL_USERNAME', mail_username),
+            ('MAIL_PASSWORD', mail_password),
+            ('MAIL_DEFAULT_SENDER or MAIL_USERNAME', sender),
+        ) if not value
+    ]
+    if missing:
+        app.logger.error(
+            "OTP email is not configured; missing Vercel environment variable(s): %s",
+            ', '.join(missing),
+        )
+        return False
+
     otp_code = str(random.randint(100000, 999999))
     expires_at = datetime.utcnow() + timedelta(minutes=10)
+    msg = Message(
+        'Your CareerOS verification code',
+        sender=sender,
+        recipients=[email],
+    )
+    msg.body = f'Your OTP code is: {otp_code}\nThis code expires in 10 minutes.'
+
+    try:
+        # SMTP delivery is synchronous; wait for the provider before returning
+        # from the serverless request so the message is not cut off afterward.
+        mail.send(msg)
+    except Exception as exc:
+        app.logger.error("OTP email delivery failed (%s)", type(exc).__name__)
+        return False
 
     OTPVerification.query.filter_by(email=email).delete()
-
-    otp_entry = OTPVerification(email=email, otp_code=otp_code, expires_at=expires_at)
-    db.session.add(otp_entry)
+    db.session.add(OTPVerification(
+        email=email,
+        otp_code=otp_code,
+        expires_at=expires_at,
+    ))
     db.session.commit()
-
-    msg = Message('Your CareerOS verification code',
-                  sender=app.config['MAIL_USERNAME'],
-                  recipients=[email])
-    msg.body = f'Your OTP code is: {otp_code}\nThis code expires in 10 minutes.'
-    try:
-        mail.send(msg)
-    except Exception as e:
-        # Don't let a bad SMTP config 500 the signup request — the OTP row
-        # is already committed to the DB, so verify_otp/resend_otp can
-        # still work once mail is fixed. Log it loudly so it's not missed.
-        print(f"[OTP MAIL ERROR] Failed to send OTP to {email}: {e}")
+    return True
 
 
 # ── HELPER FUNCTIONS: FORGOT PASSWORD (reset link + login-via-OTP) ──
@@ -2824,8 +2847,9 @@ def signup():
         db.session.add(user)
         db.session.commit()
 
-        generate_and_send_otp(email)
+        email_sent = generate_and_send_otp(email)
         session['pending_email'] = email
+        session['otp_email_sent'] = email_sent
         return redirect(url_for('verify_otp'))
 
     return render_template('signup.html')
@@ -2863,14 +2887,19 @@ def verify_otp():
         session['user_id'] = user.id
         return redirect(url_for('profile_setup'))
 
-    return render_template('verify_otp.html', email=email)
+    email_sent = session.pop('otp_email_sent', True)
+    return render_template('verify_otp.html', email=email, email_sent=email_sent)
 
 @app.route('/resend-otp')
 def resend_otp():
     email = session.get('pending_email')
     if email:
-        generate_and_send_otp(email)
-        flash('A new OTP has been sent.')
+        email_sent = generate_and_send_otp(email)
+        session['otp_email_sent'] = email_sent
+        if email_sent:
+            flash('A new OTP has been sent.')
+        else:
+            flash('We could not send your verification code. Please try again later.')
     return redirect(url_for('verify_otp'))
 
 
