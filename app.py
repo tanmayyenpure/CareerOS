@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 import random
@@ -437,10 +438,8 @@ class OTPVerification(db.Model):
     otp_code = db.Column(db.String(6))
     expires_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=db.func.now())
-    # 'signup' (email verification during signup) or 'login' (forgot-password
-    # "login with OTP" option). Existing rows/inserts default to 'signup' so
-    # nothing about the signup flow changes.
-    purpose = db.Column(db.String(20), default='signup')
+    # Purpose distinguishes the password-recovery login OTP only.
+    purpose = db.Column(db.String(20), default='login')
 
 class PasswordResetToken(db.Model):
     """Backs the forgot-password email: one token identifies the user for
@@ -2060,53 +2059,6 @@ def _get_coding_test_cases(category, title):
     return json.loads(row.test_cases_json)
 
 
-# ── HELPER FUNCTION: OTP ──
-def generate_and_send_otp(email):
-    """Send a signup OTP and persist it only after the mail server accepts it."""
-    mail_username = app.config.get('MAIL_USERNAME')
-    mail_password = app.config.get('MAIL_PASSWORD')
-    sender = app.config.get('MAIL_DEFAULT_SENDER') or mail_username
-    missing = [
-        name for name, value in (
-            ('MAIL_USERNAME', mail_username),
-            ('MAIL_PASSWORD', mail_password),
-            ('MAIL_DEFAULT_SENDER or MAIL_USERNAME', sender),
-        ) if not value
-    ]
-    if missing:
-        app.logger.error(
-            "OTP email is not configured; missing Vercel environment variable(s): %s",
-            ', '.join(missing),
-        )
-        return False
-
-    otp_code = str(random.randint(100000, 999999))
-    expires_at = datetime.utcnow() + timedelta(minutes=10)
-    msg = Message(
-        'Your CareerOS verification code',
-        sender=sender,
-        recipients=[email],
-    )
-    msg.body = f'Your OTP code is: {otp_code}\nThis code expires in 10 minutes.'
-
-    try:
-        # SMTP delivery is synchronous; wait for the provider before returning
-        # from the serverless request so the message is not cut off afterward.
-        mail.send(msg)
-    except Exception as exc:
-        app.logger.error("OTP email delivery failed (%s)", type(exc).__name__)
-        return False
-
-    OTPVerification.query.filter_by(email=email).delete()
-    db.session.add(OTPVerification(
-        email=email,
-        otp_code=otp_code,
-        expires_at=expires_at,
-    ))
-    db.session.commit()
-    return True
-
-
 # ── HELPER FUNCTIONS: FORGOT PASSWORD (reset link + login-via-OTP) ──
 RESET_TOKEN_TTL_MINUTES = 15
 
@@ -2145,8 +2097,8 @@ def _generate_and_send_password_reset(user):
     try:
         mail.send(msg)
     except Exception as e:
-        # Same reasoning as generate_and_send_otp above — the token/OTP rows
-        # are already committed, so this only affects delivery, not state.
+        # The recovery token and OTP are committed before mail is sent, so
+        # this only affects delivery, not recovery state.
         print(f"[PASSWORD RESET MAIL ERROR] Failed to send reset email to {email}: {e}")
 
 
@@ -2807,9 +2759,11 @@ def login():
     if request.method == 'POST':
         user = User.query.filter_by(email=request.form['email']).first()
         if user and check_password_hash(user.password_hash, request.form['password']):
+            # Email verification is no longer part of account activation. Mark
+            # legacy pending accounts active after valid password authentication.
             if not user.is_verified:
-                flash('Please verify your email first.')
-                return redirect(url_for('signup'))
+                user.is_verified = True
+                db.session.commit()
             session['user_id'] = user.id
             if not user.profile_complete:
                 return redirect(url_for('profile_setup'))
@@ -2826,7 +2780,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-# ── SIGNUP + OTP ROUTES ──
+# ── SIGNUP ──
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -2842,65 +2796,25 @@ def signup():
             name=name,
             email=email,
             password_hash=generate_password_hash(password),
-            is_verified=False
+            is_verified=True,
         )
         db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            # The unique email constraint is authoritative if two signups race.
+            db.session.rollback()
+            flash('Email already registered.')
+            return redirect(url_for('signup'))
 
-        email_sent = generate_and_send_otp(email)
-        session['pending_email'] = email
-        session['otp_email_sent'] = email_sent
-        return redirect(url_for('verify_otp'))
+        # Establish a fresh authenticated session only after the account is saved.
+        session.clear()
+        session['user_id'] = user.id
+        if not user.profile_complete:
+            return redirect(url_for('profile_setup'))
+        return redirect(url_for('profile'))
 
     return render_template('signup.html')
-
-@app.route('/verify-otp', methods=['GET', 'POST'])
-def verify_otp():
-    email = session.get('pending_email')
-    if not email:
-        return redirect(url_for('signup'))
-
-    if request.method == 'POST':
-        entered_otp = request.form['otp']
-        record = OTPVerification.query.filter_by(email=email).first()
-
-        if not record:
-            flash('No OTP found. Please request a new one.')
-            return redirect(url_for('verify_otp'))
-
-        if datetime.utcnow() > record.expires_at:
-            flash('OTP expired. Please request a new one.')
-            return redirect(url_for('verify_otp'))
-
-        if entered_otp != record.otp_code:
-            flash('Incorrect OTP. Try again.')
-            return redirect(url_for('verify_otp'))
-
-        user = User.query.filter_by(email=email).first()
-        user.is_verified = True
-        db.session.commit()
-
-        db.session.delete(record)
-        db.session.commit()
-
-        session.pop('pending_email', None)
-        session['user_id'] = user.id
-        return redirect(url_for('profile_setup'))
-
-    email_sent = session.pop('otp_email_sent', True)
-    return render_template('verify_otp.html', email=email, email_sent=email_sent)
-
-@app.route('/resend-otp')
-def resend_otp():
-    email = session.get('pending_email')
-    if email:
-        email_sent = generate_and_send_otp(email)
-        session['otp_email_sent'] = email_sent
-        if email_sent:
-            flash('A new OTP has been sent.')
-        else:
-            flash('We could not send your verification code. Please try again later.')
-    return redirect(url_for('verify_otp'))
 
 
 # ── FORGOT PASSWORD (reset link OR login via OTP) ──
@@ -5649,7 +5563,7 @@ def _ensure_otp_purpose_column():
     existing_cols = {c['name'] for c in inspector.get_columns('otp_verification')}
     with db.engine.begin() as conn:
         if 'purpose' not in existing_cols:
-            conn.execute(text("ALTER TABLE otp_verification ADD COLUMN purpose VARCHAR(20) DEFAULT 'signup'"))
+            conn.execute(text("ALTER TABLE otp_verification ADD COLUMN purpose VARCHAR(20) DEFAULT 'login'"))
 
 
 @app.route('/static/uploads/resumes/<path:filename>')
