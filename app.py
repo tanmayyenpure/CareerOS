@@ -197,15 +197,26 @@ db = SQLAlchemy(app)
 mail = Mail(app)
 
 # ── OPENROUTER (CARA CHAT) CONFIG ──
-OPENROUTER_API_KEY = app.config['OPENROUTER_API_KEY']
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
-)
+OPENROUTER_API_KEY = app.config.get('OPENROUTER_API_KEY')
+client = None
+if OPENROUTER_API_KEY:
+    try:
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=OPENROUTER_API_KEY,
+        )
+    except Exception as exc:
+        # Optional AI credentials must not prevent Flask from starting.
+        print(f"OpenRouter client unavailable ({type(exc).__name__}); AI chat is disabled")
 
 # ── GEMINI (ROADMAP GENERATION) CONFIG ──
-GEMINI_API_KEY = app.config['GEMINI_API_KEY']
-gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+GEMINI_API_KEY = app.config.get('GEMINI_API_KEY')
+gemini_client = None
+if GEMINI_API_KEY:
+    try:
+        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+    except Exception as exc:
+        print(f"Gemini client unavailable ({type(exc).__name__}); Gemini features are disabled")
 
 # ── ML RESUME ANALYZER (trained scikit-learn model, no LLM) ──
 try:
